@@ -167,3 +167,8 @@ the companion raising the alert on "help".
   that against real commutes.
 - Vehicle history is only useful once many people in a city use Saathi. Until then, most plates show nothing.
 - The emergency step (a call to 112) is simulated.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE). Saathi is a safety aid, not an emergency service: it can fail, and it does
+not replace calling 112.
