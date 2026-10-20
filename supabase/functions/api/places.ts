@@ -34,11 +34,15 @@ export async function places(
       const label = str(p.name);
       const [lng, lat] = Array.isArray(f?.geometry?.coordinates) ? f.geometry.coordinates : [];
       if (!label || !Number.isFinite(lng) || !Number.isFinite(lat)) continue;
-      const area = [p.neighbourhood, p.locality, p.county].map(str).find(Boolean);
+      // Area, then city: "Hoysala Nagar, Bengaluru". Region only when that leaves fewer than two parts.
+      const area = [p.neighbourhood, p.borough].map(str).find(Boolean);
+      const city = str(p.locality) || str(p.county);
       const parts: string[] = [];
-      for (const s of [area, str(p.region)]) {
+      for (const s of [area, city]) {
         if (s && s !== label && !parts.includes(s)) parts.push(s);
       }
+      const region = str(p.region);
+      if (parts.length < 2 && region && region !== label && !parts.includes(region)) parts.push(region);
       out.push({ label, sub: parts.join(", "), lat, lng });
     }
     return out;

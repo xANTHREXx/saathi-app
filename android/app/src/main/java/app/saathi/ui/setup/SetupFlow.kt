@@ -178,6 +178,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     granted = live.granted, onRefresh = live.refresh,
                     problemPerm = permProblem, problemNonce = permNonce,
                 )
+                Step.PLACES -> PlacesStep(places, { places = it })
                 else -> Text("This step is being built.", style = MaterialTheme.typography.bodyLarge, color = c.fg2)
             }
         }

@@ -177,6 +177,7 @@ Deno.test("placesParsesOrsAndSkipsBadFeatures", async () => {
       features: [
         { geometry: { coordinates: [77.6, 12.9] }, properties: { name: "Indiranagar Metro", neighbourhood: "Indiranagar", region: "Karnataka" } },
         { geometry: { coordinates: [77.5, 12.8] }, properties: { name: "Hosur Road", county: "Bengaluru South", region: "Karnataka" } },
+        { geometry: { coordinates: [77.62, 13.01] }, properties: { name: "Hoysala Nagar Park", neighbourhood: "Hoysala Nagar", locality: "Bengaluru", region: "Karnataka" } },
         { geometry: {}, properties: { name: "No coordinates", region: "Karnataka" } },
       ],
     })));
@@ -185,6 +186,7 @@ Deno.test("placesParsesOrsAndSkipsBadFeatures", async () => {
   assertEquals(hits, [
     { label: "Indiranagar Metro", sub: "Indiranagar, Karnataka", lat: 12.9, lng: 77.6 },
     { label: "Hosur Road", sub: "Bengaluru South, Karnataka", lat: 12.8, lng: 77.5 },
+    { label: "Hoysala Nagar Park", sub: "Hoysala Nagar, Bengaluru", lat: 13.01, lng: 77.62 },
   ]);
   const u = new URL(sent);
   assertEquals(u.origin + u.pathname, "https://api.openrouteservice.org/geocode/autocomplete");

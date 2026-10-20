@@ -219,7 +219,7 @@ private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
 
         Section("Places you go often")
         Hint("Home and work, say. When a trip starts at one, Saathi knows where you're headed and notices a detour or a late arrival. You can skip this; long stops are watched either way.")
-        SavedPlacesEditor(places)
+        app.saathi.ui.setup.PlacesStep(places.toList(), { places.clear(); places.addAll(it) })
 
         Section("Speak for me")
         listOf("touched" to "\"This man touched me. He's still here. Please help me.\"",
