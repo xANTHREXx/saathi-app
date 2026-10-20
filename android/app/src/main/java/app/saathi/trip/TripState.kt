@@ -23,6 +23,8 @@ data class UiState(
     val cityOverride: String? = null,
     val checkInEndsAtMs: Long? = null,
     val alertActive: Boolean = false,
+    /** Speak for me's "Don't text" window: when it closes and the alert goes out. Null when none is pending. */
+    val pendingAlertEndsAtMs: Long? = null,
     val told: List<String> = emptyList(),
     val smsFailed: List<String> = emptyList(),
     val recording: Boolean = false,

@@ -6,6 +6,7 @@ import android.speech.tts.UtteranceProgressListener
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,23 +38,37 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.saathi.alert.AlertManager
 import app.saathi.core.Reason
 import app.saathi.core.languagesFor
+import app.saathi.core.namesSentence
+import app.saathi.core.recipients
+import app.saathi.core.secondsLeft
 import app.saathi.data.Store
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiTheme
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -73,11 +89,13 @@ class SpeakForMeActivity : ComponentActivity() {
 
         val p = TripState.now.place
         val langs = languagesFor(p.countryCode ?: "IN", p.state)
-        val lines = phrases(Store.settings(this).phraseKey).let { all ->
+        val settings = Store.settings(this)
+        val lines = phrases(settings.phraseKey).let { all ->
             langs.map { it to (all[it] ?: all["hi-IN"] ?: "") }
         }
+        val who = namesSentence(recipients(settings.contacts, TripState.city()).map { it.name })
 
-        setContent { SaathiTheme(dark = false) { Speak(lines, speaking.intValue, onAgain = { speak(lines) }, onClose = { finish() }) } }
+        setContent { SaathiTheme(dark = false) { Speak(lines, who, speaking.intValue, onAgain = { speak(lines) }, onClose = { finish() }) } }
 
         tts = TextToSpeech(this) { ok -> if (ok == TextToSpeech.SUCCESS) speak(lines) }.apply {
             setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -86,7 +104,8 @@ class SpeakForMeActivity : ComponentActivity() {
                 @Deprecated("Deprecated in Java") override fun onError(id: String?) {}
             })
         }
-        AlertManager.raise(Reason.SPEAK_FOR_ME)
+        // Speaking starts now; the text waits. Not on a recreate (rotation), or "Don't text" would re-arm it.
+        if (savedInstanceState == null) AlertManager.raiseAfter(Reason.SPEAK_FOR_ME, UNDO_WINDOW_MS)
     }
 
     private fun speak(lines: List<Pair<String, String>>) {
@@ -112,30 +131,28 @@ class SpeakForMeActivity : ComponentActivity() {
     }
 }
 
+/** How long she has to say "Don't text" before contacts are told. */
+private const val UNDO_WINDOW_MS = 5_000L
+
 private fun languageName(tag: String) = when (tag.substringBefore('-')) {
     "kn" -> "ಕನ್ನಡ"; "hi" -> "हिन्दी"; "mr" -> "मराठी"; "ta" -> "தமிழ்"; "te" -> "తెలుగు"; "ml" -> "മലയാളം"
     "bn" -> "বাংলা"; "gu" -> "ગુજરાતી"; "en" -> "English"; else -> tag
 }
 
 @Composable
-private fun Speak(lines: List<Pair<String, String>>, speaking: Int, onAgain: () -> Unit, onClose: () -> Unit) {
+private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int, onAgain: () -> Unit, onClose: () -> Unit) {
     val s by TripState.ui.collectAsState()
     val c = Saathi.colors
+    var notSent by rememberSaveable { mutableStateOf(false) }
+    val pendingEnds = s.pendingAlertEndsAtMs
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()
         .padding(horizontal = 14.dp, vertical = 8.dp)) {
-        Row(
-            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.helpContainer).padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(Modifier.size(36.dp).background(c.help, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(20.dp))
-            }
-            Column {
-                Text(if (s.told.isEmpty()) "Telling your contacts…" else "${s.told.joinToString(" and ")} ${if (s.told.size == 1) "was" else "were"} told",
-                    style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
-                Text("Live location sent · recording on this phone · emergency step simulated",
-                    style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
-            }
+        when {
+            s.alertActive -> ToldBanner(s.told)
+            pendingEnds != null -> PendingBanner(who, pendingEnds, onDontText = { if (AlertManager.cancelPendingAlert()) notSent = true })
+            notSent -> Text("Not sent. Speak for me is still on screen.", style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp))
+            else -> ToldBanner(s.told) // the instant between the window closing and the alert starting
         }
         Column(
             Modifier.padding(top = 12.dp).weight(1f).fillMaxWidth().clip(MaterialTheme.shapes.large)
@@ -164,6 +181,60 @@ private fun Speak(lines: List<Pair<String, String>>, speaking: Int, onAgain: () 
                 Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Say it again")
             }
             FilledTonalButton(onClose, Modifier.weight(1f).height(56.dp), shape = RoundedCornerShape(20.dp)) { Text("Close") }
+        }
+    }
+}
+
+/** The alert went out (madder): who was told, and what was sent. */
+@Composable
+private fun ToldBanner(told: List<String>) {
+    val c = Saathi.colors
+    Row(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.helpContainer).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(36.dp).background(c.help, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+        Column {
+            Text(if (told.isEmpty()) "Telling your contacts…" else "${told.joinToString(" and ")} ${if (told.size == 1) "was" else "were"} told",
+                style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
+            Text("Live location sent · recording on this phone · emergency step simulated",
+                style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
+        }
+    }
+}
+
+/** Before send (alum, never madder): a few seconds to undo an accidental tap. */
+@Composable
+private fun PendingBanner(who: String, endsAtMs: Long, onDontText: () -> Unit) {
+    val c = Saathi.colors
+    val track = MaterialTheme.colorScheme.surfaceContainerHighest
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(endsAtMs) { while (true) { now = System.currentTimeMillis(); delay(50) } }
+    val left = secondsLeft(endsAtMs, now)
+    val fraction = ((endsAtMs - now).coerceAtLeast(0) / UNDO_WINDOW_MS.toFloat()).coerceIn(0f, 1f)
+    Row(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.alum.copy(alpha = 0.16f)).padding(14.dp),
+        verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.fillMaxSize()) {
+                val w = 4.dp.toPx()
+                val inset = w / 2
+                val arc = Size(size.width - w, size.height - w)
+                drawArc(track, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(w))
+                drawArc(c.alum, -90f, 360f * fraction, false, Offset(inset, inset), arc, style = Stroke(w, cap = StrokeCap.Round))
+            }
+            Text("$left", style = MaterialTheme.typography.titleSmall, color = c.alum)
+        }
+        Column {
+            Text("Texting $who in $left…", style = MaterialTheme.typography.titleSmall)
+            Text("Tap Don't text if you opened this by mistake.", style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                modifier = Modifier.padding(top = 2.dp))
+            FilledTonalButton(onDontText, Modifier.padding(top = 10.dp).heightIn(min = 48.dp), shape = RoundedCornerShape(20.dp)) {
+                Text("Don't text")
+            }
         }
     }
 }

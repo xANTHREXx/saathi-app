@@ -31,6 +31,8 @@ object AlertManager {
     private var checkInJob: Job? = null
     private var liveJob: Job? = null
     private var practiceJob: Job? = null
+    private var pendingJob: Job? = null
+    private val pendingLock = Any()
     private val practiceLock = Any()
     private lateinit var alarm: Alarm
     private lateinit var recorder: Recorder
@@ -63,7 +65,45 @@ object AlertManager {
         }
     }
 
+    /**
+     * Speak for me's "Don't text" window: the alert goes out after [delayMs] unless [cancelPendingAlert] is called.
+     * Runs in [scope], so closing the screen or locking the phone does not stop it. Ignored if an alert is
+     * already active or one is already pending.
+     */
+    fun raiseAfter(reason: Reason, delayMs: Long) {
+        synchronized(pendingLock) {
+            if (TripState.now.alertActive || pendingJob?.isActive == true || TripState.now.pendingAlertEndsAtMs != null) return
+            val ends = System.currentTimeMillis() + delayMs
+            TripState.update { it.copy(pendingAlertEndsAtMs = ends) }
+            pendingJob = scope.launch {
+                delay(delayMs)
+                // Same lock as cancelPendingAlert: either it cancelled in time, or the alert goes out.
+                val go = synchronized(pendingLock) {
+                    if (!isActive || TripState.now.pendingAlertEndsAtMs == null) false
+                    else { TripState.update { it.copy(pendingAlertEndsAtMs = null) }; pendingJob = null; true }
+                }
+                if (go) startAlert(reason, null)
+            }
+        }
+    }
+
+    /** The one deliberate press that undoes an accidental Speak for me. True if an alert was actually held back. */
+    fun cancelPendingAlert(): Boolean = clearPending()
+
+    private fun clearPending(): Boolean = synchronized(pendingLock) {
+        val was = pendingJob?.isActive == true || TripState.now.pendingAlertEndsAtMs != null
+        pendingJob?.cancel(); pendingJob = null
+        if (TripState.now.pendingAlertEndsAtMs != null) TripState.update { it.copy(pendingAlertEndsAtMs = null) }
+        was
+    }
+
+    /** Every other way of asking for help is immediate: it drops a pending Speak for me window, then alerts once. */
     fun raise(reason: Reason, event: TripEvent? = null) {
+        clearPending()
+        startAlert(reason, event)
+    }
+
+    private fun startAlert(reason: Reason, event: TripEvent?) {
         endPractice() // a real alert takes over from a practice; no-op when none is running
         scope.launch(Dispatchers.IO) {
             if (TripState.now.alertActive) return@launch
@@ -100,6 +140,7 @@ object AlertManager {
     /** She's okay: stop everything, tell contacts only if an alert went out. */
     fun imOkay() {
         if (TripState.now.practice) { endPractice(); return } // a practice: nothing was sent, so nothing to take back
+        clearPending() // she says she's fine: a Speak for me window still counting down never goes out
         val wasAlert = TripState.now.alertActive
         val answeredCheckIn = TripState.now.checkInEndsAtMs != null // a real check-in was waiting (practices returned above)
         endCheckIn()
