@@ -19,6 +19,10 @@ data class Settings(
     /** Whether she has been asked about community sharing. */
     val consentAsked: Boolean = false,
     val onboarded: Boolean = false,
+    /** Send scrubbed crash reports. On unless she turns it off. */
+    val crashReports: Boolean = true,
+    /** Send anonymous usage events. Off until she agrees. */
+    val usageStats: Boolean = false,
 )
 
 @Serializable

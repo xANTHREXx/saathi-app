@@ -16,6 +16,13 @@ class CrashTrackerTest {
     }
 
     @Test
+    fun crashTimeIsRoundedDownToTheHour() {
+        // 2026-10-21T13:47:59Z
+        val record = CrashTracker.formatCrashRecord(IllegalStateException("x"), nowMs = 1792590479000L)
+        assertEquals("2026-10-21T13:00:00Z", record.crashedAt)
+    }
+
+    @Test
     fun truncatesOversizedStackTrace() {
         val longString = "A".repeat(10000)
         val truncated = CrashTracker.truncateStackTrace(longString, 8000)

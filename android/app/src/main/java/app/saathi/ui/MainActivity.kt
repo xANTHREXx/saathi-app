@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -55,6 +56,8 @@ import androidx.compose.material.icons.rounded.Train
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -86,6 +89,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -533,8 +537,8 @@ private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
     // Asked once, in context, right after she has answered for her first trip.
     if (!s.onTrip && !settings.consentAsked && latest != null && latest.feltOff != null) {
         ConsentCard(
-            onYes = {
-                onChange(settings.copy(communityConsent = true, consentAsked = true))
+            onYes = { stats ->
+                onChange(settings.copy(communityConsent = true, consentAsked = true, usageStats = stats))
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     if (latest.plate != null) app.saathi.data.Api.ride(ctx, latest.plate, latest.createdAt, latest.caseId)
                     if (latest.feltOff != "nothing" && latest.lat != null && latest.lng != null) {
@@ -543,7 +547,7 @@ private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
                     }
                 }
             },
-            onNo = { onChange(settings.copy(consentAsked = true)) },
+            onNo = { stats -> onChange(settings.copy(consentAsked = true, usageStats = stats)) },
         )
     }
     latest?.takeIf { it.feltOff == null && !s.onTrip }?.let { last ->
@@ -563,8 +567,9 @@ private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
 }
 
 @Composable
-private fun ConsentCard(onYes: () -> Unit, onNo: () -> Unit) {
+private fun ConsentCard(onYes: (usageStats: Boolean) -> Unit, onNo: (usageStats: Boolean) -> Unit) {
     val c = Saathi.colors
+    var stats by remember { mutableStateOf(false) }
     Column(
         Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerLow).border(1.dp, c.hair, MaterialTheme.shapes.large).padding(18.dp),
@@ -573,9 +578,17 @@ private fun ConsentCard(onYes: () -> Unit, onNo: () -> Unit) {
         Text("Help other women?", style = MaterialTheme.typography.titleMedium)
         Text("Count this ride anonymously, and add your answer to the community map. Never your name or number. You can change this in Settings.",
             style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = stats, role = Role.Checkbox, onValueChange = { stats = it }),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Checkbox(checked = stats, onCheckedChange = null, modifier = Modifier.minimumInteractiveComponentSize())
+            Text("Also send anonymous usage stats: which features get used, never where you go.", style = MaterialTheme.typography.bodyMedium)
+        }
         Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            FilledTonalButton(onClick = onYes, Modifier.heightIn(min = 48.dp)) { Text("Yes, share") }
-            TextButton(onClick = onNo, Modifier.heightIn(min = 48.dp)) { Text("No thanks") }
+            FilledTonalButton(onClick = { onYes(stats) }, Modifier.heightIn(min = 48.dp)) { Text("Yes, share") }
+            TextButton(onClick = { onNo(stats) }, Modifier.heightIn(min = 48.dp)) { Text("No thanks") }
         }
     }
 }

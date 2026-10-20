@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import app.saathi.alert.AlertManager
 import app.saathi.core.SetupProblem
 import app.saathi.data.Settings
+import app.saathi.data.TelemetryManager
 import app.saathi.ui.setup.ContactsEditor
 import app.saathi.ui.setup.PermissionList
 import app.saathi.ui.setup.PlacesEditor
@@ -62,6 +64,7 @@ private val PRESS_CHOICES = listOf(3 to "3 presses", 4 to "4", 6 to "6", 0 to "O
 @Composable
 fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
     val c = Saathi.colors
+    val ctx = LocalContext.current
 
     // Her name: the field shows what she typed, but only a non-blank name is ever saved.
     var name by rememberSaveable { mutableStateOf(settings.name) }
@@ -164,6 +167,48 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                     Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
                 )
                 Switch(checked = settings.communityConsent, onCheckedChange = null)
+            }
+        }
+
+        SettingsSection("Help improve Saathi") {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
+                        value = settings.crashReports, role = Role.Switch,
+                        onValueChange = { onChange(settings.copy(crashReports = it)) },
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Send crash reports", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "If Saathi crashes, send what went wrong. Numbers, names and places are removed first.",
+                            style = MaterialTheme.typography.bodyMedium, color = c.fg2,
+                        )
+                    }
+                    Switch(checked = settings.crashReports, onCheckedChange = null)
+                }
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
+                        value = settings.usageStats, role = Role.Switch,
+                        onValueChange = {
+                            if (!it) TelemetryManager.clearQueue(ctx) // nothing queued stays behind once she says no
+                            onChange(settings.copy(usageStats = it))
+                        },
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Send usage stats", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "Which features get used, rounded to the hour. Never where you go or who you text.",
+                            style = MaterialTheme.typography.bodyMedium, color = c.fg2,
+                        )
+                    }
+                    Switch(checked = settings.usageStats, onCheckedChange = null)
+                }
             }
         }
 

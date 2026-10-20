@@ -257,7 +257,10 @@ class TripService : Service() {
         tripJob?.cancel(); tripJob = null
         planJob?.cancel(); planJob = null
         val ui = TripState.now
-        if (ui.onTrip) saveRecord(ui)
+        if (ui.onTrip) {
+            saveRecord(ui)
+            app.saathi.data.TelemetryManager.flush(this) // send what the trip queued while she has signal
+        }
         watcher = null
         TripState.update { it.copy(onTrip = false, mode = null, plate = null, app = null, driver = null,
             fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null) }

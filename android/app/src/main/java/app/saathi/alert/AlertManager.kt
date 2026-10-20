@@ -57,6 +57,7 @@ object AlertManager {
             delay(CHECKIN_S * 1000)
             if (isActive && TripState.now.checkInEndsAtMs != null) {
                 endCheckIn()
+                TelemetryManager.track(app, "checkin_timed_out")
                 raise(Reason.NO_RESPONSE, event)
             }
         }
@@ -100,12 +101,13 @@ object AlertManager {
     fun imOkay() {
         if (TripState.now.practice) { endPractice(); return } // a practice: nothing was sent, so nothing to take back
         val wasAlert = TripState.now.alertActive
+        val answeredCheckIn = TripState.now.checkInEndsAtMs != null // a real check-in was waiting (practices returned above)
         endCheckIn()
         liveJob?.cancel(); LiveShare.stop()
         recorder.stop()
         Notifier.cancel(app, Notifier.ALERT_ID)
         TripState.update { it.copy(alertActive = false, told = emptyList(), smsFailed = emptyList(), recording = false) }
-        TelemetryManager.track(app, "checkin_responded", mapOf("response" to "safe"))
+        if (answeredCheckIn) TelemetryManager.track(app, "checkin_answered")
         onOkay?.invoke()
         if (wasAlert) scope.launch(Dispatchers.IO) {
             val s = Store.settings(app)

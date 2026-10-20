@@ -8,10 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 data class CrashRecord(
     val exceptionType: String,
@@ -24,16 +20,17 @@ object CrashTracker {
     private const val CRASH_DIR = "crashes"
     private const val MAX_TRACE_LEN = 8000
 
-    fun formatCrashRecord(t: Throwable): CrashRecord {
-        val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val trace = t.stackTraceToString()
+    /** Saved-but-unsent crashes are dropped after this long when reports are off. */
+    private const val KEEP_MS = 7L * 24 * 60 * 60 * 1000
+
+    /** The record that is saved and sent: message and trace scrubbed, time rounded down to the hour. */
+    fun formatCrashRecord(t: Throwable, nowMs: Long = System.currentTimeMillis()): CrashRecord {
+        val trace = scrub(t.stackTraceToString())
         return CrashRecord(
             exceptionType = t.javaClass.simpleName.ifBlank { t.javaClass.name },
-            message = t.message,
+            message = t.message?.let { scrub(it) },
             stackTrace = truncateStackTrace(trace, MAX_TRACE_LEN),
-            crashedAt = isoFormat.format(Date())
+            crashedAt = hourIso(nowMs)
         )
     }
 
@@ -71,6 +68,13 @@ object CrashTracker {
                 if (!dir.exists()) return@launch
                 val files = dir.listFiles { f -> f.extension == "json" } ?: return@launch
                 if (files.isEmpty()) return@launch
+
+                // Reports are off: send nothing. Keep a week of crashes in case she turns them on, then let go.
+                if (!Store.settings(ctx).crashReports) {
+                    val cutoff = System.currentTimeMillis() - KEEP_MS
+                    files.filter { it.lastModified() < cutoff }.forEach { it.delete() }
+                    return@launch
+                }
 
                 val installId = InstallId.get(ctx)
                 val crashesArray = StringBuilder("[")
