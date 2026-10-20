@@ -3,6 +3,7 @@ import { makeHandler, type Deps } from "./app.ts";
 import { chat, companionTurn, pick, providers, type Gen } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
 import { normPlate, plateKey, toPoint, vehicleSummary } from "./community.ts";
+import { places, type PlaceHit } from "./places.ts";
 import { profileFor, route, TRAFFIC_FACTOR } from "./route.ts";
 import { MemoryStore } from "./store.ts";
 
@@ -15,7 +16,7 @@ function app(over: Partial<Deps> = {}) {
   let clock = 1_760_800_000_000;
   const deps: Deps = {
     store, hmac: h, gen: failing, aiConfigured: false,
-    route: () => Promise.resolve({ points: [], duration_s: null }), routesConfigured: false,
+    route: () => Promise.resolve({ points: [], duration_s: null }), places: () => Promise.resolve([]), routesConfigured: false,
     livePageUrl: "https://example.github.io/saathi/live/", sample: false, now: () => clock, ...over,
   };
   const handle = makeHandler(deps);
@@ -166,6 +167,48 @@ Deno.test("routeEmptyWithoutKeyOrOnError", async () => {
   assertEquals((await route(body, "key", broken)).duration_s, null);
 });
 
+// --- places
+
+Deno.test("placesParsesOrsAndSkipsBadFeatures", async () => {
+  let sent = "";
+  const fetcher = ((url: string) => {
+    sent = String(url);
+    return Promise.resolve(new Response(JSON.stringify({
+      features: [
+        { geometry: { coordinates: [77.6, 12.9] }, properties: { name: "Indiranagar Metro", neighbourhood: "Indiranagar", region: "Karnataka" } },
+        { geometry: { coordinates: [77.5, 12.8] }, properties: { name: "Hosur Road", county: "Bengaluru South", region: "Karnataka" } },
+        { geometry: {}, properties: { name: "No coordinates", region: "Karnataka" } },
+      ],
+    })));
+  }) as typeof fetch;
+  const hits = await places("  indira  ", { lat: 12.97, lng: 77.59 }, "key", fetcher);
+  assertEquals(hits, [
+    { label: "Indiranagar Metro", sub: "Indiranagar, Karnataka", lat: 12.9, lng: 77.6 },
+    { label: "Hosur Road", sub: "Bengaluru South, Karnataka", lat: 12.8, lng: 77.5 },
+  ]);
+  const u = new URL(sent);
+  assertEquals(u.origin + u.pathname, "https://api.openrouteservice.org/geocode/autocomplete");
+  assertEquals(u.searchParams.get("boundary.country"), "IN");
+  assertEquals(u.searchParams.get("size"), "5");
+  assertEquals(u.searchParams.get("text"), "indira");
+  assertEquals(u.searchParams.get("focus.point.lat"), "12.97");
+  assertEquals(u.searchParams.get("focus.point.lon"), "77.59");
+});
+
+Deno.test("placesShortQueryNeverCallsOrs", async () => {
+  let called = false;
+  const fetcher = (() => { called = true; return Promise.resolve(new Response("{}")); }) as typeof fetch;
+  assertEquals(await places("ab", null, "key", fetcher), []);
+  assertEquals(called, false);
+});
+
+Deno.test("placesEmptyOnErrorOrRefusal", async () => {
+  const broken = (() => Promise.reject(new Error("offline"))) as typeof fetch;
+  assertEquals(await places("indiranagar", null, "key", broken), []);
+  const refused = (() => Promise.resolve(new Response("forbidden", { status: 403 }))) as typeof fetch;
+  assertEquals(await places("indiranagar", null, "key", refused), []);
+});
+
 // --- HTTP surface
 
 Deno.test("health", async () => {
@@ -242,6 +285,19 @@ Deno.test("communityWritesNeedDevice", async () => {
 Deno.test("routeEndpointPassesThrough", async () => {
   const a = app({ route: () => Promise.resolve({ points: [{ lat: 1, lng: 2 }], duration_s: 60 }) });
   assertEquals(await (await a.call("POST", "/route", {})).json(), { points: [{ lat: 1, lng: 2 }], duration_s: 60 });
+});
+
+Deno.test("placesEndpointIgnoresShortQueries", async () => {
+  assertEquals(await (await app().call("GET", "/places?q=ab")).json(), { places: [] });
+});
+
+Deno.test("placesEndpointPassesQueryAndNearThrough", async () => {
+  const seen: unknown[][] = [];
+  const hit: PlaceHit = { label: "A", sub: "B", lat: 1, lng: 2 };
+  const a = app({ places: (q, near) => { seen.push([q, near]); return Promise.resolve([hit]); } });
+  assertEquals(await (await a.call("GET", "/places?q=indira&lat=12.97&lng=77.59")).json(), { places: [hit] });
+  await a.call("GET", "/places?q=indira");
+  assertEquals(seen, [["indira", { lat: 12.97, lng: 77.59 }], ["indira", null]]);
 });
 
 Deno.test("corsPreflight", async () => {

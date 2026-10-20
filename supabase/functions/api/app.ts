@@ -2,6 +2,7 @@ import { randomToken, type Hmac } from "./crypto.ts";
 import { accountKey, caseKey, plateKey, toPoint, vehicleSummary, WINDOW } from "./community.ts";
 import { applyUpdate, isLive, newShare, publicState, validToken } from "./live.ts";
 import { companionTurn, type Gen } from "./ai.ts";
+import type { PlaceHit } from "./places.ts";
 import type { Route } from "./route.ts";
 import { seedRows } from "./seed.ts";
 import type { Store } from "./store.ts";
@@ -12,6 +13,7 @@ export interface Deps {
   gen: Gen;
   aiConfigured: boolean;
   route: (body: Record<string, unknown>) => Promise<Route>;
+  places: (q: string, near: { lat: number; lng: number } | null) => Promise<PlaceHit[]>;
   routesConfigured: boolean;
   livePageUrl: string;
   sample: boolean;
@@ -120,7 +122,7 @@ export function makeHandler(d: Deps) {
         return json({ deleted: await d.store.deleteMine(await accountKey(d.hmac, device), ck) });
       }
 
-      // --- companion and route
+      // --- companion, route and places
       if (m("POST", /^\/companion\/turn$/)) {
         const b = await body(req);
         return json(await companionTurn({
@@ -130,6 +132,13 @@ export function makeHandler(d: Deps) {
         }, d.gen));
       }
       if (m("POST", /^\/route$/)) return json(await d.route(await body(req)));
+      if (m("GET", /^\/places$/)) {
+        const q = url.searchParams.get("q") ?? "";
+        const lat = url.searchParams.get("lat"), lng = url.searchParams.get("lng");
+        const near = lat && lng && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) ? { lat: Number(lat), lng: Number(lng) } : null;
+        if (q.trim().length < 3) return json({ places: [] });
+        return json({ places: await d.places(q, near) });
+      }
 
       return json({ error: "not found" }, 404);
     } catch (e) {

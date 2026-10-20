@@ -6,6 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { makeHandler } from "./app.ts";
 import { chat, providers } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
+import { places } from "./places.ts";
 import { route } from "./route.ts";
 import { MemoryStore, PgStore } from "./store.ts";
 
@@ -33,6 +34,7 @@ Deno.serve(makeHandler({
   gen: chat(ai),
   aiConfigured: ai.length > 0,
   route: (b) => route(b, orsKey),
+  places: (q, near) => places(q, near, orsKey),
   routesConfigured: Boolean(orsKey),
   livePageUrl: env("LIVE_PAGE_URL") || "http://localhost:8080/live/",
   sample: env("SEED_DEMO") === "true",
