@@ -23,13 +23,31 @@ android {
         versionCode = 1
         versionName = "0.1"
         // The backend function: https://<ref>.supabase.co/functions/v1/api, or the local Deno server from the emulator.
-        buildConfigField("String", "API_URL", "\"${localProps.getProperty("API_URL", "http://10.0.2.2:8000/api").trimEnd('/')}\"")
+        // Updates are only accepted from here (forks set UPDATE_URL_PREFIX in local.properties).
+        buildConfigField("String", "UPDATE_URL_PREFIX", "\"${localProps.getProperty("UPDATE_URL_PREFIX", "https://github.com/xANTHREXx/saathi-app/releases/download/")}\"")
+        buildConfigField("String", "API_URL","\"${localProps.getProperty("API_URL", "http://10.0.2.2:8000/api").trimEnd('/')}\"")
+    }
+
+    // The release key lives outside the repo; local.properties only points at it. Never log these values.
+    // Without all four keys the release build stays unsigned, so a wrongly signed APK can't be published by accident.
+    val releaseKeys = listOf("RELEASE_STORE_FILE", "RELEASE_STORE_PASSWORD", "RELEASE_KEY_ALIAS", "RELEASE_KEY_PASSWORD")
+    val canSignRelease = releaseKeys.all { !localProps.getProperty(it).isNullOrBlank() }
+
+    signingConfigs {
+        if (canSignRelease) {
+            create("release") {
+                storeFile = rootProject.file(localProps.getProperty("RELEASE_STORE_FILE"))
+                storePassword = localProps.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = localProps.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = localProps.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            if (canSignRelease) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

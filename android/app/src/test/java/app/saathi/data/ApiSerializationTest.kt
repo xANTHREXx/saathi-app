@@ -21,6 +21,7 @@ class ApiSerializationTest {
                 "versionCode": 2,
                 "versionName": "0.2",
                 "apkUrl": "https://github.com/example/saathi.apk",
+                "apkSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
                 "changelog": "Fixes and improvements",
                 "isMandatory": true
             }
@@ -31,8 +32,15 @@ class ApiSerializationTest {
         assertEquals(2, rel?.versionCode)
         assertEquals("0.2", rel?.versionName)
         assertEquals("https://github.com/example/saathi.apk", rel?.apkUrl)
+        assertEquals("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", rel?.apkSha256)
         assertEquals("Fixes and improvements", rel?.changelog)
         assertEquals(true, rel?.isMandatory)
+    }
+
+    @Test
+    fun parseReleaseDefaultsMissingShaToEmpty() {
+        val json = """{"latest": {"versionCode": 2, "versionName": "0.2", "apkUrl": "https://x/y.apk"}}"""
+        assertEquals("", Api.parseRelease(json)?.apkSha256)
     }
 
     @Test

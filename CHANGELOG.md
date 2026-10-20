@@ -55,12 +55,14 @@ Future agents working on this codebase should consult this guide to understand h
 | `android/app/src/main/java/app/saathi/data/Api.kt` | Android Client | Added `Api.Release` model, `parseRelease()`, `latestRelease()`, `buildTelemetryJson()`, `postTelemetry()`. |
 | `android/app/src/main/java/app/saathi/data/CrashTracker.kt` | Android Client | Default uncaught exception handler, saves crash to `filesDir/crashes/<timestamp>.json`, flushes on next launch. |
 | `android/app/src/main/java/app/saathi/data/TelemetryManager.kt` | Android Client | Event queue with 10-event flush threshold, 200-event disk queue fallback (`telemetry_queue.json`). |
-| `android/app/src/main/java/app/saathi/data/AppUpdateManager.kt` | Android Client | 6-hour check throttling, OkHttp APK download streaming with progress callback, FileProvider install intent. |
+| `android/app/src/main/java/app/saathi/data/AppUpdateManager.kt` | Android Client | 6-hour check throttling (stamped only when the check succeeds), release vetting (`isValidSha256`, `isTrustedUrl`, `rejectionReason`), streamed download to a `.part` file, SHA-256 verification (`sha256Hex`), FileProvider install intent. |
 | `android/app/src/main/java/app/saathi/SaathiApp.kt` | Android Client | Application subclass registering `CrashTracker.install()` and flushing pending crashes/telemetry on cold start. |
 | `android/app/src/main/res/xml/filepaths.xml` | Android Client | FileProvider cache path configuration for `updates/` directory. |
 | `android/app/src/main/AndroidManifest.xml` | Android Client | Declares `REQUEST_INSTALL_PACKAGES` permission, `SaathiApp`, and `androidx.core.content.FileProvider`. |
-| `android/app/src/main/java/app/saathi/ui/UpdateDialog.kt` | Android Client | Compose dialog rendering changelog, download progress bar, retry state, and mandatory mode. |
-| `android/app/src/main/java/app/saathi/ui/MainActivity.kt` | Android Client | Triggers update check on launch (deferred if mid-trip or mid-alert). |
+| `android/app/src/main/java/app/saathi/ui/UpdateDialog.kt` | Android Client | `UpdatePrompt` (Home-only check) and `UpdateDialog`: changelog, progress, metered-network note, install-permission flow, errors via `ProblemText`. Always dismissable. |
+| `android/app/src/main/java/app/saathi/ui/MainActivity.kt` | Android Client | Calls `UpdatePrompt()` inside Home, so nothing is checked or shown over setup. |
+| `android/app/src/main/java/app/saathi/ui/SettingsScreen.kt` | Android Client | "App" section: version and a "Check for updates" button (forces a check, opens the same dialog). |
+| `android/app/build.gradle.kts` | Android Client | `UPDATE_URL_PREFIX` BuildConfig field; release signing config read from `local.properties`. |
 
 ---
 
@@ -75,7 +77,8 @@ Future agents working on this codebase should consult this guide to understand h
      - **Timestamps are truncated to the hour (UTC)** before storage (`occurredAt`, `crashedAt`). Invalid, more than 1 day in the future, or older than 30 days are replaced by the server's current time (then truncated). We only ever need hour granularity; do not add finer timestamps.
      - Crash `message` and `stackTrace` pass through `scrub()` (`scrub.ts`): runs of 6+ digits (spaces, dashes, leading `+` allowed) become `[number]`, emails become `[email]`, coordinate pairs with 4+ decimals become `[place]`. Stack-frame line numbers (`MainActivity.kt:123`) are kept.
 2. **Safety Isolation**:
-   - Update prompts are suppressed if a trip is active (`TripState.now.onTrip`) or if an alert is active (`TripState.now.alertActive`).
+   - **The updater never blocks help.** `UpdateDialog` is always dismissable (back, outside tap, "Later"), including when `isMandatory` is true; `isMandatory` only changes the wording ("Important update", "This fixes something important. Please update soon."). There is no mandatory mode and no modal she can't leave. Do not add one.
+   - The prompt appears only on Home: never during setup, and never while `TripState.ui` shows `onTrip`, `alertActive`, a pending check-in (`checkInEndsAtMs != null`) or a `practice`. If any of these start while the dialog is open it closes itself. A finished, verified download stays in the cache and is picked up again from Settings > App > Check for updates.
    - Crash saving is strictly non-blocking and wrapped in `runCatching` before delegating to Android's default handler.
 3. **Free Tier / Storage Cost**:
    - Do **NOT** store APK files in Supabase Storage. APKs are hosted on GitHub Releases CDN. Supabase Postgres only stores lightweight metadata rows.
@@ -85,6 +88,11 @@ Future agents working on this codebase should consult this guide to understand h
    - Inserts are batched: one `addCrashes(rows)` and one `addEvents(rows)` call per request (skipped when empty).
 4. **Update integrity**:
    - `app_releases.apk_sha256` is the lowercase hex SHA-256 of the APK file (`^[0-9a-f]{64}$`, enforced by a check constraint); `apk_url` must start with `https://`. `GET /api/version` returns it as `apkSha256`. The client must verify the downloaded APK against it before launching the installer.
+   - **Client checks** (`AppUpdateManager`): a release is ignored (treated as no update, warning logged) unless `apkSha256` is 64 lowercase hex characters and `apkUrl` is `https://` and starts with `BuildConfig.UPDATE_URL_PREFIX` (default `https://github.com/xANTHREXx/saathi-app/releases/download/`; forks set `UPDATE_URL_PREFIX` in `local.properties`). After download the file is hashed (streamed) and compared to `apkSha256`; on mismatch it is deleted, she sees "The download didn't check out, so it wasn't installed. Try again later." and nothing is installed. Only a verified file ever reaches the installer.
+   - `Api.latestRelease()` returns `Result<Release?>`: failure means "couldn't check" (offline, HTTP error) and does not stamp `last_check_ms`, so an offline launch doesn't suppress checks for 6 hours.
+   - **Install permission:** before launching the installer, if `canRequestPackageInstalls()` is false the app opens `ACTION_MANAGE_UNKNOWN_APP_SOURCES` for its own package and the dialog says "Allow Saathi to install updates, then come back and tap Install." The verified file is kept; on return (ON_RESUME) she taps Install. Granting this permission can restart the app; Settings > App > Check for updates reopens the dialog and finds the verified file again.
+   - **Mobile data:** on a metered network the dialog says "This is a large download (about 100 MB). Use Wi-Fi if you can." The button still works. This needs `ACCESS_NETWORK_STATE` in the manifest.
+5. **Release signing**: `assembleRelease` signs with the key named by `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD` in `local.properties`. If any of the four is missing the release APK is left unsigned (`app-release-unsigned.apk`), so a wrongly signed APK can't be published by accident. Debug builds are unchanged. Every update must be signed by the same key as the installed app, or Android refuses it.
 
 ---
 
@@ -115,6 +123,17 @@ The server only accepts the event names listed above (see section 3); property k
 
 When publishing a new version of Saathi:
 
+0. **One-time: create the release key.** Keep the file outside the repo and back it up somewhere safe. Losing it means no user can ever update the app.
+   ```powershell
+   keytool -genkeypair -v -keystore saathi-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias saathi
+   ```
+   Then add four lines to `android/local.properties` (which is not committed):
+   ```properties
+   RELEASE_STORE_FILE=C:/path/outside/repo/saathi-release.jks
+   RELEASE_STORE_PASSWORD=...
+   RELEASE_KEY_ALIAS=saathi
+   RELEASE_KEY_PASSWORD=...
+   ```
 1. **Bump Version** in `android/app/build.gradle.kts`:
    ```kotlin
    versionCode = 2
@@ -125,7 +144,7 @@ When publishing a new version of Saathi:
    cd android
    .\gradlew.bat assembleRelease
    ```
-   The APK will be generated at `android/app/build/outputs/apk/release/app-release.apk` (signed with the keystore).
+   The APK will be generated at `android/app/build/outputs/apk/release/app-release.apk` (signed with the release key from step 0; if it is named `app-release-unsigned.apk`, the `RELEASE_*` lines are missing and the APK must not be published).
 3. **Upload to GitHub Releases**:
    - Create a tag (e.g. `v0.2`) on GitHub.
    - Attach the built APK (e.g. `saathi-v0.2.apk`).
@@ -150,5 +169,5 @@ When publishing a new version of Saathi:
    ```
 6. **App Behavior**:
    - Active user devices will fetch the release via `GET /api/version` within 6 hours (or on next launch).
-   - The user sees `UpdateDialog` with the changelog.
-   - Tapping **Update Now** streams the APK to cache, passes it to the Android package installer via `FileProvider`, and updates the app in-place without data loss.
+   - On Home (not during setup, a trip, an alert, a check-in or a practice) she sees `UpdateDialog` with the changelog. She can always leave it with **Later**, back, or a tap outside, even if `is_mandatory` is true (that only changes the wording).
+   - Tapping **Update** streams the APK to cache, verifies its SHA-256, then (after the install-permission step if needed) passes it to the Android package installer via `FileProvider`, and updates the app in-place without data loss.

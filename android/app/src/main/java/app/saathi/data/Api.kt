@@ -126,6 +126,8 @@ object Api {
         val versionCode: Int,
         val versionName: String,
         val apkUrl: String,
+        /** Lowercase hex SHA-256 of the APK; "" when the server didn't send one. */
+        val apkSha256: String,
         val changelog: String,
         val isMandatory: Boolean
     )
@@ -137,17 +139,20 @@ object Api {
             versionCode = latest["versionCode"]?.jsonPrimitive?.intOrNull ?: 0,
             versionName = latest["versionName"]?.jsonPrimitive?.content ?: "",
             apkUrl = latest["apkUrl"]?.jsonPrimitive?.content ?: "",
+            apkSha256 = latest["apkSha256"]?.jsonPrimitive?.content ?: "",
             changelog = latest["changelog"]?.jsonPrimitive?.content ?: "",
             isMandatory = latest["isMandatory"]?.jsonPrimitive?.booleanOrNull ?: false
         )
     }.getOrNull()
 
-    fun latestRelease(): Release? = runCatching {
+    /** Success with null means "no update"; failure means the check itself didn't work (offline, HTTP error). */
+    fun latestRelease(): Result<Release?> = runCatching {
         val req = Request.Builder().url("${BuildConfig.API_URL}/version").build()
         http.newCall(req).execute().use { r ->
-            if (r.isSuccessful) parseRelease(r.body!!.string()) else null
+            if (!r.isSuccessful) throw java.io.IOException("version check failed: HTTP ${r.code}")
+            parseRelease(r.body!!.string())
         }
-    }.getOrNull()
+    }
 
     fun buildTelemetryJson(
         installId: String,

@@ -1,3 +1,5 @@
+> Superseded in parts by the 2026-10-21 fixes; CHANGELOG.md and the design spec are current.
+
 # In-App Updater & Telemetry Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

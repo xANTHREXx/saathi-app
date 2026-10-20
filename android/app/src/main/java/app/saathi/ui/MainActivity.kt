@@ -125,20 +125,6 @@ class MainActivity : ComponentActivity() {
                 var settings by remember { mutableStateOf(Store.settings(this)) }
                 // Set when setup has just finished, so Home can say so once.
                 var justSetUp by remember { mutableStateOf(false) }
-                var availableUpdate by remember { mutableStateOf<app.saathi.data.Api.Release?>(null) }
-
-                LaunchedEffect(Unit) {
-                    if (!TripState.now.onTrip && !TripState.now.alertActive) {
-                        val update = app.saathi.data.AppUpdateManager.checkUpdate(this@MainActivity)
-                        if (update != null) {
-                            availableUpdate = update
-                        }
-                    }
-                }
-
-                availableUpdate?.let { rel ->
-                    UpdateDialog(release = rel, onDismiss = { availableUpdate = null })
-                }
 
                 if (!settings.onboarded) SetupFlow(settings) { s ->
                     Store.save(this, s); settings = s; justSetUp = true; guard(this)
@@ -149,6 +135,8 @@ class MainActivity : ComponentActivity() {
                         settings, onChange = { s -> Store.save(this, s); settings = s },
                         justSetUp = justSetUp, onSetUpShown = { justSetUp = false },
                     )
+                    // Home only: never over setup, a trip, an alert or a check-in.
+                    UpdatePrompt()
                 }
             }
         }

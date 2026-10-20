@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,8 +40,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import app.saathi.BuildConfig
 import app.saathi.alert.AlertManager
 import app.saathi.core.SetupProblem
+import app.saathi.data.Api.Release
+import app.saathi.data.AppUpdateManager
 import app.saathi.data.Settings
 import app.saathi.data.TelemetryManager
 import app.saathi.ui.setup.ContactsEditor
@@ -50,6 +54,7 @@ import app.saathi.ui.setup.ProblemText
 import app.saathi.ui.setup.rememberLivePerms
 import app.saathi.ui.theme.Saathi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val PHRASES = listOf(
     "touched" to "\"This man touched me. He's still here. Please help me.\"",
@@ -230,8 +235,45 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
             }
         }
 
+        SettingsSection("App") { AppSection() }
+
         Spacer(Modifier.height(8.dp))
     }
+}
+
+/** Version, and a manual update check that opens the same dialog as the automatic one. */
+@Composable
+private fun AppSection() {
+    val c = Saathi.colors
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var checking by remember { mutableStateOf(false) }
+    var offered by remember { mutableStateOf<Release?>(null) }
+    // null: not checked yet; true: up to date; false: the check didn't work.
+    var upToDate by remember { mutableStateOf<Boolean?>(null) }
+
+    Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+    FilledTonalButton(
+        onClick = {
+            checking = true
+            upToDate = null
+            scope.launch {
+                AppUpdateManager.checkUpdate(ctx, force = true)
+                    .onSuccess { rel -> offered = rel; upToDate = rel == null }
+                    .onFailure { upToDate = false }
+                checking = false
+            }
+        },
+        enabled = !checking,
+        modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
+    ) { Text(if (checking) "Checking…" else "Check for updates") }
+    when (upToDate) {
+        true -> Text("You're on the latest version.", style = MaterialTheme.typography.bodyMedium, color = c.fg2,
+            modifier = Modifier.padding(top = 8.dp))
+        false -> ProblemText("Couldn't check for updates. Try again later.", Modifier.padding(top = 4.dp))
+        null -> Unit
+    }
+    offered?.let { UpdateDialog(it, onDismiss = { offered = null }) }
 }
 
 /** A titled block: a heading, an optional one-liner in fg2, then the controls 12dp below. */
