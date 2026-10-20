@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.saathi.core.ANYWHERE
 import app.saathi.core.Contact
@@ -87,8 +89,15 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
     var problem by remember { mutableStateOf<SetupProblem?>(null) }
     var problemNonce by remember { mutableIntStateOf(0) }
 
+    // Step 2's live permission state, and the missing permission Continue pointed at.
+    val ctx = LocalContext.current
+    val live = rememberLivePerms()
+    var permProblem by remember { mutableStateOf<Perm?>(null) }
+    var permNonce by remember { mutableIntStateOf(0) }
+    var skipDialog by rememberSaveable { mutableStateOf(false) }
+
     fun raise(p: SetupProblem) { problem = p; problemNonce++ }
-    fun goTo(s: Step) { problem = null; stepIndex = s.ordinal }
+    fun goTo(s: Step) { problem = null; permProblem = null; stepIndex = s.ordinal }
 
     fun continueContacts() {
         when (val r = addPending(contacts, formName, formPhone, ANYWHERE)) {
@@ -99,11 +108,18 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
         goTo(Step.PERMISSIONS)
     }
 
+    fun continuePermissions() {
+        live.refresh()
+        // Read the system again rather than trust what was drawn a moment ago.
+        val missing = firstMissingRequired(readAllPerms(ctx))
+        if (missing == null) goTo(Step.PLACES) else { permProblem = missing; permNonce++ }
+    }
+
     fun finish() = onDone(initial.copy(name = name.trim(), contacts = contacts, places = places, onboarded = true))
 
     fun next() = when (step) {
         Step.CONTACTS -> continueContacts()
-        Step.PERMISSIONS -> goTo(Step.PLACES)
+        Step.PERMISSIONS -> continuePermissions()
         Step.PLACES -> goTo(Step.PRACTICE)
         Step.PRACTICE -> finish()
     }
@@ -158,6 +174,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     formPhone = formPhone, onFormPhoneChange = { formPhone = it },
                     problem = problem, problemNonce = problemNonce, onProblemChange = { p -> if (p == null) problem = null else raise(p) },
                 )
+                Step.PERMISSIONS -> PermissionsStep(
+                    granted = live.granted, onRefresh = live.refresh,
+                    problemPerm = permProblem, problemNonce = permNonce,
+                )
                 else -> Text("This step is being built.", style = MaterialTheme.typography.bodyLarge, color = c.fg2)
             }
         }
@@ -175,6 +195,19 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             if (step == Step.PLACES) {
                 TextButton(onClick = { goTo(Step.PRACTICE) }) { Text("Skip") }
             }
+            if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
+                TextButton(onClick = { skipDialog = true }) { Text("Set up later") }
+            }
         }
+    }
+
+    if (skipDialog && step == Step.PERMISSIONS) {
+        AlertDialog(
+            onDismissRequest = { skipDialog = false },
+            title = { Text("Skip for now?") },
+            text = { Text("Without these, Saathi can't watch trips or send alerts. You can finish this in Settings.") },
+            confirmButton = { TextButton(onClick = { skipDialog = false }) { Text("Go back") } },
+            dismissButton = { TextButton(onClick = { skipDialog = false; goTo(Step.PLACES) }) { Text("Skip anyway") } },
+        )
     }
 }
