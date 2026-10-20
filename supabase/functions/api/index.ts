@@ -2,7 +2,7 @@
 //   supabase functions deploy api --no-verify-jwt
 // (contacts open the live link from an SMS, with no key). Locally without Docker:
 //   STORE=memory SAATHI_SECRET=dev deno run -A supabase/functions/api/index.ts
-import { createClient } from "npm:@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { makeHandler } from "./app.ts";
 import { aiConfig, chat } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
@@ -15,9 +15,14 @@ const env = (k: string) => Deno.env.get(k) || undefined;
 const secret = env("SAATHI_SECRET");
 if (!secret) throw new Error("Set SAATHI_SECRET (supabase secrets set SAATHI_SECRET=...)");
 
+// The server-side key Supabase injects: the new secret key, or the legacy service-role key (retired end of 2026).
+const adminKey = (() => {
+  try { return JSON.parse(env("SUPABASE_SECRET_KEYS") ?? "{}").default as string | undefined; } catch { return undefined; }
+})() ?? env("SUPABASE_SERVICE_ROLE_KEY");
+
 const store = env("STORE") === "memory"
   ? new MemoryStore()
-  : new PgStore(createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } }));
+  : new PgStore(createClient(env("SUPABASE_URL")!, adminKey!, { auth: { persistSession: false } }));
 
 const ai = aiConfig(env);
 const orsKey = env("ORS_API_KEY");
