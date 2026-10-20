@@ -307,3 +307,68 @@ Deno.test("corsPreflight", async () => {
   assertEquals(r.status, 204);
   assertEquals(r.headers.get("access-control-allow-origin"), "*");
 });
+
+Deno.test("versionEndpointReturnsNullWhenNoReleases", async () => {
+  const a = app();
+  const res = await a.call("GET", "/version");
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { latest: null });
+});
+
+Deno.test("versionEndpointReturnsLatestRelease", async () => {
+  const a = app();
+  a.store.releases.push(
+    { version_code: 1, version_name: "0.1", apk_url: "http://x/1.apk", changelog: "first", is_mandatory: false },
+    { version_code: 2, version_name: "0.2", apk_url: "http://x/2.apk", changelog: "second", is_mandatory: true },
+  );
+  const res = await a.call("GET", "/version");
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), {
+    latest: {
+      versionCode: 2,
+      versionName: "0.2",
+      apkUrl: "http://x/2.apk",
+      changelog: "second",
+      isMandatory: true,
+    },
+  });
+});
+
+Deno.test("telemetryEndpointValidatesInstallId", async () => {
+  const a = app();
+  const res = await a.call("POST", "/telemetry", { installId: "", crashes: [], events: [] });
+  assertEquals(res.status, 400);
+});
+
+Deno.test("telemetryEndpointRejectsEmptyBatch", async () => {
+  const a = app();
+  const res = await a.call("POST", "/telemetry", { installId: "uuid-123", crashes: [], events: [] });
+  assertEquals(res.status, 400);
+});
+
+Deno.test("telemetryEndpointStoresCrashesAndEventsWithTruncation", async () => {
+  const a = app();
+  const longTrace = "e".repeat(10000);
+  const res = await a.call("POST", "/telemetry", {
+    installId: "uuid-123",
+    versionCode: 1,
+    versionName: "0.1",
+    osVersion: 34,
+    deviceModel: "Pixel 7",
+    crashes: [
+      { exceptionType: "NullPointerException", message: "boom", stackTrace: longTrace },
+    ],
+    events: [
+      { name: "trip_started", properties: { mode: "cab" } },
+    ],
+  });
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { ok: true, crashes: 1, events: 1 });
+  assertEquals(a.store.crashes.length, 1);
+  assertEquals(a.store.crashes[0].stack_trace.length, 8000);
+  assertEquals(a.store.crashes[0].install_id, "uuid-123");
+  assertEquals(a.store.events.length, 1);
+  assertEquals(a.store.events[0].event_name, "trip_started");
+  assertEquals(a.store.events[0].properties, { mode: "cab" });
+});
+

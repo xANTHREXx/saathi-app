@@ -140,6 +140,64 @@ export function makeHandler(d: Deps) {
         return json({ places: await d.places(q, near) });
       }
 
+      // --- updater & telemetry
+      if (m("GET", /^\/version$/)) {
+        const rel = await d.store.latestRelease();
+        return json({
+          latest: rel ? {
+            versionCode: rel.version_code,
+            versionName: rel.version_name,
+            apkUrl: rel.apk_url,
+            changelog: rel.changelog,
+            isMandatory: rel.is_mandatory,
+          } : null,
+        });
+      }
+
+      if (m("POST", /^\/telemetry$/)) {
+        const b = await body(req);
+        const installId = String(b.installId ?? "").trim().slice(0, 64);
+        if (!installId) return json({ error: "missing installId" }, 400);
+
+        const versionCode = Number(b.versionCode) || 0;
+        const versionName = String(b.versionName ?? "").slice(0, 32);
+        const osVersion = Number(b.osVersion) || 0;
+        const deviceModel = String(b.deviceModel ?? "").slice(0, 64);
+
+        const rawCrashes = Array.isArray(b.crashes) ? b.crashes.slice(0, 50) : [];
+        const rawEvents = Array.isArray(b.events) ? b.events.slice(0, 50) : [];
+
+        if (rawCrashes.length === 0 && rawEvents.length === 0) {
+          return json({ error: "empty telemetry batch" }, 400);
+        }
+
+        for (const c of rawCrashes) {
+          await d.store.addCrash({
+            install_id: installId,
+            version_code: versionCode,
+            version_name: versionName,
+            os_version: osVersion,
+            device_model: deviceModel,
+            exception_type: String(c.exceptionType ?? "Unknown").slice(0, 100),
+            message: c.message ? String(c.message).slice(0, 1000) : null,
+            stack_trace: String(c.stackTrace ?? "").slice(0, 8000),
+            crashed_at: String(c.crashedAt || new Date(now()).toISOString()),
+          });
+        }
+
+        for (const e of rawEvents) {
+          await d.store.addEvent({
+            install_id: installId,
+            version_code: versionCode,
+            event_name: String(e.name ?? "").slice(0, 64),
+            properties: (e.properties && typeof e.properties === "object") ? e.properties as Record<string, unknown> : {},
+            occurred_at: String(e.occurredAt || new Date(now()).toISOString()),
+          });
+        }
+
+        return json({ ok: true, crashes: rawCrashes.length, events: rawEvents.length });
+      }
+
       return json({ error: "not found" }, 404);
     } catch (e) {
       console.error(path, e);
