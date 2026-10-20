@@ -121,4 +121,49 @@ object Api {
             if (r.isSuccessful) Json.parseToJsonElement(r.body!!.string()).jsonObject else null
         }
     }
+
+    data class Release(
+        val versionCode: Int,
+        val versionName: String,
+        val apkUrl: String,
+        val changelog: String,
+        val isMandatory: Boolean
+    )
+
+    fun parseRelease(jsonStr: String): Release? = runCatching {
+        val o = Json.parseToJsonElement(jsonStr).jsonObject
+        val latest = o["latest"]?.let { if (it is kotlinx.serialization.json.JsonNull) null else it.jsonObject } ?: return null
+        Release(
+            versionCode = latest["versionCode"]?.jsonPrimitive?.intOrNull ?: 0,
+            versionName = latest["versionName"]?.jsonPrimitive?.content ?: "",
+            apkUrl = latest["apkUrl"]?.jsonPrimitive?.content ?: "",
+            changelog = latest["changelog"]?.jsonPrimitive?.content ?: "",
+            isMandatory = latest["isMandatory"]?.jsonPrimitive?.booleanOrNull ?: false
+        )
+    }.getOrNull()
+
+    fun latestRelease(): Release? = runCatching {
+        val req = Request.Builder().url("${BuildConfig.API_URL}/version").build()
+        http.newCall(req).execute().use { r ->
+            if (r.isSuccessful) parseRelease(r.body!!.string()) else null
+        }
+    }.getOrNull()
+
+    fun buildTelemetryJson(
+        installId: String,
+        versionCode: Int,
+        versionName: String,
+        osVersion: Int,
+        deviceModel: String,
+        crashesJson: String = "[]",
+        eventsJson: String = "[]"
+    ): String {
+        return """{"installId":${q(installId)},"versionCode":$versionCode,"versionName":${q(versionName)},"osVersion":$osVersion,"deviceModel":${q(deviceModel)},"crashes":$crashesJson,"events":$eventsJson}"""
+    }
+
+    fun postTelemetry(bodyJson: String): Boolean = runCatching {
+        val req = Request.Builder().url("${BuildConfig.API_URL}/telemetry").post(bodyJson.toRequestBody(jsonType)).build()
+        http.newCall(req).execute().use { it.isSuccessful }
+    }.getOrDefault(false)
 }
+
