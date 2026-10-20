@@ -169,6 +169,17 @@ the companion raising the alert on "help".
 - Vehicle history is only useful once many people in a city use Saathi. Until then, most plates show nothing.
 - The emergency step (a call to 112) is simulated.
 
+## Verifying a downloaded APK
+
+Official Saathi releases are signed with this certificate (CN=Saathi, O=Saathi, C=IN):
+
+```
+SHA-256: 0f:ab:b6:f6:b1:f3:24:e5:3f:0b:92:92:80:d0:8f:c2:c0:18:1a:75:b4:83:27:2b:3b:00:28:0b:da:0a:af:08
+```
+
+Check a download with `apksigner verify --print-certs saathi.apk` (Android SDK build-tools). If the digest
+differs, don't install it. The app's updater also refuses any file whose SHA-256 doesn't match the release record.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE). Saathi is a safety aid, not an emergency service: it can fail, and it does
