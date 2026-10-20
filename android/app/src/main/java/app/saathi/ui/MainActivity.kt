@@ -111,6 +111,7 @@ import app.saathi.data.TripRecord
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.trip.UiState
+import app.saathi.ui.setup.SetupFlow
 import app.saathi.ui.theme.PlateText
 import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiMark
@@ -131,7 +132,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SaathiTheme {
                 var settings by remember { mutableStateOf(Store.settings(this)) }
-                if (!settings.onboarded) Onboarding(settings) { s ->
+                if (!settings.onboarded) SetupFlow(settings) { s ->
                     Store.save(this, s); settings = s; guard(this)
                 } else {
                     guard(this)
