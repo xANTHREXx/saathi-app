@@ -7,3 +7,8 @@ local.properties
 node_modules/
 .env
 captures/
+
+# Signing keys never belong in the repo
+*.jks
+*.keystore
+*.p12
