@@ -40,6 +40,10 @@ data class UiState(
     val noRoute: Boolean = false,
     /** About this vehicle, from other Saathi users: shown only to her, as counts. */
     val vehicleNote: String? = null,
+    /** A practice check-in is running or just ended. It never sends anything. */
+    val practice: Boolean = false,
+    /** The practice ran out without an answer. */
+    val practiceOver: Boolean = false,
 )
 
 /** One shared state for the service, the screens, the widget. */

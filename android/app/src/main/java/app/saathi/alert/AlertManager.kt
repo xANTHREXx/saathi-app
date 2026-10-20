@@ -29,6 +29,8 @@ object AlertManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var checkInJob: Job? = null
     private var liveJob: Job? = null
+    private var practiceJob: Job? = null
+    private val practiceLock = Any()
     private lateinit var alarm: Alarm
     private lateinit var recorder: Recorder
     private val alertLog = mutableListOf<String>()
@@ -45,6 +47,7 @@ object AlertManager {
 
     fun startCheckIn(event: TripEvent) {
         if (checkInJob?.isActive == true || TripState.now.alertActive) return
+        endPractice() // a real check-in always wins over a practice
         val ends = System.currentTimeMillis() + CHECKIN_S * 1000
         TripState.update { it.copy(checkInEndsAtMs = ends) }
         alarm.start()
@@ -59,6 +62,7 @@ object AlertManager {
     }
 
     fun raise(reason: Reason, event: TripEvent? = null) {
+        endPractice() // a real alert takes over from a practice; no-op when none is running
         scope.launch(Dispatchers.IO) {
             if (TripState.now.alertActive) return@launch
             TripState.update { it.copy(alertActive = true) }
@@ -88,6 +92,7 @@ object AlertManager {
 
     /** She's okay: stop everything, tell contacts only if an alert went out. */
     fun imOkay() {
+        if (TripState.now.practice) { endPractice(); return } // a practice: nothing was sent, so nothing to take back
         val wasAlert = TripState.now.alertActive
         endCheckIn()
         liveJob?.cancel(); LiveShare.stop()
@@ -98,6 +103,40 @@ object AlertManager {
         if (wasAlert) scope.launch(Dispatchers.IO) {
             val s = Store.settings(app)
             SmsSender.send(app, recipients(s.contacts, TripState.city()), okText(s.name.ifBlank { "She" }))
+        }
+    }
+
+    /** A practice check-in: same alarm, notification and screen as a real one, but silence never texts anyone. */
+    fun startPractice(delayMs: Long) {
+        if (checkInJob?.isActive == true || TripState.now.alertActive || practiceJob?.isActive == true) return
+        TripState.update { it.copy(practice = false, practiceOver = false) }
+        practiceJob = scope.launch {
+            delay(delayMs)
+            synchronized(practiceLock) {
+                if (!isActive) return@launch
+                val ends = System.currentTimeMillis() + CHECKIN_S * 1000
+                TripState.update { it.copy(practice = true, practiceOver = false, checkInEndsAtMs = ends) }
+                alarm.start()
+                Notifier.showCheckIn(app, "Practice")
+            }
+            delay(CHECKIN_S * 1000)
+            synchronized(practiceLock) {
+                if (!isActive || !TripState.now.practice || TripState.now.checkInEndsAtMs == null) return@launch
+                // Ran out unanswered: stop the noise and say so. Deliberately nothing is sent.
+                alarm.stop()
+                Notifier.cancel(app, Notifier.CHECKIN_ID)
+                TripState.update { it.copy(checkInEndsAtMs = null, practiceOver = true) }
+            }
+        }
+    }
+
+    /** Ends a practice (answered, or dismissed afterwards). */
+    fun endPractice() {
+        synchronized(practiceLock) {
+            if (!TripState.now.practice && practiceJob?.isActive != true) return
+            practiceJob?.cancel(); practiceJob = null
+            endCheckIn()
+            TripState.update { it.copy(practice = false, practiceOver = false) }
         }
     }
 

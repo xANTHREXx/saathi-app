@@ -96,6 +96,9 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
     var permNonce by remember { mutableIntStateOf(0) }
     var skipDialog by rememberSaveable { mutableStateOf(false) }
 
+    // Step 4's practice check-in. It lives in AlertManager and never sends anything.
+    val practice = rememberPractice()
+
     fun raise(p: SetupProblem) { problem = p; problemNonce++ }
     fun goTo(s: Step) { problem = null; permProblem = null; stepIndex = s.ordinal }
 
@@ -115,16 +118,26 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
         if (missing == null) goTo(Step.PLACES) else { permProblem = missing; permNonce++ }
     }
 
-    fun finish() = onDone(initial.copy(name = name.trim(), contacts = contacts, places = places, onboarded = true))
+    fun finish() {
+        practice.reset() // clears a practice that ran out unanswered; a no-op otherwise
+        onDone(initial.copy(name = name.trim(), contacts = contacts, places = places, onboarded = true))
+    }
 
     fun next() = when (step) {
         Step.CONTACTS -> continueContacts()
         Step.PERMISSIONS -> continuePermissions()
         Step.PLACES -> goTo(Step.PRACTICE)
-        Step.PRACTICE -> finish()
+        Step.PRACTICE -> when (practice.phase) {
+            PracticePhase.IDLE -> practice.start()
+            PracticePhase.DONE -> finish()
+            else -> Unit // counting down or ringing: the button is disabled
+        }
     }
 
-    fun back() { if (step != Step.CONTACTS) goTo(Step.values()[step.ordinal - 1]) }
+    fun back() {
+        if (step == Step.PRACTICE) practice.reset() // stop a pending practice before leaving
+        if (step != Step.CONTACTS) goTo(Step.values()[step.ordinal - 1])
+    }
 
     BackHandler(enabled = step != Step.CONTACTS) { back() }
 
@@ -179,7 +192,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     problemPerm = permProblem, problemNonce = permNonce,
                 )
                 Step.PLACES -> PlacesStep(places, { places = it })
-                else -> Text("This step is being built.", style = MaterialTheme.typography.bodyLarge, color = c.fg2)
+                Step.PRACTICE -> PracticeStep(practice)
             }
         }
 
@@ -191,10 +204,21 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             Button(
                 onClick = { next() },
                 Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                enabled = step != Step.PRACTICE || practice.phase == PracticePhase.IDLE || practice.phase == PracticePhase.DONE,
                 shape = RoundedCornerShape(20.dp),
-            ) { Text(if (step == Step.PRACTICE) "Finish" else "Continue", style = MaterialTheme.typography.titleMedium) }
+            ) {
+                val label = when {
+                    step != Step.PRACTICE -> "Continue"
+                    practice.phase == PracticePhase.DONE -> "Finish"
+                    else -> "Start practice"
+                }
+                Text(label, style = MaterialTheme.typography.titleMedium)
+            }
             if (step == Step.PLACES) {
                 TextButton(onClick = { goTo(Step.PRACTICE) }) { Text("Skip") }
+            }
+            if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
+                TextButton(onClick = { finish() }) { Text("Skip practice") }
             }
             if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
                 TextButton(onClick = { skipDialog = true }) { Text("Set up later") }

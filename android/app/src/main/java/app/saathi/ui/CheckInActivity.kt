@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,8 +26,10 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,14 +64,14 @@ class CheckInActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         AlertManager.init(this)
-        setContent { SaathiTheme(dark = true) { CheckIn(onOk = { AlertManager.imOkay(); finish() }, onClose = { finish() }) } }
+        setContent { SaathiTheme(dark = true) { CheckIn(onOk = { AlertManager.imOkay(); finish() }, onClose = { finish() }, onDone = { AlertManager.endPractice(); finish() }) } }
     }
 }
 
 private const val WINDOW_S = 10f
 
 @Composable
-private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit) {
+private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
     val s by TripState.ui.collectAsState()
     val c = Saathi.colors
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -80,13 +83,29 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         when {
+            s.practice && s.practiceOver && ends == null -> {
+                Spacer(Modifier.weight(1f))
+                Column(Modifier.padding(horizontal = 6.dp)) {
+                    Text("Practice over", style = MaterialTheme.typography.displaySmall)
+                    Text("On a real trip, your contacts would get a text now with where you are.",
+                        style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp))
+                    Text("Nothing was sent.", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp))
+                }
+                Spacer(Modifier.weight(1f))
+                Button(onDone, Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(20.dp)) {
+                    Text("Done", style = MaterialTheme.typography.titleMedium)
+                }
+            }
             ends != null -> {
                 val leftMs = (ends - now).coerceAtLeast(0)
+                val practice = s.practice
                 val reason = s.events.lastOrNull()?.detail?.replaceFirstChar { it.uppercase() }
                 Column(Modifier.padding(horizontal = 6.dp)) {
-                    reason?.let { Pill(Icons.Rounded.PauseCircle, it, c.alum) }
+                    if (practice) Pill(Icons.Rounded.School, "Practice", c.alum)
+                    else reason?.let { Pill(Icons.Rounded.PauseCircle, it, c.alum) }
                     Text("Are you okay?", style = MaterialTheme.typography.displayLarge, modifier = Modifier.padding(top = 18.dp))
-                    Text("If you don't answer, Saathi will text your contacts with your location.",
+                    Text(if (practice) "This is a practice. Nothing will be sent."
+                        else "If you don't answer, Saathi will text your contacts with your location.",
                         style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp))
                     StalledThread(Modifier.padding(top = 24.dp))
                 }
@@ -94,7 +113,7 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit) {
                 Spacer(Modifier.weight(1f))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Countdown(leftMs / 1000f / WINDOW_S, ((leftMs + 999) / 1000).toInt())
-                    Text("seconds before your contacts get a text", style = MaterialTheme.typography.bodyLarge, color = c.fg2,
+                    Text(if (practice) "seconds left in the practice" else "seconds before your contacts get a text", style = MaterialTheme.typography.bodyLarge, color = c.fg2,
                         modifier = Modifier.padding(top = 14.dp))
                 }
                 Spacer(Modifier.weight(1f))
