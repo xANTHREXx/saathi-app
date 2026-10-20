@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
 import { makeHandler, type Deps } from "./app.ts";
-import { chat, companionTurn, providers, type Gen } from "./ai.ts";
+import { chat, companionTurn, pick, providers, type Gen } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
 import { normPlate, plateKey, toPoint, vehicleSummary } from "./community.ts";
 import { profileFor, route, TRAFFIC_FACTOR } from "./route.ts";
@@ -62,16 +62,52 @@ Deno.test("chatTriesProvidersAndModelsInOrder", async () => {
       : new Response("quota", { status: 429 }));
   }) as typeof fetch;
   const ps = providers((k) => ({ GEMINI_API_KEY: "a", GEMINI_MODELS: "m1,m2", GROQ_API_KEY: "b", GROQ_MODELS: "g1,g2,g3" } as Record<string, string>)[k]);
-  assertEquals(ps.map((p) => p.name), ["gemini", "groq"]);
+  assertEquals(ps.map((p) => p.name), ["groq", "gemini"]);
   const out = await chat(ps, fetcher)("s", "u");
-  assertEquals(tried, ["m1", "m2", "g1", "g2"]);
+  assertEquals(tried, ["g1", "g2"]);
   assertMatch(out, /hi/);
+});
+
+Deno.test("slowModelGetsCompanyAndFastestAnswerWins", async () => {
+  const fetcher = ((_url: string, init: RequestInit) => {
+    const model = JSON.parse(String(init.body)).model;
+    if (model === "slow") {
+      // Never answers; must be cancelled once the other one does.
+      return new Promise<Response>((_, reject) => init.signal!.addEventListener("abort", () => reject(new Error("aborted"))));
+    }
+    return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: '{"reply":"fast","raise_alert":false}' } }] })));
+  }) as typeof fetch;
+  const ps = providers((k) => ({ GROQ_API_KEY: "a", GROQ_MODELS: "slow", GEMINI_API_KEY: "b", GEMINI_MODELS: "quick" } as Record<string, string>)[k]);
+  const t0 = Date.now();
+  const out = await chat(ps, fetcher)("s", "u");
+  assertMatch(out, /fast/);
+  assert(Date.now() - t0 < 6_000);
+});
+
+Deno.test("pickPrefersWhatTheProviderServes", () => {
+  assertEquals(pick(["a", "b", "c"], new Set(["c", "b", "z"])), ["b", "c"]);
+  assertEquals(pick(["a", "b", "c"], new Set(["z"])), ["a", "b"]); // listing knows none: try preferences anyway
+  assertEquals(pick(["a", "b", "c"], null), ["a", "b"]); // listing failed
+});
+
+Deno.test("unpinnedProviderAsksWhichModelsExist", async () => {
+  const tried: string[] = [];
+  const fetcher = ((url: string, init?: RequestInit) => {
+    if (url.endsWith("/models")) {
+      return Promise.resolve(new Response(JSON.stringify({ data: [{ id: "openai/gpt-oss-20b" }, { id: "whisper-large-v3" }] })));
+    }
+    tried.push(JSON.parse(String(init!.body)).model);
+    return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: '{"reply":"ok","raise_alert":false}' } }] })));
+  }) as typeof fetch;
+  const ps = providers((k) => ({ GROQ_API_KEY: "b" } as Record<string, string>)[k]);
+  await chat(ps, fetcher)("s", "u");
+  assertEquals(tried, ["openai/gpt-oss-20b"]);
 });
 
 Deno.test("customProviderGoesFirstOnlyWhenComplete", () => {
   const env = (o: Record<string, string>) => (k: string) => o[k];
   assertEquals(providers(env({ AI_API_KEY: "k", GEMINI_API_KEY: "g" })).map((p) => p.name), ["gemini"]);
-  assertEquals(providers(env({ AI_API_KEY: "k", AI_BASE_URL: "https://x/", AI_MODELS: "m", GEMINI_API_KEY: "g" })).map((p) => p.name), ["custom", "gemini"]);
+  assertEquals(providers(env({ AI_API_KEY: "k", AI_BASE_URL: "https://x/", AI_MODELS: "m", GEMINI_API_KEY: "g", GROQ_API_KEY: "q" })).map((p) => p.name), ["custom", "groq", "gemini"]);
 });
 
 Deno.test("chatWithoutKeysFallsBack", async () => {

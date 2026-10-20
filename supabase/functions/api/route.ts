@@ -31,10 +31,14 @@ export async function route(body: Record<string, unknown>, key: string | undefin
     const r = await fetcher(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: key },
-      body: JSON.stringify({ coordinates: [[from.lng, from.lat], [to.lng, to.lat]] }),
+      // Saved places can sit inside a campus or gated society, far from a public road: snap within 1 km.
+      body: JSON.stringify({ coordinates: [[from.lng, from.lat], [to.lng, to.lat]], radiuses: [1000, 1000] }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!r.ok) return NO_ROUTE;
+    if (!r.ok) {
+      console.warn(`route failed: OpenRouteService ${r.status} ${(await r.text()).slice(0, 200)}`);
+      return NO_ROUTE;
+    }
     const f = (await r.json())?.features?.[0];
     const coords: [number, number][] = f?.geometry?.coordinates ?? [];
     const secs = Number(f?.properties?.summary?.duration);
@@ -43,7 +47,8 @@ export async function route(body: Record<string, unknown>, key: string | undefin
     const points = coords.filter((_, i) => i % step === 0 || i === coords.length - 1).map(([lng, lat]) => ({ lat, lng }));
     const factor = profile === "foot-walking" ? 1 : TRAFFIC_FACTOR;
     return { points, duration_s: Number.isFinite(secs) ? Math.round(secs * factor) : null };
-  } catch {
+  } catch (e) {
+    console.warn("route failed:", String(e));
     return NO_ROUTE;
   }
 }
