@@ -1,6 +1,34 @@
 import type { LiveShare } from "./live.ts";
 import type { PointRow, RideRow } from "./community.ts";
 
+export interface ReleaseRow {
+  version_code: number;
+  version_name: string;
+  apk_url: string;
+  changelog: string;
+  is_mandatory: boolean;
+}
+
+export interface CrashRow {
+  install_id: string;
+  version_code: number;
+  version_name: string;
+  os_version: number;
+  device_model: string;
+  exception_type: string;
+  message: string | null;
+  stack_trace: string;
+  crashed_at: string;
+}
+
+export interface EventRow {
+  install_id: string;
+  version_code: number;
+  event_name: string;
+  properties: Record<string, unknown>;
+  occurred_at: string;
+}
+
 /** Where the backend keeps state. Postgres on Supabase; memory for tests and running locally without Docker. */
 export interface Store {
   getLive(token: string): Promise<LiveShare | null>;
@@ -13,12 +41,18 @@ export interface Store {
   vehicle(plateKey: string, since: number, includeSample: boolean): Promise<{ reports: string[]; rides: string[] }>;
   hasSample(): Promise<boolean>;
   deleteMine(account: string, caseKey: string): Promise<number>;
+  latestRelease(): Promise<ReleaseRow | null>;
+  addCrash(c: CrashRow): Promise<void>;
+  addEvent(e: EventRow): Promise<void>;
 }
 
 export class MemoryStore implements Store {
   live = new Map<string, LiveShare>();
   pts: PointRow[] = [];
   rides: RideRow[] = [];
+  releases: ReleaseRow[] = [];
+  crashes: CrashRow[] = [];
+  events: EventRow[] = [];
 
   getLive(token: string) { return Promise.resolve(this.live.get(token) ?? null); }
   putLive(s: LiveShare) { this.live.set(s.token, s); return Promise.resolve(); }
@@ -38,6 +72,19 @@ export class MemoryStore implements Store {
     this.pts = this.pts.filter(keep);
     this.rides = this.rides.filter(keep);
     return Promise.resolve(before - this.pts.length - this.rides.length);
+  }
+  latestRelease() {
+    if (this.releases.length === 0) return Promise.resolve(null);
+    const sorted = [...this.releases].sort((a, b) => b.version_code - a.version_code);
+    return Promise.resolve(sorted[0]);
+  }
+  addCrash(c: CrashRow) {
+    this.crashes.push(c);
+    return Promise.resolve();
+  }
+  addEvent(e: EventRow) {
+    this.events.push(e);
+    return Promise.resolve();
   }
 }
 
@@ -93,5 +140,22 @@ export class PgStore implements Store {
       n += count ?? 0;
     }
     return n;
+  }
+  async latestRelease() {
+    const r = must(await this.db.from("app_releases").select("version_code,version_name,apk_url,changelog,is_mandatory").order("version_code", { ascending: false }).limit(1).maybeSingle());
+    if (!r) return null;
+    return {
+      version_code: r.version_code,
+      version_name: r.version_name,
+      apk_url: r.apk_url,
+      changelog: r.changelog,
+      is_mandatory: r.is_mandatory,
+    };
+  }
+  async addCrash(c: CrashRow) {
+    must(await this.db.from("app_crashes").insert(c));
+  }
+  async addEvent(e: EventRow) {
+    must(await this.db.from("app_events").insert(e));
   }
 }
