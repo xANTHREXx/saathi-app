@@ -67,6 +67,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -123,7 +124,8 @@ class MainActivity : ComponentActivity() {
                 if (!settings.onboarded) SetupFlow(settings) { s ->
                     Store.save(this, s); settings = s; justSetUp = true; guard(this)
                 } else {
-                    guard(this)
+                    // Once when Home appears, and again if the power-button count changes (the service re-reads it on each start).
+                    LaunchedEffect(settings.powerPresses) { guard(this@MainActivity) }
                     Home(
                         settings, onChange = { s -> Store.save(this, s); settings = s },
                         justSetUp = justSetUp, onSetUpShown = { justSetUp = false },
@@ -184,7 +186,7 @@ private fun Home(settings: Settings, onChange: (Settings) -> Unit, justSetUp: Bo
     ) { pad ->
         Box(Modifier.padding(bottom = pad.calculateBottomPadding())) {
             when (tab) {
-                Tab.TRIP -> TripTab(settings)
+                Tab.TRIP -> TripTab(settings, onChange)
                 Tab.TRIPS -> TripsTab()
                 Tab.SETTINGS -> SettingsScreen(settings, onChange)
             }
@@ -193,7 +195,7 @@ private fun Home(settings: Settings, onChange: (Settings) -> Unit, justSetUp: Bo
 }
 
 @Composable
-private fun TripTab(settings: Settings) {
+private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
     val s by TripState.ui.collectAsState()
     val ctx = LocalContext.current
     var showDemo by remember { mutableStateOf(false) }
@@ -224,7 +226,7 @@ private fun TripTab(settings: Settings) {
                         .background(Saathi.colors.fg3.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
                     if (s.alertActive) ToldBanner(s)
                     if (s.onTrip) OnTrip(s) else Ready()
-                    AfterTrip()
+                    AfterTrip(settings, onChange)
                     if (showDemo) DemoPanel()
                 }
             }
@@ -506,16 +508,33 @@ private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean =
 
 /** After a trip: two taps to log a small thing, so "nothing major" still leaves a trace (RE-7). */
 @Composable
-private fun AfterTrip() {
+private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
     val ctx = LocalContext.current
     val s by TripState.ui.collectAsState()
     val scope = rememberCoroutineScope()
     var refresh by remember { mutableIntStateOf(0) }
     val records = remember(s.onTrip, refresh) { Store.records(ctx) }
-    records.lastOrNull()?.takeIf { it.feltOff == null && !s.onTrip }?.let { last ->
+    val latest = records.lastOrNull()
+    // Asked once, in context, right after she has answered for her first trip.
+    if (!s.onTrip && !settings.consentAsked && latest != null && latest.feltOff != null) {
+        ConsentCard(
+            onYes = {
+                onChange(settings.copy(communityConsent = true, consentAsked = true))
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    if (latest.plate != null) app.saathi.data.Api.ride(ctx, latest.plate, latest.createdAt, latest.caseId)
+                    if (latest.feltOff != "nothing" && latest.lat != null && latest.lng != null) {
+                        app.saathi.data.Api.point(ctx, latest.lat, latest.lng, latest.endedAt ?: latest.createdAt,
+                            latest.feltOff, latest.plate, latest.caseId)
+                    }
+                }
+            },
+            onNo = { onChange(settings.copy(consentAsked = true)) },
+        )
+    }
+    latest?.takeIf { it.feltOff == null && !s.onTrip }?.let { last ->
         FeltOff { kind ->
             Store.saveRecord(ctx, last.copy(feltOff = kind))
-            val consent = Store.settings(ctx).communityConsent
+            val consent = settings.communityConsent
             if (kind != "nothing" && consent && last.lat != null && last.lng != null) {
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     app.saathi.data.Api.point(ctx, last.lat, last.lng, last.endedAt ?: last.createdAt, kind, last.plate, last.caseId)
@@ -524,6 +543,24 @@ private fun AfterTrip() {
             if (kind == "something_happened") ctx.startActivity(Intent(ctx, GuideActivity::class.java)
                 .putExtra(GuideActivity.EXTRA_CASE, last.caseId).putExtra(GuideActivity.EXTRA_KIND, "something happened"))
             refresh++
+        }
+    }
+}
+
+@Composable
+private fun ConsentCard(onYes: () -> Unit, onNo: () -> Unit) {
+    val c = Saathi.colors
+    Column(
+        Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow).border(1.dp, c.hair, MaterialTheme.shapes.large).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Help other women?", style = MaterialTheme.typography.titleMedium)
+        Text("Count this ride anonymously, and add your answer to the community map. Never your name or number. You can change this in Settings.",
+            style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+        Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            FilledTonalButton(onClick = onYes, Modifier.heightIn(min = 48.dp)) { Text("Yes, share") }
+            TextButton(onClick = onNo, Modifier.heightIn(min = 48.dp)) { Text("No thanks") }
         }
     }
 }
