@@ -110,9 +110,9 @@ export function makeHandler(d: Deps) {
       if (m("GET", /^\/community\/vehicle$/)) {
         await ensureSeed();
         const key = await plateKey(d.hmac, url.searchParams.get("plate"));
-        if (!key) return json({ rides: 0, reports: 0, flagged: false });
+        if (!key) return json({ rides: 0, reports: 0, flagged: false, sample: d.sample });
         const v = await d.store.vehicle(key, Math.floor(now() / 1000) - WINDOW, d.sample);
-        return json(vehicleSummary(v.reports, v.rides));
+        return json({ ...vehicleSummary(v.reports, v.rides), sample: d.sample });
       }
       if (m("DELETE", /^\/community\/mine$/)) {
         const ck = await caseKey(d.hmac, device, url.searchParams.get("case"));

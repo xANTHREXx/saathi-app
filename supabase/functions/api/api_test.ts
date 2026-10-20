@@ -27,7 +27,7 @@ function app(over: Partial<Deps> = {}) {
   return { store, call, tick: (ms: number) => (clock += ms) };
 }
 
-// --- companion (ported from server/test/ai.test.js)
+// --- companion (ported from the earlier Express server's tests)
 
 Deno.test("replyNeverSaysSafe", async () => {
   const r = await companionTurn({ text: "hello" }, fakeJson({ reply: "You're safe now, I'm with you.", raise_alert: false }));
@@ -71,7 +71,7 @@ Deno.test("chatWithoutKeyFallsBack", async () => {
   assertEquals(r.raise_alert, true);
 });
 
-// --- community (ported from server/test/core.test.js)
+// --- community (ported from the earlier Express server's tests)
 
 Deno.test("pointRoundsLocationAndHashesPlate", async () => {
   const p = (await toPoint(h, { lat: 12.971234, lng: 77.594987, t: 1760800000, kind: "felt_off", plate: "KA 05 AB 1234" }, "acc1"))!;
@@ -148,10 +148,10 @@ Deno.test("vehicleRidesAndReports", async () => {
   const t = 1_760_800_000 - 86400;
   for (const dev of ["d1", "d2", "d2"]) await a.call("POST", "/community/ride", { plate: "KA05AB1234", t }, dev);
   let v = await (await a.call("GET", "/community/vehicle?plate=ka-05-ab-1234")).json();
-  assertEquals(v, { rides: 2, reports: 0, flagged: false });
+  assertEquals(v, { rides: 2, reports: 0, flagged: false, sample: false });
   for (const dev of ["d1", "d3", "d4"]) await a.call("POST", "/community/point", { lat: 1, lng: 1, t, kind: "alert", plate: "KA05AB1234" }, dev);
   v = await (await a.call("GET", "/community/vehicle?plate=KA05AB1234")).json();
-  assertEquals(v, { rides: 2, reports: 3, flagged: true });
+  assertEquals(v, { rides: 2, reports: 3, flagged: true, sample: false });
 });
 
 Deno.test("oldRidesAndReportsDontCount", async () => {
@@ -161,7 +161,7 @@ Deno.test("oldRidesAndReportsDontCount", async () => {
     await a.call("POST", "/community/point", { lat: 1, lng: 1, t: old, kind: "alert", plate: "KA01AA0001" }, dev);
     await a.call("POST", "/community/ride", { plate: "KA01AA0001", t: old }, dev);
   }
-  assertEquals(await (await a.call("GET", "/community/vehicle?plate=KA01AA0001")).json(), { rides: 0, reports: 0, flagged: false });
+  assertEquals(await (await a.call("GET", "/community/vehicle?plate=KA01AA0001")).json(), { rides: 0, reports: 0, flagged: false, sample: false });
 });
 
 Deno.test("deleteMineRemovesOnlyThatCase", async () => {
@@ -187,7 +187,7 @@ Deno.test("pointsHideSampleUnlessDemo", async () => {
   const v = await (await demo.call("GET", "/community/vehicle?plate=KA05XY9876")).json();
   assertEquals(v.flagged, true);
   const ok = await (await demo.call("GET", "/community/vehicle?plate=KA05AB1234")).json();
-  assertEquals(ok, { rides: 13, reports: 0, flagged: false });
+  assertEquals(ok, { rides: 13, reports: 0, flagged: false, sample: true });
 });
 
 Deno.test("communityWritesNeedDevice", async () => {

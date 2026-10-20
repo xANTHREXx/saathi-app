@@ -66,7 +66,8 @@ moves cities, and her small unreported incidents become shared evidence other wo
   Hindi, English in the demo).
 - Hackathon context: Google Cloud AI Builder Cup 2026, theme Sustainability & Social Impact, judged
   40% technical merit and Gen AI, 25% problem alignment, 25% innovation, 10% UX. Backend on Cloud
-  Run and Firebase; APK via Firebase App Distribution.
+  Run and Firebase; APK via Firebase App Distribution. After the cup (2026-10-20) the backend moved to
+  Supabase so it runs with no billing; the Cloud Run server is in git history before that date.
 
 ## Capabilities and Constraints
 

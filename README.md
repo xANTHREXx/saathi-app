@@ -167,4 +167,3 @@ the companion raising the alert on "help".
   that against real commutes.
 - Vehicle history is only useful once many people in a city use Saathi. Until then, most plates show nothing.
 - The emergency step (a call to 112) is simulated.
-- The `server/` folder holds the earlier Express backend for Cloud Run, kept for reference.
