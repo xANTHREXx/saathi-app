@@ -1,0 +1,13 @@
+# Supabase pauses free projects after 7 days without activity. A ping every 3 days keeps the live link and
+# vehicle history answering. Set the repository variable SAATHI_API to https://<ref>.supabase.co/functions/v1/api
+name: keep backend awake
+on:
+  schedule:
+    - cron: "23 4 */3 * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    if: vars.SAATHI_API != ''
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS "${{ vars.SAATHI_API }}/health"

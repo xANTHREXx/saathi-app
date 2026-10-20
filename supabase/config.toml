@@ -1,0 +1,5 @@
+project_id = "saathi"
+
+[functions.api]
+# Contacts open the live link from an SMS with no Supabase key, so the gateway must not demand one.
+verify_jwt = false
