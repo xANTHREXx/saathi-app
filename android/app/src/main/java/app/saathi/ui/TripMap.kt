@@ -57,6 +57,11 @@ fun TripMap(s: UiState, modifier: Modifier = Modifier) {
                 },
                 update = { map ->
                     map.overlays.clear()
+                    // The route Saathi expects, faint, under what she has actually travelled.
+                    if (s.onTrip && s.route.size > 1) map.overlays += Polyline(map).apply {
+                        setPoints(s.route.map { GeoPoint(it.lat, it.lng) })
+                        outlinePaint.apply { color = (line and 0x00FFFFFF) or 0x55000000; strokeWidth = 10f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+                    }
                     val pts = s.trail.map { GeoPoint(it.lat, it.lng) }
                     if (pts.size > 1) {
                         // A hairline under the route, with the watched stretch stamped in stars on top.

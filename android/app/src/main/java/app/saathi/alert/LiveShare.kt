@@ -21,7 +21,7 @@ object LiveShare {
     /** Returns the page URL, or null when offline or the server is unreachable. */
     fun create(name: String, plate: String?): String? = runCatching {
         val body = """{"name":${q(name)},"plate":${plate?.let { q(it) } ?: "null"}}"""
-        http.newCall(Request.Builder().url("${BuildConfig.BASE_URL}/live").post(body.toRequestBody(jsonType)).build())
+        http.newCall(Request.Builder().url("${BuildConfig.API_URL}/live").post(body.toRequestBody(jsonType)).build())
             .execute().use { r ->
                 if (!r.isSuccessful) return null
                 val o = Json.parseToJsonElement(r.body!!.string()).jsonObject
@@ -35,7 +35,7 @@ object LiveShare {
         runCatching {
             val ev = events.joinToString(",") { q(it) }
             val body = """{"lat":${fix.lat},"lng":${fix.lng},"t":${fix.t},"events":[$ev]}"""
-            http.newCall(Request.Builder().url("${BuildConfig.BASE_URL}/live/$t").post(body.toRequestBody(jsonType)).build())
+            http.newCall(Request.Builder().url("${BuildConfig.API_URL}/live/$t").post(body.toRequestBody(jsonType)).build())
                 .execute().close()
         }
     }

@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import app.saathi.alert.AlertManager
 import app.saathi.core.Plate
 import app.saathi.core.Reason
-import app.saathi.data.Api
+import app.saathi.data.PlateReader
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.ui.theme.PlateText
@@ -64,7 +64,6 @@ import app.saathi.ui.theme.SaathiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 /** Compares the plate on the vehicle in front of her with the one the ride app booked. */
 class PlateCheckActivity : ComponentActivity() {
@@ -90,8 +89,7 @@ class PlateCheckActivity : ComponentActivity() {
             if (bmp == null) return@rememberLauncherForActivityResult
             busy = true
             scope.launch {
-                val jpeg = ByteArrayOutputStream().also { bmp.compress(Bitmap.CompressFormat.JPEG, 90, it) }.toByteArray()
-                val plate = withContext(Dispatchers.IO) { Api.readPlate(jpeg) }
+                val plate = PlateReader.read(bmp)
                 busy = false
                 if (plate != null) seen = plate else note = "Couldn't read the plate. Type it below."
             }

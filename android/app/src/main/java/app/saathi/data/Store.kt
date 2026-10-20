@@ -2,6 +2,7 @@ package app.saathi.data
 
 import android.content.Context
 import app.saathi.core.Contact
+import app.saathi.core.SavedPlace
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -11,7 +12,7 @@ import java.io.File
 data class Settings(
     val name: String = "",
     val contacts: List<Contact> = emptyList(),
-    val homes: Map<String, String> = emptyMap(),
+    val places: List<SavedPlace> = emptyList(),
     val phraseKey: String = "touched",
     val powerPresses: Int = 3,
     val communityConsent: Boolean = false,
@@ -37,6 +38,9 @@ data class TripRecord(
     val lat: Double? = null,
     val lng: Double? = null,
     val endedAt: Long? = null,
+    /** Saved-place labels the trip started at and was headed to, when known. */
+    val from: String? = null,
+    val to: String? = null,
 )
 
 /** Small JSON files in the app's private storage. */

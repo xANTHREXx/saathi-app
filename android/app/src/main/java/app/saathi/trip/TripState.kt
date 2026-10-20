@@ -31,6 +31,13 @@ data class UiState(
     val startedAtMs: Long = 0,
     /** This trip's fixes, newest last, capped, for the map line. */
     val trail: List<Fix> = emptyList(),
+    /** Saved place the trip started at, and where it's headed (guessed or picked). */
+    val fromLabel: String? = null,
+    val destLabel: String? = null,
+    /** The expected route the watcher checks against; empty when unknown. */
+    val route: List<Fix> = emptyList(),
+    /** About this vehicle, from other Saathi users: shown only to her, as counts. */
+    val vehicleNote: String? = null,
 )
 
 /** One shared state for the service, the screens, the widget. */

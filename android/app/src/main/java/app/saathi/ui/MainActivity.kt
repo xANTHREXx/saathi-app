@@ -160,6 +160,7 @@ private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
     val c = Saathi.colors
     var name by remember { mutableStateOf(initial.name) }
     val contacts = remember { mutableStateListOf<Contact>().apply { addAll(initial.contacts) } }
+    val places = remember { mutableStateListOf<app.saathi.core.SavedPlace>().apply { addAll(initial.places) } }
     var cName by remember { mutableStateOf("") }
     var cPhone by remember { mutableStateOf("") }
     var cCity by remember { mutableStateOf("") }
@@ -215,6 +216,10 @@ private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
             }
         }) { Text("Add contact") }
 
+        Section("Places you go often")
+        Hint("Home and work, say. When a trip starts at one, Saathi knows where you're headed and notices a detour or a late arrival. You can skip this; long stops are watched either way.")
+        SavedPlacesEditor(places)
+
         Section("Speak for me")
         listOf("touched" to "\"This man touched me. He's still here. Please help me.\"",
             "following" to "\"This man is following me. Please help me.\"",
@@ -232,7 +237,8 @@ private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
 
         Section("Community")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Add anonymous points to the community map when I report something", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text("Share anonymously: count my rides by vehicle plate, and add a point to the community map when I report something. Never my name or number.",
+                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             Switch(consent, { consent = it })
         }
 
@@ -262,7 +268,8 @@ private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
         Button(
             onClick = {
                 if (name.isBlank() || contacts.isEmpty()) error = "Add your name and at least one contact."
-                else onDone(Settings(name.trim(), contacts.toList(), initial.homes, phrase, presses, consent, onboarded = true))
+                else onDone(initial.copy(name = name.trim(), contacts = contacts.toList(), places = places.toList(), phraseKey = phrase,
+                    powerPresses = presses, communityConsent = consent, onboarded = true))
             },
             Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp),
         ) { Text("Done", style = MaterialTheme.typography.titleMedium) }
@@ -470,6 +477,7 @@ private fun OnTrip(s: UiState) {
                 Text("watched", style = MaterialTheme.typography.labelSmall, color = c.fg2)
             }
         }
+        DestinationRow(s)
         LineDiagram(s, minutes)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (s.plate != null) FilledTonalButton(onClick = {
@@ -662,7 +670,7 @@ private fun AfterTrip() {
             val consent = Store.settings(ctx).communityConsent
             if (kind != "nothing" && consent && last.lat != null && last.lng != null) {
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                    app.saathi.data.Api.point(ctx, last.lat, last.lng, last.endedAt ?: last.createdAt, kind, last.plate)
+                    app.saathi.data.Api.point(ctx, last.lat, last.lng, last.endedAt ?: last.createdAt, kind, last.plate, last.caseId)
                 }
             }
             if (kind == "something_happened") ctx.startActivity(Intent(ctx, GuideActivity::class.java)
@@ -694,7 +702,9 @@ private fun FeltOff(onPick: (String) -> Unit) {
 private fun TripsTab() {
     val ctx = LocalContext.current
     val c = Saathi.colors
-    val records = remember { Store.records(ctx) }
+    var refresh by remember { mutableIntStateOf(0) }
+    val records = remember(refresh) { Store.records(ctx) }
+    val scope = rememberCoroutineScope()
     val day = remember { SimpleDateFormat("EEE d MMM, h:mm a", Locale.ENGLISH) }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -703,14 +713,21 @@ private fun TripsTab() {
         Text("My trips", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp))
         if (records.isEmpty()) Text("Trips Saathi watched will appear here, each with its sealed record.",
             style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(horizontal = 6.dp))
-        records.reversed().forEach { r -> TripCard(r, day.format(Date(r.createdAt * 1000))) {
-            ctx.startActivity(Intent(ctx, GuideActivity::class.java).putExtra(GuideActivity.EXTRA_CASE, r.caseId))
-        } }
+        records.reversed().forEach { r -> TripCard(r, day.format(Date(r.createdAt * 1000)),
+            onGuide = { ctx.startActivity(Intent(ctx, GuideActivity::class.java).putExtra(GuideActivity.EXTRA_CASE, r.caseId)) },
+            onDelete = {
+                // Gone from the phone now; its anonymous community share goes too, when the server can be reached.
+                Store.deleteRecord(ctx, r.caseId)
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) { app.saathi.data.Api.deleteMine(ctx, r.caseId) }
+                refresh++
+            },
+        ) }
     }
 }
 
 @Composable
-private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit) {
+private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit, onDelete: () -> Unit) {
+    var confirm by remember { mutableStateOf(false) }
     val c = Saathi.colors
     Column(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerLow)
@@ -733,7 +750,10 @@ private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit) {
                 Text("${it.name}  ${it.sha256.take(16)}…", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = c.fg2)
             }
         }
-        FilledTonalButton(onClick = onGuide, Modifier.padding(top = 6.dp)) { Text("Reporting options and draft") }
+        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(onClick = onGuide) { Text("Reporting options and draft") }
+            OutlinedButton(onClick = { if (confirm) onDelete() else confirm = true }) { Text(if (confirm) "Tap again to delete" else "Delete") }
+        }
     }
 }
 

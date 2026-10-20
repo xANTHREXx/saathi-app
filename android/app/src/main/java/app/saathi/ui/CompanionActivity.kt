@@ -132,11 +132,14 @@ class CompanionActivity : ComponentActivity() {
 
     private fun send(text: String) {
         lines += "her" to text
-        val fix = TripState.now.lastFix
         val history = lines.toList()
         lifecycleScope.launch {
-            val r = withContext(Dispatchers.IO) { Api.companion(text, lang, fix?.lat, fix?.lng, history) }
-            if (r == null) { offline.value = true; return@launch }
+            val r = withContext(Dispatchers.IO) { Api.companion(text, lang, history) }
+            if (r == null) {
+                offline.value = true
+                if (app.saathi.core.asksForHelp(text)) AlertManager.raise(Reason.COMPANION)
+                return@launch
+            }
             offline.value = false
             lines += "saathi" to r.reply
             say(r.reply)

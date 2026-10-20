@@ -13,72 +13,55 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.saathi.data.Api
+import app.saathi.R
+import app.saathi.core.ComplaintDraft
 import app.saathi.data.Store
-import app.saathi.trip.TripState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
-/** Options for reporting and a draft complaint, with sources. She edits and files it herself. */
+/**
+ * Options for reporting and a draft complaint. The guide is fixed, reviewed text (res/raw/guide_en.txt), not
+ * generated; the draft is filled only from her trip record. She edits and files it herself.
+ */
 class GuideActivity : ComponentActivity() {
     companion object { const val EXTRA_CASE = "case"; const val EXTRA_KIND = "kind" }
-
-    // Shown when the server or the model can't answer. No numbers or legal claims that nobody reviewed.
-    private val offline = """This is information, not legal advice.
-
-YOUR OPTIONS
-• Tell someone close what happened. You don't have to decide anything else today.
-• If it was a ride-app trip, report it in the app's Help or Safety section. Keep your trip record.
-• The police: in India you can ask any police station to register a Zero FIR, even if it happened elsewhere. You can bring someone you trust.
-• A women's helpline in your state can advise you on the next step.
-
-Your trip record below has fingerprints for each piece of evidence, so you can show it wasn't changed."""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val caseId = intent.getStringExtra(EXTRA_CASE)
-        val kind = intent.getStringExtra(EXTRA_KIND) ?: "something happened"
-        val record = Store.records(this).firstOrNull { it.caseId == caseId }
+        val record = Store.records(this).firstOrNull { it.caseId == caseId } ?: Store.records(this).lastOrNull()
+        val guide = resources.openRawResource(R.raw.guide_en).use { it.reader().readText() }.trim()
+        val draft = record?.let { r ->
+            ComplaintDraft.draft(ComplaintDraft.Facts(
+                caseId = r.caseId, startedAt = r.createdAt, endedAt = r.endedAt, mode = r.mode, app = r.app, plate = r.plate,
+                plateCheck = r.plateCheck, events = r.events, lat = r.lat, lng = r.lng,
+                evidence = r.evidence.map { it.name to it.sha256 },
+            ))
+        }
         setContent { app.saathi.ui.theme.SaathiTheme(dark = false) {
-            var text by remember { mutableStateOf<String?>(null) }
-            var sources by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-            LaunchedEffect(Unit) {
-                val g = record?.let { r ->
-                    withContext(Dispatchers.IO) { Api.guide(Json.encodeToString(r), kind, TripState.now.place.state) }
-                }
-                text = g?.markdown ?: offline
-                sources = g?.sources ?: emptyList()
-            }
             Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).systemBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("What you can do next", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D1222))
-                Text(text ?: "Preparing your options…", fontSize = 16.sp, color = Color(0xFF0D1222), lineHeight = 23.sp)
-                if (sources.isNotEmpty()) {
-                    Text("Sources", fontWeight = FontWeight.Bold)
-                    sources.forEach { (t, u) -> Text("$t\n$u", fontSize = 13.sp, color = Color(0xFF2E3F86)) }
+                Text(guide, fontSize = 16.sp, color = Color(0xFF0D1222), lineHeight = 23.sp)
+                if (draft != null) {
+                    Text("Draft complaint", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF0D1222))
+                    SelectionContainer {
+                        Text(draft, fontSize = 14.sp, color = Color(0xFF0D1222), lineHeight = 21.sp, fontFamily = FontFamily.Serif)
+                    }
+                    Button(onClick = {
+                        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Saathi draft", draft))
+                    }, Modifier.fillMaxWidth()) { Text("Copy the draft, to edit and send yourself") }
+                } else {
+                    Text("No trip record yet, so there's no draft. Trips Saathi watches leave one.", fontSize = 14.sp, color = Color(0xFF4D5675))
                 }
-                record?.let { r ->
-                    Text("Trip record ${r.caseId}", fontWeight = FontWeight.Bold)
-                    r.evidence.forEach { Text("${it.name}: ${it.sha256}", fontSize = 12.sp, color = Color(0xFF4D5675)) }
-                }
-                Button(onClick = {
-                    getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Saathi draft", text ?: ""))
-                }, Modifier.fillMaxWidth()) { Text("Copy, to edit and send yourself") }
             }
         } }
     }

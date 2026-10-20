@@ -48,3 +48,15 @@ fun alertText(
 }
 
 fun okText(name: String) = "Saathi: false alarm, $name is fine."
+
+/**
+ * What other Saathi users' rides say about this vehicle, for her only. Counts, never names, and never "safe":
+ * a ride where nothing was reported doesn't prove anything. Reports below the flag threshold aren't shown,
+ * but then it doesn't claim "none" either.
+ * Null when there's nothing to say or the vehicle is flagged (the flag warning covers that).
+ */
+fun vehicleNote(rides: Int, reports: Int, flagged: Boolean, sample: Boolean): String? {
+    if (flagged || rides <= 0) return null
+    val n = if (rides == 1) "1 ride" else "$rides rides"
+    return "$n with Saathi users" + (if (reports == 0) " · none raised a concern" else "") + if (sample) " (Sample data)" else ""
+}

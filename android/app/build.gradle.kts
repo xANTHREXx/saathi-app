@@ -22,8 +22,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1"
-        manifestPlaceholders["MAPS_API_KEY"] = localProps.getProperty("MAPS_API_KEY", "")
-        buildConfigField("String", "BASE_URL", "\"${localProps.getProperty("BASE_URL", "http://10.0.2.2:8080")}\"")
+        // The backend function: https://<ref>.supabase.co/functions/v1/api, or the local Deno server from the emulator.
+        buildConfigField("String", "API_URL", "\"${localProps.getProperty("API_URL", "http://10.0.2.2:8000/api").trimEnd('/')}\"")
     }
 
     buildTypes {
@@ -56,5 +56,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+    // On-phone text recognition for plate photos; the bundled model works offline.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     testImplementation("junit:junit:4.13.2")
 }

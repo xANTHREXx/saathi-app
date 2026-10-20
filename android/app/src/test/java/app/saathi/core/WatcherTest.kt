@@ -80,4 +80,16 @@ class WatcherTest {
         val e = feed(w, stationary(0, 31)).single()
         assertEquals("stopped 5 min", e.detail)
     }
+
+    @Test
+    fun planMidTripTurnsOnRouteChecks() {
+        val eastOffset = 400.0 / (111_320.0 * Math.cos(Math.toRadians(12.9)))
+        val w = Watcher(Mode.CAB, emptyList(), durationS = null, startedAt = 0)
+        val far = (0..7).map { Fix(12.9010 + it * 0.0005, 77.6000 + eastOffset, it * 10L) }
+        assertEquals(0, feed(w, far).size)
+        w.plan(route, durationS = 600, from = 100)
+        val later = (0..7).map { Fix(12.9010 + it * 0.0005, 77.6000 + eastOffset, 100 + it * 10L) }
+        assertEquals(listOf(EventKind.OFF_ROUTE), feed(w, later).map { it.kind })
+        assertEquals(EventKind.LATE, w.add(Fix(12.9170, 77.6000, 100 + 1201))?.kind)
+    }
 }

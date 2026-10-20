@@ -9,9 +9,9 @@ import kotlin.math.roundToInt
  */
 class Watcher(
     private val mode: Mode,
-    private val route: List<Fix>,
-    private val durationS: Long?,
-    private val startedAt: Long,
+    private var route: List<Fix>,
+    private var durationS: Long?,
+    private var startedAt: Long,
 ) {
     private val stopAfterS = if (mode == Mode.BUS || mode == Mode.TRAIN) 600L else 300L
     private val stopRadiusM = 50.0
@@ -32,6 +32,18 @@ class Watcher(
         fired.clear()
         anchor = null
         offSince = null
+    }
+
+    /**
+     * The expected route arrived, or she changed where she's going. Late is counted from [from];
+     * a stop already under way keeps counting.
+     */
+    fun plan(route: List<Fix>, durationS: Long?, from: Long) {
+        this.route = route
+        this.durationS = durationS
+        this.startedAt = from
+        offSince = null
+        fired -= setOf(EventKind.OFF_ROUTE, EventKind.LATE)
     }
 
     private fun longStop(fix: Fix): TripEvent? {

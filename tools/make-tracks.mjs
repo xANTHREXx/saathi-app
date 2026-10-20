@@ -15,9 +15,15 @@ function track(start, legs) {
   return pts;
 }
 // Bengaluru auto: 13 min moving, then a 12 min stop off route at a fuel station, then 8 min home.
-writeFileSync(`${out}/blr-auto.json`, JSON.stringify(track({ lat: 12.9166, lng: 77.6101 }, [
-  { steps: 78, dn: 45, de: 30 }, { steps: 6, de: 100 }, { steps: 72, stop: true }, { steps: 6, de: -100 }, { steps: 48, dn: 50, de: 20 },
+const blrStart = { lat: 12.9166, lng: 77.6101 };
+const blrOut = { steps: 78, dn: 45, de: 30 }, blrHome = { steps: 48, dn: 50, de: 20 };
+writeFileSync(`${out}/blr-auto.json`, JSON.stringify(track(blrStart, [
+  blrOut, { steps: 6, de: 100 }, { steps: 72, stop: true }, { steps: 6, de: -100 }, blrHome,
 ])));
+// The route the app expects for that trip: the same roads without the detour, 21 min of driving plus a little.
+writeFileSync(`${out}/blr-auto.route.json`, JSON.stringify({
+  to: "Home (demo)", duration_s: 1300, points: track(blrStart, [blrOut, blrHome]).map(({ lat, lng }) => ({ lat, lng })),
+}));
 // Pune bus: moving with short stops at bus stops, about 20 min.
 const legs = []; for (let i = 0; i < 8; i++) legs.push({ steps: 12, dn: 40, de: 25 }, { steps: 4, stop: true });
 writeFileSync(`${out}/pune-bus.json`, JSON.stringify(track({ lat: 18.5204, lng: 73.8567 }, legs)));
