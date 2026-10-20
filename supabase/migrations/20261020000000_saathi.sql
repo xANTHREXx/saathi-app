@@ -42,6 +42,9 @@ alter table public.live_shares enable row level security;
 alter table public.community_points enable row level security;
 alter table public.vehicle_rides enable row level security;
 revoke all on public.live_shares, public.community_points, public.vehicle_rides from anon, authenticated;
+-- Explicit, so it works on projects created with "Automatically expose new tables" off (no default grants).
+grant select, insert, update, delete on public.live_shares, public.community_points, public.vehicle_rides to service_role;
+grant usage, select on all sequences in schema public to service_role;
 
 -- Housekeeping: live links die an hour after the last update; ride rows are only counted for 90 days.
 create extension if not exists pg_cron with schema extensions;
