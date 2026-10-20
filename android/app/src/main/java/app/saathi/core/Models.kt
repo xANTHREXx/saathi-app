@@ -17,6 +17,14 @@ data class TripEvent(val kind: EventKind, val detail: String, val at: Long)
 
 /** A place she goes often (home, work, college), set once. Used to guess where a trip is headed. */
 @Serializable
-data class SavedPlace(val label: String, val lat: Double, val lng: Double) {
+data class SavedPlace(
+    val label: String,
+    val lat: Double,
+    val lng: Double,
+    /** The place in words, e.g. "12th Main, Indiranagar, Bengaluru". */
+    val address: String? = null,
+    /** Saved from her current location. */
+    val fromLocation: Boolean = false,
+) {
     val fix get() = Fix(lat, lng, 0)
 }

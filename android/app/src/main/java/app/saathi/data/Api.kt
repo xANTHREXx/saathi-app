@@ -63,6 +63,20 @@ object Api {
         }
     }.getOrNull()
 
+    data class PlaceHit(val label: String, val sub: String, val lat: Double, val lng: Double)
+
+    /** Address suggestions as she types. Empty when offline or nothing matches. */
+    fun places(query: String, near: Fix?): List<PlaceHit> = runCatching {
+        val at = near?.let { "&lat=${it.lat}&lng=${it.lng}" } ?: ""
+        get("/places?q=${URLEncoder.encode(query, "UTF-8")}$at")?.let { o ->
+            o["places"]!!.jsonArray.map { e ->
+                val p = e.jsonObject
+                PlaceHit(p["label"]?.jsonPrimitive?.content ?: "", p["sub"]?.jsonPrimitive?.content ?: "",
+                    p["lat"]!!.jsonPrimitive.double, p["lng"]!!.jsonPrimitive.double)
+            }.filter { it.label.isNotBlank() }
+        }
+    }.getOrNull() ?: emptyList()
+
     data class Reply(val reply: String, val raiseAlert: Boolean)
     data class Pt(val lat: Double, val lng: Double, val band: Int, val kind: String)
 

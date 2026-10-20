@@ -39,7 +39,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.util.Locale
 import java.util.UUID
 
 /**
@@ -181,11 +180,8 @@ class TripService : Service() {
         lastGeocodeMs = now
         scope.launch(Dispatchers.IO) {
             runCatching {
-                @Suppress("DEPRECATION")
-                val a = Geocoder(this@TripService, Locale.ENGLISH).getFromLocation(fix.lat, fix.lng, 1)?.firstOrNull()
-                    ?: return@launch
-                val label = listOfNotNull(a.featureName?.takeIf { f -> f.any { it.isLetter() } && !f.contains("+") }, a.thoroughfare ?: a.subLocality)
-                    .distinct().joinToString(", ").ifBlank { null }
+                val a = Geocode.lookup(this@TripService, fix.lat, fix.lng) ?: return@launch
+                val label = Geocode.shortLabel(a)
                 TripState.update { it.copy(place = Place(a.locality ?: a.subAdminArea, a.adminArea, a.countryCode, label)) }
             }
         }

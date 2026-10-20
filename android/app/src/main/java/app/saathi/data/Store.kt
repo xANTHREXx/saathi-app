@@ -16,6 +16,8 @@ data class Settings(
     val phraseKey: String = "touched",
     val powerPresses: Int = 3,
     val communityConsent: Boolean = false,
+    /** Whether she has been asked about community sharing. */
+    val consentAsked: Boolean = false,
     val onboarded: Boolean = false,
 )
 
