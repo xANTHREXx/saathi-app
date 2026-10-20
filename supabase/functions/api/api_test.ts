@@ -25,7 +25,9 @@ function app(over: Partial<Deps> = {}) {
       method, headers: { "content-type": "application/json", "x-saathi-device": device },
       body: body === undefined ? undefined : JSON.stringify(body),
     }));
-  return { store, call, tick: (ms: number) => (clock += ms) };
+  const raw = (path: string, text: string) =>
+    handle(new Request(`http://x/functions/v1/api${path}`, { method: "POST", body: text }));
+  return { store, call, raw, tick: (ms: number) => (clock += ms) };
 }
 
 // --- companion (ported from the earlier Express server's tests)
@@ -318,8 +320,8 @@ Deno.test("versionEndpointReturnsNullWhenNoReleases", async () => {
 Deno.test("versionEndpointReturnsLatestRelease", async () => {
   const a = app();
   a.store.releases.push(
-    { version_code: 1, version_name: "0.1", apk_url: "http://x/1.apk", changelog: "first", is_mandatory: false },
-    { version_code: 2, version_name: "0.2", apk_url: "http://x/2.apk", changelog: "second", is_mandatory: true },
+    { version_code: 1, version_name: "0.1", apk_url: "https://x/1.apk", apk_sha256: "1".repeat(64), changelog: "first", is_mandatory: false },
+    { version_code: 2, version_name: "0.2", apk_url: "https://x/2.apk", apk_sha256: "ab".repeat(32), changelog: "second", is_mandatory: true },
   );
   const res = await a.call("GET", "/version");
   assertEquals(res.status, 200);
@@ -327,30 +329,162 @@ Deno.test("versionEndpointReturnsLatestRelease", async () => {
     latest: {
       versionCode: 2,
       versionName: "0.2",
-      apkUrl: "http://x/2.apk",
+      apkUrl: "https://x/2.apk",
+      apkSha256: "ab".repeat(32),
       changelog: "second",
       isMandatory: true,
     },
   });
 });
 
+const IID = "123e4567-e89b-42d3-a456-426614174000";
+const CLOCK = 1_760_800_000_000; // the app() helper's fixed clock
+const HOUR_MS = 3_600_000;
+const startOfHour = (ms: number) => new Date(Math.floor(ms / HOUR_MS) * HOUR_MS).toISOString();
+const ev = (over: Record<string, unknown> = {}) => ({ name: "trip_started", ...over });
+
 Deno.test("telemetryEndpointValidatesInstallId", async () => {
   const a = app();
-  const res = await a.call("POST", "/telemetry", { installId: "", crashes: [], events: [] });
-  assertEquals(res.status, 400);
+  for (const installId of ["", "uuid-123", "ABCDEFAB-e89b-42d3-a456-426614174000", `${IID}0`, 42, undefined]) {
+    const res = await a.call("POST", "/telemetry", { installId, crashes: [], events: [ev()] });
+    assertEquals(res.status, 400, String(installId));
+  }
+  assertEquals(a.store.events.length, 0);
 });
 
-Deno.test("telemetryEndpointRejectsEmptyBatch", async () => {
+Deno.test("telemetryRejectsBadJson", async () => {
   const a = app();
-  const res = await a.call("POST", "/telemetry", { installId: "uuid-123", crashes: [], events: [] });
-  assertEquals(res.status, 400);
+  const send = (body: string) => a.raw("/telemetry", body);
+  assertEquals((await send("{not json")).status, 400);
+  assertEquals((await send("[1,2]")).status, 400);
+  assertEquals((await send("null")).status, 400);
+});
+
+Deno.test("telemetryRejectsOversizedBodyWith413", async () => {
+  const a = app();
+  const res = await a.call("POST", "/telemetry", { installId: IID, events: [ev()], pad: "x".repeat(64_000) });
+  assertEquals(res.status, 413);
+  assertEquals(await res.json(), { error: "too large" });
+  assertEquals(a.store.events.length, 0);
+});
+
+Deno.test("telemetryJunkOnlyBatchIs200WithZeroCounts", async () => {
+  const a = app();
+  const res = await a.call("POST", "/telemetry", {
+    installId: IID,
+    crashes: ["nope", null, 5],
+    events: [ev({ name: "sos_triggered" }), ev({ name: 5 }), "x", null, {}],
+  });
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { ok: true, crashes: 0, events: 0 });
+  const empty = await a.call("POST", "/telemetry", { installId: IID, crashes: [], events: [] });
+  assertEquals(empty.status, 200);
+  assertEquals(await empty.json(), { ok: true, crashes: 0, events: 0 });
+  assertEquals(a.store.crashes.length + a.store.events.length, 0);
+});
+
+Deno.test("telemetryDropsUnknownEventsAndKeepsAllowlisted", async () => {
+  const a = app();
+  const names = ["trip_started", "checkin_triggered", "checkin_answered", "checkin_timed_out", "plate_scanned", "alert_sent", "update_prompted", "update_completed"];
+  const res = await a.call("POST", "/telemetry", { installId: IID, events: [...names.map((name) => ev({ name })), ev({ name: "checkin_responded" }), ev({ name: "pwn" })] });
+  assertEquals(await res.json(), { ok: true, crashes: 0, events: 8 });
+  assertEquals(a.store.events.map((e) => e.event_name), names);
+});
+
+Deno.test("telemetryCapsEventsAt50AndCrashesAt20", async () => {
+  const a = app();
+  const res = await a.call("POST", "/telemetry", {
+    installId: IID,
+    events: Array.from({ length: 80 }, () => ev()),
+    crashes: Array.from({ length: 30 }, () => ({ exceptionType: "E", stackTrace: "s" })),
+  });
+  assertEquals(await res.json(), { ok: true, crashes: 20, events: 50 });
+});
+
+Deno.test("telemetryPropertyRules", async () => {
+  const a = app();
+  const many = Object.fromEntries("abcdefghijkl".split("").map((c, i) => [`key_${c}`, i]));
+  const props = {
+    ok_bool: true,
+    ok_num: 3.5,
+    ok_str: "  cab  ",
+    long_str: "x".repeat(100),
+    nested: { a: 1 },
+    list: [1, 2],
+    nothing: null,
+    inf: 1e999, // JSON turns this into null
+    BadKey: "dropped",
+    "has space": "dropped",
+    ["k".repeat(33)]: "dropped",
+  };
+  await a.call("POST", "/telemetry", { installId: IID, events: [ev({ properties: props }), ev({ properties: many }), ev({ properties: "str" }), ev({ properties: [1] })] });
+  assertEquals(a.store.events.length, 4);
+  assertEquals(a.store.events[0].properties, { ok_bool: true, ok_num: 3.5, ok_str: "cab", long_str: "x".repeat(40) });
+  assertEquals(Object.keys(a.store.events[1].properties).length, 8);
+  assertEquals(a.store.events[2].properties, {});
+  assertEquals(a.store.events[3].properties, {});
+});
+
+Deno.test("telemetryTimestampsAreTruncatedToTheHour", async () => {
+  const a = app();
+  const t = new Date(CLOCK - 5 * HOUR_MS - 123_456).toISOString(); // not on the hour
+  await a.call("POST", "/telemetry", {
+    installId: IID,
+    events: [ev({ occurredAt: t })],
+    crashes: [{ exceptionType: "E", stackTrace: "s", crashedAt: t }],
+  });
+  const want = startOfHour(CLOCK - 5 * HOUR_MS - 123_456);
+  assertEquals(a.store.events[0].occurred_at, want);
+  assertEquals(a.store.crashes[0].crashed_at, want);
+  assertMatch(want, /:00:00\.000Z$/);
+});
+
+Deno.test("telemetryReplacesInvalidFutureAndAncientTimestampsWithNow", async () => {
+  const a = app();
+  const now = startOfHour(CLOCK);
+  const bad: unknown[] = [
+    "not a date", undefined, null, {},
+    new Date(CLOCK + 2 * 86_400_000).toISOString(),
+    new Date(CLOCK - 31 * 86_400_000).toISOString(),
+  ];
+  await a.call("POST", "/telemetry", {
+    installId: IID,
+    events: bad.map((occurredAt) => ev({ occurredAt })),
+    crashes: bad.map((crashedAt) => ({ exceptionType: "E", stackTrace: "s", crashedAt })),
+  });
+  assertEquals(a.store.events.length, bad.length);
+  assertEquals(a.store.crashes.length, bad.length);
+  for (const e of a.store.events) assertEquals(e.occurred_at, now);
+  for (const c of a.store.crashes) assertEquals(c.crashed_at, now);
+  // Edges that are still accepted: just under 1 day ahead, just under 30 days old.
+  const b = app();
+  await b.call("POST", "/telemetry", {
+    installId: IID,
+    events: [ev({ occurredAt: new Date(CLOCK + 86_400_000 - HOUR_MS).toISOString() }), ev({ occurredAt: new Date(CLOCK - 29 * 86_400_000).toISOString() })],
+  });
+  assertEquals(b.store.events.map((e) => e.occurred_at), [startOfHour(CLOCK + 86_400_000 - HOUR_MS), startOfHour(CLOCK - 29 * 86_400_000)]);
+});
+
+Deno.test("telemetryScrubsCrashMessageAndStackTrace", async () => {
+  const a = app();
+  await a.call("POST", "/telemetry", {
+    installId: IID,
+    crashes: [{
+      exceptionType: "IllegalStateException",
+      message: "bad contact +91 98765 43210 for riya@example.com near 12.97167,77.59456",
+      stackTrace: "java.lang.IllegalStateException: call 9876543210\n\tat app.saathi.ui.MainActivity.onCreate(MainActivity.kt:123)",
+    }],
+  });
+  const c = a.store.crashes[0];
+  assertEquals(c.message, "bad contact [number] for [email] near [place]");
+  assertEquals(c.stack_trace, "java.lang.IllegalStateException: call [number]\n\tat app.saathi.ui.MainActivity.onCreate(MainActivity.kt:123)");
 });
 
 Deno.test("telemetryEndpointStoresCrashesAndEventsWithTruncation", async () => {
   const a = app();
   const longTrace = "e".repeat(10000);
   const res = await a.call("POST", "/telemetry", {
-    installId: "uuid-123",
+    installId: IID,
     versionCode: 1,
     versionName: "0.1",
     osVersion: 34,
@@ -366,7 +500,7 @@ Deno.test("telemetryEndpointStoresCrashesAndEventsWithTruncation", async () => {
   assertEquals(await res.json(), { ok: true, crashes: 1, events: 1 });
   assertEquals(a.store.crashes.length, 1);
   assertEquals(a.store.crashes[0].stack_trace.length, 8000);
-  assertEquals(a.store.crashes[0].install_id, "uuid-123");
+  assertEquals(a.store.crashes[0].install_id, IID);
   assertEquals(a.store.events.length, 1);
   assertEquals(a.store.events[0].event_name, "trip_started");
   assertEquals(a.store.events[0].properties, { mode: "cab" });

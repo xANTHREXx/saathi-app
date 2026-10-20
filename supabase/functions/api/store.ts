@@ -5,6 +5,7 @@ export interface ReleaseRow {
   version_code: number;
   version_name: string;
   apk_url: string;
+  apk_sha256: string;
   changelog: string;
   is_mandatory: boolean;
 }
@@ -42,8 +43,8 @@ export interface Store {
   hasSample(): Promise<boolean>;
   deleteMine(account: string, caseKey: string): Promise<number>;
   latestRelease(): Promise<ReleaseRow | null>;
-  addCrash(c: CrashRow): Promise<void>;
-  addEvent(e: EventRow): Promise<void>;
+  addCrashes(rows: CrashRow[]): Promise<void>;
+  addEvents(rows: EventRow[]): Promise<void>;
 }
 
 export class MemoryStore implements Store {
@@ -78,12 +79,12 @@ export class MemoryStore implements Store {
     const sorted = [...this.releases].sort((a, b) => b.version_code - a.version_code);
     return Promise.resolve(sorted[0]);
   }
-  addCrash(c: CrashRow) {
-    this.crashes.push(c);
+  addCrashes(rows: CrashRow[]) {
+    this.crashes.push(...rows);
     return Promise.resolve();
   }
-  addEvent(e: EventRow) {
-    this.events.push(e);
+  addEvents(rows: EventRow[]) {
+    this.events.push(...rows);
     return Promise.resolve();
   }
 }
@@ -142,20 +143,23 @@ export class PgStore implements Store {
     return n;
   }
   async latestRelease() {
-    const r = must(await this.db.from("app_releases").select("version_code,version_name,apk_url,changelog,is_mandatory").order("version_code", { ascending: false }).limit(1).maybeSingle());
+    const r = must(await this.db.from("app_releases").select("version_code,version_name,apk_url,apk_sha256,changelog,is_mandatory").order("version_code", { ascending: false }).limit(1).maybeSingle());
     if (!r) return null;
     return {
       version_code: r.version_code,
       version_name: r.version_name,
       apk_url: r.apk_url,
+      apk_sha256: r.apk_sha256,
       changelog: r.changelog,
       is_mandatory: r.is_mandatory,
     };
   }
-  async addCrash(c: CrashRow) {
-    must(await this.db.from("app_crashes").insert(c));
+  async addCrashes(rows: CrashRow[]) {
+    if (rows.length === 0) return;
+    must(await this.db.from("app_crashes").insert(rows));
   }
-  async addEvent(e: EventRow) {
-    must(await this.db.from("app_events").insert(e));
+  async addEvents(rows: EventRow[]) {
+    if (rows.length === 0) return;
+    must(await this.db.from("app_events").insert(rows));
   }
 }

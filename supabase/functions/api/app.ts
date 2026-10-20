@@ -5,6 +5,7 @@ import { companionTurn, type Gen } from "./ai.ts";
 import type { PlaceHit } from "./places.ts";
 import type { Route } from "./route.ts";
 import { seedRows } from "./seed.ts";
+import { scrub } from "./scrub.ts";
 import type { Store } from "./store.ts";
 
 export interface Deps {
@@ -36,6 +37,48 @@ async function body(req: Request): Promise<Record<string, unknown>> {
   } catch {
     return {};
   }
+}
+
+// --- telemetry validation: anonymous, coarse, bounded
+
+const TELEMETRY_MAX_BODY = 64_000;
+const MAX_EVENTS = 50, MAX_CRASHES = 20, MAX_PROPS = 8;
+const HOUR = 3_600_000, DAY = 86_400_000;
+const INSTALL_ID = /^[0-9a-f-]{36}$/;
+const PROP_KEY = /^[a-z_]{1,32}$/;
+const EVENT_NAMES = new Set([
+  "trip_started", "checkin_triggered", "checkin_answered", "checkin_timed_out",
+  "plate_scanned", "alert_sent", "update_prompted", "update_completed",
+]);
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+/** Cut, scrub, cut again: the first cut bounds the work scrub does, the second keeps the stored size within the limit. */
+const clean = (v: unknown, max: number) => scrub(String(v).slice(0, max)).slice(0, max);
+const int32 = (v: unknown) => {
+  const n = Math.trunc(Number(v));
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), 2_147_483_647) : 0;
+};
+
+/** Hour-granularity UTC time. Invalid, >1 day ahead or >30 days old falls back to `nowMs`. */
+function hourOf(v: unknown, nowMs: number): string {
+  let t = typeof v === "string" || typeof v === "number" ? new Date(v).getTime() : NaN;
+  if (!Number.isFinite(t) || t > nowMs + DAY || t < nowMs - 30 * DAY) t = nowMs;
+  return new Date(Math.floor(t / HOUR) * HOUR).toISOString();
+}
+
+function cleanProps(v: unknown): Record<string, boolean | number | string> {
+  const out: Record<string, boolean | number | string> = {};
+  if (!isObj(v)) return out;
+  let n = 0;
+  for (const [k, val] of Object.entries(v)) {
+    if (n >= MAX_PROPS) break;
+    if (!PROP_KEY.test(k) || k === "__proto__") continue;
+    if (typeof val === "boolean" || (typeof val === "number" && Number.isFinite(val))) out[k] = val;
+    else if (typeof val === "string") out[k] = val.trim().slice(0, 40);
+    else continue;
+    n++;
+  }
+  return out;
 }
 
 /** The whole API as one handler. Paths match the old Express server, so the app keeps its calls. */
@@ -148,6 +191,7 @@ export function makeHandler(d: Deps) {
             versionCode: rel.version_code,
             versionName: rel.version_name,
             apkUrl: rel.apk_url,
+            apkSha256: rel.apk_sha256,
             changelog: rel.changelog,
             isMandatory: rel.is_mandatory,
           } : null,
@@ -155,47 +199,47 @@ export function makeHandler(d: Deps) {
       }
 
       if (m("POST", /^\/telemetry$/)) {
-        const b = await body(req);
-        const installId = String(b.installId ?? "").trim().slice(0, 64);
-        if (!installId) return json({ error: "missing installId" }, 400);
+        const text = await req.text();
+        if (text.length > TELEMETRY_MAX_BODY) return json({ error: "too large" }, 413);
+        let b: unknown;
+        try { b = JSON.parse(text); } catch { return json({ error: "bad json" }, 400); }
+        if (!isObj(b)) return json({ error: "bad json" }, 400);
 
-        const versionCode = Number(b.versionCode) || 0;
+        const installId = typeof b.installId === "string" ? b.installId : "";
+        if (!INSTALL_ID.test(installId)) return json({ error: "bad installId" }, 400);
+
+        const nowMs = now();
+        const versionCode = int32(b.versionCode);
         const versionName = String(b.versionName ?? "").slice(0, 32);
-        const osVersion = Number(b.osVersion) || 0;
+        const osVersion = int32(b.osVersion);
         const deviceModel = String(b.deviceModel ?? "").slice(0, 64);
 
-        const rawCrashes = Array.isArray(b.crashes) ? b.crashes.slice(0, 50) : [];
-        const rawEvents = Array.isArray(b.events) ? b.events.slice(0, 50) : [];
+        const crashes = (Array.isArray(b.crashes) ? b.crashes.slice(0, MAX_CRASHES) : []).filter(isObj).map((c) => ({
+          install_id: installId,
+          version_code: versionCode,
+          version_name: versionName,
+          os_version: osVersion,
+          device_model: deviceModel,
+          exception_type: String(c.exceptionType ?? "Unknown").slice(0, 100),
+          message: c.message ? clean(c.message, 500) : null,
+          stack_trace: clean(c.stackTrace ?? "", 8000),
+          crashed_at: hourOf(c.crashedAt, nowMs),
+        }));
 
-        if (rawCrashes.length === 0 && rawEvents.length === 0) {
-          return json({ error: "empty telemetry batch" }, 400);
-        }
-
-        for (const c of rawCrashes) {
-          await d.store.addCrash({
+        const events = (Array.isArray(b.events) ? b.events.slice(0, MAX_EVENTS) : [])
+          .filter((e): e is Record<string, unknown> => isObj(e) && typeof e.name === "string" && EVENT_NAMES.has(e.name))
+          .map((e) => ({
             install_id: installId,
             version_code: versionCode,
-            version_name: versionName,
-            os_version: osVersion,
-            device_model: deviceModel,
-            exception_type: String(c.exceptionType ?? "Unknown").slice(0, 100),
-            message: c.message ? String(c.message).slice(0, 1000) : null,
-            stack_trace: String(c.stackTrace ?? "").slice(0, 8000),
-            crashed_at: String(c.crashedAt || new Date(now()).toISOString()),
-          });
-        }
+            event_name: e.name as string,
+            properties: cleanProps(e.properties),
+            occurred_at: hourOf(e.occurredAt, nowMs),
+          }));
 
-        for (const e of rawEvents) {
-          await d.store.addEvent({
-            install_id: installId,
-            version_code: versionCode,
-            event_name: String(e.name ?? "").slice(0, 64),
-            properties: (e.properties && typeof e.properties === "object") ? e.properties as Record<string, unknown> : {},
-            occurred_at: String(e.occurredAt || new Date(now()).toISOString()),
-          });
-        }
-
-        return json({ ok: true, crashes: rawCrashes.length, events: rawEvents.length });
+        // Junk-only batches still get a 200 so clients don't retry them forever.
+        if (crashes.length) await d.store.addCrashes(crashes);
+        if (events.length) await d.store.addEvents(events);
+        return json({ ok: true, crashes: crashes.length, events: events.length });
       }
 
       return json({ error: "not found" }, 404);

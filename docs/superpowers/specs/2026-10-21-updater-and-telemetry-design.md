@@ -67,7 +67,8 @@ when publishing a new version. The app reads the latest row to decide whether to
 create table public.app_releases (
   version_code   integer primary key,
   version_name   text    not null,            -- e.g. '0.2'
-  apk_url        text    not null,            -- GitHub Releases download URL
+  apk_url        text    not null check (apk_url like 'https://%'), -- GitHub Releases download URL
+  apk_sha256     text    not null check (apk_sha256 ~ '^[0-9a-f]{64}$'), -- lowercase hex SHA-256 of the APK file
   changelog      text    not null default '', -- shown in the update dialog
   is_mandatory   boolean not null default false,
   created_at     timestamptz not null default now()
@@ -132,10 +133,19 @@ Prevents unbounded growth. Follows the same pattern as Saathi's existing `saathi
 and `saathi-rides-cleanup` cron jobs.
 
 ```sql
-select cron.schedule('saathi-events-cleanup', '23 3 * * *',
-  $$delete from public.app_events where received_at < now() - interval '30 days'$$);
-select cron.schedule('saathi-crashes-cleanup', '29 3 * * *',
-  $$delete from public.app_crashes where received_at < now() - interval '60 days'$$);
+-- inside a do-block guarded by `exists (select 1 from pg_extension where extname = 'pg_cron')`
+-- and an `exception when others` for the no-pg_cron case; unschedule only jobs that exist
+-- (cron.unschedule raises for unknown jobs), so re-running the migration stays safe.
+if exists (select 1 from cron.job where jobname = 'saathi-events-cleanup') then
+  perform cron.unschedule('saathi-events-cleanup');
+end if;
+if exists (select 1 from cron.job where jobname = 'saathi-crashes-cleanup') then
+  perform cron.unschedule('saathi-crashes-cleanup');
+end if;
+perform cron.schedule('saathi-events-cleanup', '23 3 * * *',
+  'delete from public.app_events where received_at < now() - interval ''30 days''');
+perform cron.schedule('saathi-crashes-cleanup', '29 3 * * *',
+  'delete from public.app_crashes where received_at < now() - interval ''60 days''');
 ```
 
 ## 4. Edge Function Endpoints
@@ -154,11 +164,15 @@ Returns the latest release row. The Android app calls this on launch to check fo
     "versionCode": 2,
     "versionName": "0.2",
     "apkUrl": "https://github.com/xANTHREXx/saathi-app/releases/download/v0.2/saathi.apk",
+    "apkSha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
     "changelog": "Detour checks are smoother; fixed plate scan on Samsung.",
     "isMandatory": false
   }
 }
 ```
+
+`apkSha256` is the lowercase hex SHA-256 of the APK. The client verifies the downloaded file
+against it before launching the installer.
 
 If no releases exist yet, returns `{ "latest": null }`.
 
@@ -198,13 +212,29 @@ locally and flushes periodically.
 
 **Response** (200): `{ "ok": true, "crashes": 1, "events": 1 }`
 
-**Validation:**
-- `installId` required, max 64 chars.
-- `crashes` and `events` are optional arrays; at least one must be present.
-- Each array is capped at 50 items per request to prevent abuse.
-- `stackTrace` is truncated to 8,000 chars server-side.
+**Validation and sanitising** (all server-side; the database is free-tier and the data must not
+let anyone reconstruct where or when someone travels):
+- The raw body is read as text first. Longer than 64,000 characters: `413 {"error":"too large"}`,
+  not parsed. Invalid JSON, or JSON that is not an object: `400`.
+- `installId` must match `^[0-9a-f-]{36}$` (a UUID), else `400`.
+- `crashes` and `events` are optional arrays. At most 20 crashes and 50 events are kept.
+- Events whose `name` is not in the allowlist are dropped: `trip_started`, `checkin_triggered`,
+  `checkin_answered`, `checkin_timed_out`, `plate_scanned`, `alert_sent`, `update_prompted`,
+  `update_completed`.
+- Event properties: at most 8 keys; key must match `^[a-z_]{1,32}$`; value must be a boolean,
+  a finite number, or a string (trimmed, cut to 40 chars). Anything else is dropped.
+- Crashes: `exceptionType` at most 100 chars, `message` at most 500, `stackTrace` at most 8,000.
+  `message` and `stackTrace` are passed through `scrub()` (`scrub.ts`): runs of 6+ digits (spaces,
+  dashes and a leading `+` allowed) become `[number]`, emails `[email]`, coordinate pairs with
+  4+ decimals `[place]`. Stack-frame line numbers such as `MainActivity.kt:123` are kept.
+- Timestamps (`occurredAt`, `crashedAt`) are parsed as dates. Invalid, more than 1 day in the
+  future, or older than 30 days: replaced by the server's current time. The result is truncated
+  to the start of the hour (UTC) and stored as an ISO string. Hour granularity is all we keep.
+- If nothing valid remains the response is `200 {"ok":true,"crashes":0,"events":0}` (not 400), so
+  clients do not retry junk forever. Counts in the response are rows actually stored.
 
-**Implementation:** Loops and inserts rows via `store.addCrash()` / `store.addEvent()`.
+**Implementation:** one batched insert per table via `store.addCrashes(rows)` /
+`store.addEvents(rows)`; each call is skipped when its array is empty.
 
 ## 5. Store Interface Changes
 
@@ -213,14 +243,15 @@ New methods added to the `Store` interface in `store.ts`:
 ```typescript
 // In the Store interface:
 latestRelease(): Promise<ReleaseRow | null>;
-addCrash(c: CrashRow): Promise<void>;
-addEvent(e: EventRow): Promise<void>;
+addCrashes(rows: CrashRow[]): Promise<void>; // single insert call in PgStore
+addEvents(rows: EventRow[]): Promise<void>;  // single insert call in PgStore
 
 // Types:
 interface ReleaseRow {
   version_code: number;
   version_name: string;
   apk_url: string;
+  apk_sha256: string;
   changelog: string;
   is_mandatory: boolean;
 }
@@ -233,14 +264,14 @@ interface CrashRow {
   exception_type: string;
   message: string | null;
   stack_trace: string;
-  crashed_at: string; // ISO timestamp
+  crashed_at: string; // ISO timestamp, truncated to the hour (UTC)
 }
 interface EventRow {
   install_id: string;
   version_code: number;
   event_name: string;
   properties: Record<string, unknown>;
-  occurred_at: string; // ISO timestamp
+  occurred_at: string; // ISO timestamp, truncated to the hour (UTC)
 }
 ```
 
@@ -352,18 +383,16 @@ file on a 200 response.
 **Usage:** Call `TelemetryManager.track(ctx, "event_name", properties)` at key points in the
 existing code. Fire-and-forget; never blocks the caller.
 
-**Key events to instrument:**
+**Key events to instrument** (the server only accepts this allowlist; other names are dropped):
 
 | Event | Where instrumented | Properties |
 |-------|-------------------|------------|
 | `trip_started` | `TripService.startTrip()` | `mode`, `app` (Uber/Ola/Rapido/manual), `auto_detected` |
 | `plate_scanned` | `PlateCheckActivity` result | `success`, `duration_ms` |
 | `checkin_triggered` | `TripService` watcher callback | `reason` (detour/long_stop/late_arrival) |
-| `checkin_responded` | `CheckInActivity` dismiss | `reaction_time_s`, `response` (safe/alert) |
+| `checkin_answered` | `CheckInActivity` dismiss | none |
+| `checkin_timed_out` | `CheckInActivity` / `AlertManager` timeout | none |
 | `alert_sent` | `AlertSender` | `contacts_count`, `offline` |
-| `sos_triggered` | Power-button / widget SOS | `trigger` (power_button/widget/lock_screen) |
-| `companion_turn` | `CompanionActivity` | `lang`, `fallback_used` |
-| `llm_fallback` | Edge Function (server-side log) | `primary`, `fallback`, `status` |
 | `update_prompted` | `AppUpdateManager` | `from_version`, `to_version` |
 | `update_completed` | `AppUpdateManager` download done | `to_version`, `download_time_s` |
 
@@ -425,7 +454,8 @@ The updater and telemetry code are in the `data` package, separate from `core`, 
 | Install ID (random UUID) | ✅ | Not tied to any account; reset on reinstall |
 | Device model + Android version | ✅ | For debugging device-specific crashes |
 | Stack traces | ✅ | Code-level crash info only |
-| Event names + timestamps | ✅ | e.g. `"trip_started"`; no location data attached |
+| Event names + timestamps | ✅ | e.g. `"trip_started"`; no location data attached; timestamps truncated to the hour (UTC) server-side |
+| Crash message / stack trace text | ✅ | Phone-like numbers, emails and coordinate pairs scrubbed server-side |
 
 ## 10. Your Workflow: How to Push an Update
 
@@ -436,15 +466,18 @@ The updater and telemetry code are in the `data` package, separate from `core`, 
    ```
 2. **Build**: `gradlew assembleRelease`
 3. **Upload APK** to GitHub Releases: create tag `v0.2`, attach the APK file.
-4. **Insert a row** in Supabase Studio → Table Editor → `app_releases`:
+4. **Hash the APK**: `certutil -hashfile saathi.apk SHA256` (Windows) or `sha256sum saathi.apk`.
+   Lowercase the result (64 hex characters).
+5. **Insert a row** in Supabase Studio → Table Editor → `app_releases`:
    ```
    version_code: 2
    version_name: "0.2"
    apk_url: "https://github.com/xANTHREXx/saathi-app/releases/download/v0.2/saathi.apk"
+   apk_sha256: "<lowercase hex from step 4>"
    changelog: "Detour checks are smoother; fixed plate scan on Samsung."
    is_mandatory: false
    ```
-5. **Done.** Every running app will detect the update within 6 hours (or on next launch) and
+6. **Done.** Every running app will detect the update within 6 hours (or on next launch) and
    prompt the user.
 
 To **force-update** (e.g. a critical bug): set `is_mandatory = true` on the release row. The
@@ -461,6 +494,7 @@ All devices will stop seeing the update prompt.
 | `supabase/migrations/20261021000000_updater_and_telemetry.sql` | **New.** Tables, indexes, RLS, cron. |
 | `supabase/functions/api/store.ts` | Add `Store` interface methods + `PgStore`/`MemoryStore` impls |
 | `supabase/functions/api/app.ts` | Add `GET /version` and `POST /telemetry` route handlers |
+| `supabase/functions/api/scrub.ts` | **New.** `scrub()` for crash text (numbers, emails, coordinates) |
 
 ### Android
 | File | Change |
@@ -486,7 +520,7 @@ All devices will stop seeing the update prompt.
   and persistence.
 - **Integration tests:** Mock Edge Function responses for version check (newer, same, 500,
   timeout). Mock telemetry POST (success, failure, retry).
-- **Store tests:** `MemoryStore` implementations for `latestRelease()`, `addCrash()`, `addEvent()`.
+- **Store tests:** `MemoryStore` implementations for `latestRelease()`, `addCrashes()`, `addEvents()`.
 - **Manual verification:** Trigger a deliberate crash on a test device, relaunch, confirm the
   crash row appears in Supabase Studio. Publish a test release row, confirm the update dialog
   appears.

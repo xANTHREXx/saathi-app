@@ -4,7 +4,8 @@
 create table if not exists public.app_releases (
   version_code   integer primary key,
   version_name   text    not null,
-  apk_url        text    not null,
+  apk_url        text    not null check (apk_url like 'https://%'),
+  apk_sha256     text    not null check (apk_sha256 ~ '^[0-9a-f]{64}$'), -- lowercase hex SHA-256 of the APK file
   changelog      text    not null default '',
   is_mandatory   boolean not null default false,
   created_at     timestamptz not null default now()
@@ -56,8 +57,13 @@ grant select, insert, delete on public.app_events to service_role;
 do $$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
-    perform cron.unschedule('saathi-events-cleanup');
-    perform cron.unschedule('saathi-crashes-cleanup');
+    -- Unschedule only if present (cron.unschedule raises for unknown jobs), so re-runs stay idempotent.
+    if exists (select 1 from cron.job where jobname = 'saathi-events-cleanup') then
+      perform cron.unschedule('saathi-events-cleanup');
+    end if;
+    if exists (select 1 from cron.job where jobname = 'saathi-crashes-cleanup') then
+      perform cron.unschedule('saathi-crashes-cleanup');
+    end if;
     perform cron.schedule('saathi-events-cleanup', '23 3 * * *',
       'delete from public.app_events where received_at < now() - interval ''30 days''');
     perform cron.schedule('saathi-crashes-cleanup', '29 3 * * *',
