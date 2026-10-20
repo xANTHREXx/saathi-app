@@ -104,18 +104,83 @@ internal fun ContactsStep(
     problemNonce: Int,
     onProblemChange: (SetupProblem?) -> Unit,
 ) {
-    val ctx = LocalContext.current
     val c = Saathi.colors
 
     val nameRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(problem, problemNonce) {
+        if (problem?.field == SetupField.YOUR_NAME) nameRequester.bringIntoView()
+    }
+
+    Column(Modifier.fillMaxWidth()) {
+        Text("Who should we tell?", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "If you don't answer a check-in, Saathi texts these people from your own SIM.",
+            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+        )
+
+        OutlinedTextField(
+            name, { onNameChange(it); if (problem?.field == SetupField.YOUR_NAME) onProblemChange(null) },
+            Modifier.fillMaxWidth().padding(top = 24.dp).bringIntoViewRequester(nameRequester),
+            label = { Text("Your first name") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+            supportingText = {
+                Column {
+                    if (problem?.field == SetupField.YOUR_NAME) ProblemText(problem.message)
+                    Text(
+                        "Shown in alerts: \"${name.trim().ifBlank { "Priya" }} hasn't answered a check-in.\"",
+                        style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                    )
+                }
+            },
+        )
+
+        ContactsEditor(
+            contacts = contacts, onContactsChange = onContactsChange,
+            formOpen = formOpen, onFormOpenChange = onFormOpenChange,
+            formName = formName, onFormNameChange = onFormNameChange,
+            formPhone = formPhone, onFormPhoneChange = onFormPhoneChange,
+            problem = problem, problemNonce = problemNonce, onProblemChange = onProblemChange,
+            modifier = Modifier.padding(top = 24.dp),
+            heading = "People to text",
+        )
+    }
+}
+
+/**
+ * The contact rows, the pickers and the type-a-number form, without any step heading.
+ * Used by [ContactsStep] and by Settings. State is hoisted; the editor only draws it.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun ContactsEditor(
+    contacts: List<Contact>,
+    onContactsChange: (List<Contact>) -> Unit,
+    formOpen: Boolean,
+    onFormOpenChange: (Boolean) -> Unit,
+    formName: String,
+    onFormNameChange: (String) -> Unit,
+    formPhone: String,
+    onFormPhoneChange: (String) -> Unit,
+    problem: SetupProblem?,
+    problemNonce: Int,
+    onProblemChange: (SetupProblem?) -> Unit,
+    modifier: Modifier = Modifier,
+    /** A title drawn above the rows, or null when the caller has its own. */
+    heading: String? = null,
+    /** When set, shown as a problem (not the plain hint) while there are no contacts. */
+    emptyProblem: String? = null,
+) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+
     val peopleRequester = remember { BringIntoViewRequester() }
     val formRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(problem, problemNonce) {
         when (problem?.field) {
-            SetupField.YOUR_NAME -> nameRequester.bringIntoView()
             SetupField.CONTACTS -> peopleRequester.bringIntoView()
             SetupField.CONTACT_NAME, SetupField.CONTACT_PHONE -> formRequester.bringIntoView()
-            null -> {}
+            SetupField.YOUR_NAME, null -> {}
         }
     }
     fun clearIf(field: SetupField) { if (problem?.field == field) onProblemChange(null) }
@@ -163,33 +228,12 @@ internal fun ContactsStep(
         }
     }
 
-    Column(Modifier.fillMaxWidth()) {
-        Text("Who should we tell?", style = MaterialTheme.typography.headlineMedium)
-        Text(
-            "If you don't answer a check-in, Saathi texts these people from your own SIM.",
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
-        )
-
-        OutlinedTextField(
-            name, { onNameChange(it); clearIf(SetupField.YOUR_NAME) },
-            Modifier.fillMaxWidth().padding(top = 24.dp).bringIntoViewRequester(nameRequester),
-            label = { Text("Your first name") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
-            supportingText = {
-                Column {
-                    if (problem?.field == SetupField.YOUR_NAME) ProblemText(problem.message)
-                    Text(
-                        "Shown in alerts: \"${name.trim().ifBlank { "Priya" }} hasn't answered a check-in.\"",
-                        style = MaterialTheme.typography.bodySmall, color = c.fg2,
-                    )
-                }
-            },
-        )
-
-        Column(Modifier.fillMaxWidth().padding(top = 24.dp).bringIntoViewRequester(peopleRequester)) {
-            Text("People to text", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(12.dp))
+    Column(modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().bringIntoViewRequester(peopleRequester)) {
+            if (heading != null) {
+                Text(heading, style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(12.dp))
+            }
             contacts.forEachIndexed { i, ct ->
                 if (i > 0) Spacer(Modifier.height(8.dp))
                 ContactRow(
@@ -199,10 +243,14 @@ internal fun ContactsStep(
                 )
             }
             if (contacts.isEmpty()) {
-                Text(
-                    "No one yet. Pick at least one person you'd want to know.",
-                    style = MaterialTheme.typography.bodyMedium, color = c.fg2,
-                )
+                if (emptyProblem != null) {
+                    ProblemText(emptyProblem)
+                } else {
+                    Text(
+                        "No one yet. Pick at least one person you'd want to know.",
+                        style = MaterialTheme.typography.bodyMedium, color = c.fg2,
+                    )
+                }
             }
             if (problem?.field == SetupField.CONTACTS) ProblemText(problem.message)
         }

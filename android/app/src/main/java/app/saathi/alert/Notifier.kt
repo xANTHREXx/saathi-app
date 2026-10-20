@@ -63,12 +63,15 @@ object Notifier {
         return b.build()
     }
 
-    fun showCheckIn(ctx: Context, detail: String) {
+    fun showCheckIn(ctx: Context, detail: String, practice: Boolean = false) {
         val full = activity(ctx, CheckInActivity::class.java, 20)
         val n = Notification.Builder(ctx, CHECKIN)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("Are you okay?")
-            .setContentText("Your trip: $detail. Your contacts will be told in 10 seconds.")
+            .setContentTitle(if (practice) "Practice check-in" else "Are you okay?")
+            .setContentText(
+                if (practice) "This is a practice. Nothing will be sent. Tap I'm okay."
+                else "Your trip: $detail. Your contacts will be told in 10 seconds.",
+            )
             .setCategory(Notification.CATEGORY_ALARM)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setFullScreenIntent(full, true)

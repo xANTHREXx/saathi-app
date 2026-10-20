@@ -115,17 +115,37 @@ internal fun rememberLivePerms(): LivePerms {
     return LivePerms(state, refresh)
 }
 
-/**
- * Step 2: permissions asked in place, with live state. State is read by [rememberLivePerms] in [SetupFlow];
- * this only draws it and launches each permission's dialog or settings screen.
- */
-@OptIn(ExperimentalFoundationApi::class)
+/** Step 2: the heading, then [PermissionList]. State is read by [rememberLivePerms] in [SetupFlow]. */
 @Composable
 internal fun PermissionsStep(
     granted: Map<Perm, Boolean>,
     onRefresh: () -> Unit,
     problemPerm: Perm?,
     problemNonce: Int,
+) {
+    val c = Saathi.colors
+    Column(Modifier.fillMaxWidth()) {
+        Text("Let Saathi watch your trips", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Android asks once for each. Saathi uses them only on trips and alerts.",
+            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+        )
+        PermissionList(granted, onRefresh, problemPerm, problemNonce, Modifier.padding(top = 24.dp))
+    }
+}
+
+/**
+ * Permissions asked in place, with live state, without any heading. Used by the setup step and by Settings.
+ * State is read by [rememberLivePerms]; this only draws it and launches each permission's dialog or settings screen.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun PermissionList(
+    granted: Map<Perm, Boolean>,
+    onRefresh: () -> Unit,
+    problemPerm: Perm? = null,
+    problemNonce: Int = 0,
+    modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
     val activity = ctx as? ComponentActivity
@@ -186,28 +206,20 @@ internal fun PermissionsStep(
     }
 
     val visible = visiblePerms()
-    Column(Modifier.fillMaxWidth()) {
-        Text("Let Saathi watch your trips", style = MaterialTheme.typography.headlineMedium)
-        Text(
-            "Android asks once for each. Saathi uses them only on trips and alerts.",
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
-        )
-
-        Column(Modifier.fillMaxWidth().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            visible.filter { it.required }.forEach { perm ->
-                Column(Modifier.fillMaxWidth().bringIntoViewRequester(requesters.getValue(perm))) {
-                    PermCard(perm, granted[perm] == true, enabled = perm != Perm.LOCATION_ALWAYS || granted[Perm.LOCATION] == true) { ask(perm) }
-                    if (problemPerm == perm && granted[perm] != true) ProblemText("Needed so alerts can reach your contacts.")
-                }
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        visible.filter { it.required }.forEach { perm ->
+            Column(Modifier.fillMaxWidth().bringIntoViewRequester(requesters.getValue(perm))) {
+                PermCard(perm, granted[perm] == true, enabled = perm != Perm.LOCATION_ALWAYS || granted[Perm.LOCATION] == true) { ask(perm) }
+                if (problemPerm == perm && granted[perm] != true) ProblemText("Needed so alerts can reach your contacts.")
             }
-            Text(
-                "Optional", style = MaterialTheme.typography.labelLarge, color = c.fg2,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            visible.filter { !it.required }.forEach { perm ->
-                Column(Modifier.fillMaxWidth().bringIntoViewRequester(requesters.getValue(perm))) {
-                    PermCard(perm, granted[perm] == true, enabled = true) { ask(perm) }
-                }
+        }
+        Text(
+            "Optional", style = MaterialTheme.typography.labelLarge, color = c.fg2,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        visible.filter { !it.required }.forEach { perm ->
+            Column(Modifier.fillMaxWidth().bringIntoViewRequester(requesters.getValue(perm))) {
+                PermCard(perm, granted[perm] == true, enabled = true) { ask(perm) }
             }
         }
     }

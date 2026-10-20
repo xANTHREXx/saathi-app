@@ -1,20 +1,11 @@
 package app.saathi.ui
 
-import android.Manifest
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings as SysSettings
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -33,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -66,7 +56,6 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -74,15 +63,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -99,11 +88,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
-import app.saathi.core.ANYWHERE
-import app.saathi.core.Contact
 import app.saathi.core.Reason
 import app.saathi.data.Settings
 import app.saathi.data.Store
@@ -132,11 +118,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             SaathiTheme {
                 var settings by remember { mutableStateOf(Store.settings(this)) }
+                // Set when setup has just finished, so Home can say so once.
+                var justSetUp by remember { mutableStateOf(false) }
                 if (!settings.onboarded) SetupFlow(settings) { s ->
-                    Store.save(this, s); settings = s; guard(this)
+                    Store.save(this, s); settings = s; justSetUp = true; guard(this)
                 } else {
                     guard(this)
-                    Home(settings, onEdit = { settings = settings.copy(onboarded = false) })
+                    Home(
+                        settings, onChange = { s -> Store.save(this, s); settings = s },
+                        justSetUp = justSetUp, onSetUpShown = { justSetUp = false },
+                    )
                 }
             }
         }
@@ -153,186 +144,41 @@ private fun startTrip(ctx: Context, mode: String, plate: String? = null, app: St
 private val clock = SimpleDateFormat("h:mm a", Locale.ENGLISH)
 private fun time(ms: Long) = clock.format(Date(ms)).lowercase()
 
-// ---------------------------------------------------------------- onboarding (flow 1)
-
-@Composable
-private fun Onboarding(initial: Settings, onDone: (Settings) -> Unit) {
-    val ctx = LocalContext.current
-    val c = Saathi.colors
-    var name by remember { mutableStateOf(initial.name) }
-    val contacts = remember { mutableStateListOf<Contact>().apply { addAll(initial.contacts) } }
-    val places = remember { mutableStateListOf<app.saathi.core.SavedPlace>().apply { addAll(initial.places) } }
-    var cName by remember { mutableStateOf("") }
-    var cPhone by remember { mutableStateOf("") }
-    var cCity by remember { mutableStateOf("") }
-    var phrase by remember { mutableStateOf(initial.phraseKey) }
-    var presses by remember { mutableStateOf(initial.powerPresses) }
-    var consent by remember { mutableStateOf(initial.communityConsent) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
-
-    Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())
-            .statusBarsPadding().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SaathiMark(28.dp); Text("Saathi", style = MaterialTheme.typography.titleLarge)
-        }
-        Text("Set up Saathi", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(top = 8.dp))
-        Text("About a minute. Everything here is asked once, so nothing interrupts you on a trip.",
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2)
-
-        Section("Your first name")
-        OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Shown in alerts") })
-
-        Section("Emergency contacts")
-        Hint("Tag each with a city, or \"anywhere\". Alerts go to people in the city you're in, plus everyone tagged anywhere.")
-        contacts.forEachIndexed { i, ct ->
-            Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(ct.name, style = MaterialTheme.typography.titleSmall)
-                    Text("${ct.phone} · ${ct.city}", style = MaterialTheme.typography.bodySmall, color = c.fg2)
-                }
-                OutlinedButton(onClick = { contacts.removeAt(i) }) { Text("Remove") }
-            }
-        }
-        OutlinedTextField(cName, { cName = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Name") })
-        OutlinedTextField(cPhone, { cPhone = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Phone, with country code (+91…)") })
-        OutlinedTextField(cCity, { cCity = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("City, or anywhere") })
-        error?.let { Text(it, color = c.help, style = MaterialTheme.typography.bodyMedium) }
-        FilledTonalButton(onClick = {
-            val phone = cPhone.replace(" ", "")
-            error = when {
-                cName.isBlank() -> "Add a name."
-                !Regex("""^\+\d{8,15}$""").matches(phone) && !Regex("""^\d{4}$""").matches(phone) ->
-                    "Use the full number with country code, like +919800000000."
-                else -> null
-            }
-            if (error == null) {
-                contacts += Contact(cName.trim(), phone, cCity.trim().ifBlank { ANYWHERE })
-                cName = ""; cPhone = ""; cCity = ""
-            }
-        }) { Text("Add contact") }
-
-        Section("Places you go often")
-        Hint("Home and work, say. When a trip starts at one, Saathi knows where you're headed and notices a detour or a late arrival. You can skip this; long stops are watched either way.")
-        app.saathi.ui.setup.PlacesStep(places.toList(), { places.clear(); places.addAll(it) })
-
-        Section("Speak for me")
-        listOf("touched" to "\"This man touched me. He's still here. Please help me.\"",
-            "following" to "\"This man is following me. Please help me.\"",
-            "help" to "\"I need help. Please stay with me and call for help.\"").forEach { (k, label) ->
-            FilterChip(selected = phrase == k, onClick = { phrase = k }, label = { Text(label, Modifier.padding(vertical = 8.dp)) })
-        }
-
-        Section("Power button")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(3 to "3 presses", 4 to "4", 6 to "6", 0 to "Off").forEach { (n, l) ->
-                FilterChip(selected = presses == n, onClick = { presses = n }, label = { Text(l) })
-            }
-        }
-        Hint("Many phones open the camera on a double press, and Android's own Emergency SOS uses 5 presses. Pick a count that doesn't clash with yours.")
-
-        Section("Community")
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Share anonymously: count my rides by vehicle plate, and add a point to the community map when I report something. Never my name or number.",
-                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Switch(consent, { consent = it })
-        }
-
-        Section("Permissions")
-        Hint("Location (all the time) to watch trips · SMS to text your contacts from your SIM · Microphone to record when help is raised · Notifications for check-ins.")
-        Button(onClick = {
-            perms.launch(buildList {
-                add(Manifest.permission.ACCESS_FINE_LOCATION); add(Manifest.permission.SEND_SMS)
-                add(Manifest.permission.RECORD_AUDIO)
-                if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
-            }.toTypedArray())
-        }, Modifier.fillMaxWidth().height(52.dp)) { Text("Allow location, SMS, microphone, notifications") }
-        SetupButton("Location: choose \"Allow all the time\"") {
-            ctx.startActivity(Intent(SysSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}")))
-        }
-        if (Build.VERSION.SDK_INT >= 34) SetupButton("Allow check-ins over the lock screen") {
-            ctx.startActivity(Intent(SysSettings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:${ctx.packageName}")))
-        }
-        SetupButton("Keep Saathi running in the background") {
-            ctx.startActivity(Intent(SysSettings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}")))
-        }
-        SetupButton("Notice Uber, Ola and Rapido rides for me") {
-            ctx.startActivity(Intent(SysSettings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-        }
-        SetupCheck()
-
-        Button(
-            onClick = {
-                if (name.isBlank() || contacts.isEmpty()) error = "Add your name and at least one contact."
-                else onDone(initial.copy(name = name.trim(), contacts = contacts.toList(), places = places.toList(), phraseKey = phrase,
-                    powerPresses = presses, communityConsent = consent, onboarded = true))
-            },
-            Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp),
-        ) { Text("Done", style = MaterialTheme.typography.titleMedium) }
-    }
-}
-
-@Composable
-private fun SetupButton(label: String, onClick: () -> Unit) =
-    OutlinedButton(onClick = onClick, Modifier.fillMaxWidth().height(48.dp)) { Text(label) }
-
-@Composable
-private fun SetupCheck() {
-    val ctx = LocalContext.current
-    val c = Saathi.colors
-    fun has(p: String) = ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
-    val items = listOf(
-        "Location" to has(Manifest.permission.ACCESS_FINE_LOCATION),
-        "Location all the time" to has(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-        "SMS" to has(Manifest.permission.SEND_SMS),
-        "Microphone" to has(Manifest.permission.RECORD_AUDIO),
-        "Check-ins over the lock screen" to (Build.VERSION.SDK_INT < 34 || ctx.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()),
-        "Runs in the background" to ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName),
-    )
-    Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text("Check my setup", style = MaterialTheme.typography.titleSmall)
-        items.forEach { (label, ok) ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.size(8.dp).background(if (ok) c.ok else c.help, CircleShape))
-                Text(label, style = MaterialTheme.typography.bodyMedium)
-                Spacer(Modifier.weight(1f))
-                Text(if (ok) "Done" else "Missing", style = MaterialTheme.typography.labelMedium, color = if (ok) c.ok else c.help)
-            }
-        }
-    }
-}
-
-@Composable
-private fun Section(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 14.dp))
-
-@Composable
-private fun Hint(t: String) = Text(t, style = MaterialTheme.typography.bodyMedium, color = Saathi.colors.fg2)
-
 // ---------------------------------------------------------------- home (flows 3, 4, 5)
 
-private enum class Tab { TRIP, TRIPS }
+private enum class Tab { TRIP, TRIPS, SETTINGS }
 
 @Composable
-private fun Home(settings: Settings, onEdit: () -> Unit) {
+private fun Home(settings: Settings, onChange: (Settings) -> Unit, justSetUp: Boolean, onSetUpShown: () -> Unit) {
     val ctx = LocalContext.current
     var tab by remember { mutableStateOf(Tab.TRIP) }
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(justSetUp) {
+        if (justSetUp) {
+            snackbar.showSnackbar("Saathi is ready. Uber, Ola and Rapido trips start on their own.")
+            onSetUpShown()
+        }
+    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        // Flat, like everything else: a tonal bar with no shadow.
+        snackbarHost = {
+            SnackbarHost(snackbar) { data ->
+                Surface(
+                    Modifier.padding(horizontal = 12.dp), shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.inverseSurface, contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                ) {
+                    Text(data.visuals.message, Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        },
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                 NavigationBarItem(tab == Tab.TRIP, { tab = Tab.TRIP }, { Icon(Icons.Rounded.Route, null) }, label = { Text("Trip") })
                 NavigationBarItem(tab == Tab.TRIPS, { tab = Tab.TRIPS }, { Icon(Icons.Rounded.History, null) }, label = { Text("My trips") })
                 NavigationBarItem(false, { ctx.startActivity(Intent(ctx, CommunityMapActivity::class.java)) },
                     { Icon(Icons.Rounded.Map, null) }, label = { Text("Map") })
-                NavigationBarItem(false, onEdit, { Icon(Icons.Rounded.Tune, null) }, label = { Text("Settings") })
+                NavigationBarItem(tab == Tab.SETTINGS, { tab = Tab.SETTINGS }, { Icon(Icons.Rounded.Tune, null) }, label = { Text("Settings") })
             }
         },
     ) { pad ->
@@ -340,6 +186,7 @@ private fun Home(settings: Settings, onEdit: () -> Unit) {
             when (tab) {
                 Tab.TRIP -> TripTab(settings)
                 Tab.TRIPS -> TripsTab()
+                Tab.SETTINGS -> SettingsScreen(settings, onChange)
             }
         }
     }

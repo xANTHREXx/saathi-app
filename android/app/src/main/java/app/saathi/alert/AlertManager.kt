@@ -117,7 +117,7 @@ object AlertManager {
                 val ends = System.currentTimeMillis() + CHECKIN_S * 1000
                 TripState.update { it.copy(practice = true, practiceOver = false, checkInEndsAtMs = ends) }
                 alarm.start()
-                Notifier.showCheckIn(app, "Practice")
+                Notifier.showCheckIn(app, "", practice = true)
             }
             delay(CHECKIN_S * 1000)
             synchronized(practiceLock) {

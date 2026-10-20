@@ -88,15 +88,34 @@ private fun hasLocationPermission(ctx: android.content.Context): Boolean {
     return has(Manifest.permission.ACCESS_FINE_LOCATION) || has(Manifest.permission.ACCESS_COARSE_LOCATION)
 }
 
-/**
- * Step 3: places she goes often. The editor keeps its own state (label, search text, suggestions);
- * the only thing it shares with its caller is the saved list.
- */
-@OptIn(ExperimentalLayoutApi::class)
+/** Step 3: the heading, then [PlacesEditor]. */
 @Composable
 internal fun PlacesStep(
     places: List<SavedPlace>,
     onChange: (List<SavedPlace>) -> Unit,
+) {
+    val c = Saathi.colors
+    Column(Modifier.fillMaxWidth()) {
+        Text("Places you go often", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "With two places, Saathi knows where a trip from one is going and notices detours. You can skip this.",
+            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+        )
+        PlacesEditor(places, onChange, Modifier.padding(top = 24.dp))
+    }
+}
+
+/**
+ * Saved places and the Add a place editor, without any heading. Used by the setup step and by Settings.
+ * The editor keeps its own state (label, search text, suggestions);
+ * the only thing it shares with its caller is the saved list.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun PlacesEditor(
+    places: List<SavedPlace>,
+    onChange: (List<SavedPlace>) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
     val c = Saathi.colors
@@ -203,15 +222,9 @@ internal fun PlacesStep(
         }
     }
 
-    Column(Modifier.fillMaxWidth()) {
-        Text("Places you go often", style = MaterialTheme.typography.headlineMedium)
-        Text(
-            "With two places, Saathi knows where a trip from one is going and notices detours. You can skip this.",
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
-        )
-
+    Column(modifier.fillMaxWidth()) {
         if (places.isNotEmpty()) {
-            Column(Modifier.fillMaxWidth().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 places.forEachIndexed { i, p ->
                     PlaceRow(p, onRemove = { onChange(places.filterIndexed { j, _ -> j != i }) })
                 }
@@ -220,7 +233,7 @@ internal fun PlacesStep(
 
         Text(
             "Add a place", style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = 24.dp),
+            modifier = Modifier.padding(top = if (places.isNotEmpty()) 24.dp else 0.dp),
         )
 
         FlowRow(
