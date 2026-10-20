@@ -139,6 +139,10 @@ class TripService : Service() {
                 fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null)
         }
         i.getStringExtra(EXTRA_PLATE)?.let { plate -> scope.launch(Dispatchers.IO) { checkVehicle(plate) } }
+        app.saathi.data.TelemetryManager.track(this, "trip_started", mapOf(
+            "mode" to mode.name,
+            "auto_detected" to (i.getStringExtra(EXTRA_APP) != null)
+        ))
         val replay = i.getStringExtra(EXTRA_REPLAY)
         demoRoute = replay != null && loadDemoRoute(replay)
         val source = if (replay != null) ReplaySource(this, replay, i.getIntExtra(EXTRA_SPEED, 30)) else FusedSource(this)
@@ -171,6 +175,7 @@ class TripService : Service() {
         val event = watcher?.add(fix) ?: return
         Log.i("Saathi", "watcher: ${event.kind} ${event.detail}")
         TripState.update { it.copy(events = it.events + event) }
+        app.saathi.data.TelemetryManager.track(this, "checkin_triggered", mapOf("reason" to event.kind.name))
         AlertManager.startCheckIn(event)
     }
 

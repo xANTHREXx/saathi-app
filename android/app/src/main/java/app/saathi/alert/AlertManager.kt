@@ -8,6 +8,7 @@ import app.saathi.core.alertText
 import app.saathi.core.okText
 import app.saathi.core.recipients
 import app.saathi.data.Store
+import app.saathi.data.TelemetryManager
 import app.saathi.trip.LocationOnce
 import app.saathi.trip.TripState
 import kotlinx.coroutines.CoroutineScope
@@ -86,6 +87,11 @@ object AlertManager {
             Log.i("Saathi", "alert ${reason.name}: $text")
             TripState.update { it.copy(told = r.sent, smsFailed = r.failed, recording = recording) }
             Notifier.showAlerted(app, r.sent, r.failed)
+            TelemetryManager.track(app, "alert_sent", mapOf(
+                "reason" to reason.name,
+                "contacts_count" to to.size,
+                "offline" to (liveUrl == null)
+            ))
             if (liveUrl != null) startLivePush()
         }
     }
@@ -99,6 +105,7 @@ object AlertManager {
         recorder.stop()
         Notifier.cancel(app, Notifier.ALERT_ID)
         TripState.update { it.copy(alertActive = false, told = emptyList(), smsFailed = emptyList(), recording = false) }
+        TelemetryManager.track(app, "checkin_responded", mapOf("response" to "safe"))
         onOkay?.invoke()
         if (wasAlert) scope.launch(Dispatchers.IO) {
             val s = Store.settings(app)

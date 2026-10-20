@@ -91,6 +91,7 @@ class PlateCheckActivity : ComponentActivity() {
             scope.launch {
                 val plate = PlateReader.read(bmp)
                 busy = false
+                app.saathi.data.TelemetryManager.track(this@PlateCheckActivity, "plate_scanned", mapOf("success" to (plate != null)))
                 if (plate != null) seen = plate else note = "Couldn't read the plate. Type it below."
             }
         }
