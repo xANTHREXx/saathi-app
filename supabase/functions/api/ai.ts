@@ -1,46 +1,66 @@
 /**
- * The companion's model. Any OpenAI-compatible chat API works: Gemini (free AI Studio key, the default),
- * Groq, or your own provider. Models are tried in order; one that is busy or retired falls through.
- * When none answers, the companion still keeps her talking and raises the alert on words for help.
+ * The companion's model. Any OpenAI-compatible chat API works. Set whichever keys you have; they are tried in
+ * order (your own provider, then Gemini, then Groq), and within each, models in order. One that is busy, out of
+ * quota or retired falls through. When none answers, the companion still keeps her talking and raises the alert
+ * on words for help.
  */
 export type Gen = (system: string, user: string) => Promise<string>;
 
-export interface AiConfig { baseUrl: string; apiKey?: string; models: string[] }
+export interface Provider { name: string; baseUrl: string; apiKey: string; models: string[] }
 
-export const DEFAULT_AI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
-export const DEFAULT_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+const list = (s: string | undefined) => (s || "").split(",").map((x) => x.trim()).filter(Boolean);
 
-export function aiConfig(env: (k: string) => string | undefined): AiConfig {
-  const models = (env("AI_MODELS") || "").split(",").map((s) => s.trim()).filter(Boolean);
-  return { baseUrl: (env("AI_BASE_URL") || DEFAULT_AI_BASE).replace(/\/$/, ""), apiKey: env("AI_API_KEY"), models: models.length ? models : DEFAULT_MODELS };
+export function providers(env: (k: string) => string | undefined): Provider[] {
+  const out: Provider[] = [];
+  const custom = env("AI_API_KEY");
+  if (custom && env("AI_BASE_URL") && list(env("AI_MODELS")).length) {
+    out.push({ name: "custom", baseUrl: env("AI_BASE_URL")!, apiKey: custom, models: list(env("AI_MODELS")) });
+  }
+  const gemini = env("GEMINI_API_KEY");
+  if (gemini) {
+    out.push({
+      name: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", apiKey: gemini,
+      models: list(env("GEMINI_MODELS")).length ? list(env("GEMINI_MODELS")) : ["gemini-flash-latest", "gemini-flash-lite-latest"],
+    });
+  }
+  const groq = env("GROQ_API_KEY");
+  if (groq) {
+    out.push({
+      name: "groq", baseUrl: "https://api.groq.com/openai/v1", apiKey: groq,
+      models: list(env("GROQ_MODELS")).length ? list(env("GROQ_MODELS")) : ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    });
+  }
+  return out.map((p) => ({ ...p, baseUrl: p.baseUrl.replace(/\/$/, "") }));
 }
 
-export function chat(cfg: AiConfig, fetcher: typeof fetch = fetch): Gen {
+export function chat(ps: Provider[], fetcher: typeof fetch = fetch): Gen {
   return async (system, user) => {
-    if (!cfg.apiKey) throw new Error("No AI key");
-    let last: unknown;
-    for (const model of cfg.models) {
-      try {
-        const r = await fetcher(`${cfg.baseUrl}/chat/completions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: "system", content: system }, { role: "user", content: user }],
-            response_format: { type: "json_object" },
-          }),
-          signal: AbortSignal.timeout(12_000),
-        });
-        if (!r.ok) throw new Error(`${model}: ${r.status}`);
-        const j = await r.json();
-        const text = j?.choices?.[0]?.message?.content;
-        if (typeof text === "string" && text.trim()) return text;
-        throw new Error(`${model}: empty reply`);
-      } catch (e) {
-        last = e;
+    let last: unknown = new Error("No AI provider configured");
+    for (const p of ps) {
+      for (const model of p.models) {
+        try {
+          const r = await fetcher(`${p.baseUrl}/chat/completions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}` },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: "system", content: system }, { role: "user", content: user }],
+              response_format: { type: "json_object" },
+            }),
+            signal: AbortSignal.timeout(12_000),
+          });
+          if (!r.ok) throw new Error(`${p.name} ${model}: ${r.status}`);
+          const j = await r.json();
+          const text = j?.choices?.[0]?.message?.content;
+          if (typeof text === "string" && text.trim()) return text;
+          throw new Error(`${p.name} ${model}: empty reply`);
+        } catch (e) {
+          console.warn("companion model failed:", String(e));
+          last = e;
+        }
       }
     }
-    throw last ?? new Error("No model available");
+    throw last;
   };
 }
 

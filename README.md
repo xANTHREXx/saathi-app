@@ -66,7 +66,7 @@ The memory store forgets everything on restart. Serve the live page with
 ```bash
 supabase link --project-ref <ref>
 supabase db push                       # tables, row-level security, hourly cleanup
-supabase secrets set SAATHI_SECRET=<long random string> ORS_API_KEY=<key> AI_API_KEY=<key> \
+supabase secrets set SAATHI_SECRET=<long random string> ORS_API_KEY=<key> GEMINI_API_KEY=<key> GROQ_API_KEY=<key> \
   LIVE_PAGE_URL=https://<you>.github.io/<repo>/live/
 supabase functions deploy api --no-verify-jwt
 ```
@@ -79,7 +79,8 @@ supabase functions deploy api --no-verify-jwt
 |---|---|
 | `SAATHI_SECRET` | **Required.** Key for the hashes of plates, devices and records. Keep it fixed, or community data is orphaned. |
 | `ORS_API_KEY` | Routes from [OpenRouteService](https://openrouteservice.org/) (free: 2,000 a day). Without it, no detour or late checks; long stops still work. |
-| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODELS` | Companion model, any OpenAI-compatible API. Defaults to Gemini's endpoint; a free key comes from [AI Studio](https://aistudio.google.com/). For Groq: `AI_BASE_URL=https://api.groq.com/openai/v1`, `AI_MODELS=llama-3.3-70b-versatile`. Without a key, the fixed fallback replies are used. |
+| `GEMINI_API_KEY`, `GROQ_API_KEY` | Companion model. Set either or both: Gemini (free key from [AI Studio](https://aistudio.google.com/)) is tried first, then Groq (free key from [console.groq.com](https://console.groq.com/)). Without any key, the fixed fallback replies are used. Override models with `GEMINI_MODELS` / `GROQ_MODELS`. |
+| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODELS` | Optional: any other OpenAI-compatible provider, tried before the two above. |
 | `LIVE_PAGE_URL` | Where `docs/live/` is published. |
 | `SEED_DEMO=true` | Adds sample community data, labelled "Sample data" in the app. Leave it off for real use. |
 

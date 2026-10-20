@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
 import { makeHandler, type Deps } from "./app.ts";
-import { chat, companionTurn, type Gen } from "./ai.ts";
+import { chat, companionTurn, providers, type Gen } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
 import { normPlate, plateKey, toPoint, vehicleSummary } from "./community.ts";
 import { profileFor, route, TRAFFIC_FACTOR } from "./route.ts";
@@ -52,22 +52,30 @@ Deno.test("noModelOnlyRaisesForHelpWords", async () => {
   assert(r.reply.length > 0);
 });
 
-Deno.test("chatTriesModelsInOrder", async () => {
+Deno.test("chatTriesProvidersAndModelsInOrder", async () => {
   const tried: string[] = [];
-  const fetcher = ((_url: string, init: RequestInit) => {
+  const fetcher = ((url: string, init: RequestInit) => {
     const model = JSON.parse(String(init.body)).model;
     tried.push(model);
-    return Promise.resolve(model === "b"
+    return Promise.resolve(url.includes("groq") && model === "g2"
       ? new Response(JSON.stringify({ choices: [{ message: { content: '{"reply":"hi","raise_alert":false}' } }] }))
-      : new Response("busy", { status: 503 }));
+      : new Response("quota", { status: 429 }));
   }) as typeof fetch;
-  const out = await chat({ baseUrl: "https://ai", apiKey: "k", models: ["a", "b", "c"] }, fetcher)("s", "u");
-  assertEquals(tried, ["a", "b"]);
+  const ps = providers((k) => ({ GEMINI_API_KEY: "a", GEMINI_MODELS: "m1,m2", GROQ_API_KEY: "b", GROQ_MODELS: "g1,g2,g3" } as Record<string, string>)[k]);
+  assertEquals(ps.map((p) => p.name), ["gemini", "groq"]);
+  const out = await chat(ps, fetcher)("s", "u");
+  assertEquals(tried, ["m1", "m2", "g1", "g2"]);
   assertMatch(out, /hi/);
 });
 
-Deno.test("chatWithoutKeyFallsBack", async () => {
-  const r = await companionTurn({ text: "help" }, chat({ baseUrl: "https://ai", models: ["a"] }));
+Deno.test("customProviderGoesFirstOnlyWhenComplete", () => {
+  const env = (o: Record<string, string>) => (k: string) => o[k];
+  assertEquals(providers(env({ AI_API_KEY: "k", GEMINI_API_KEY: "g" })).map((p) => p.name), ["gemini"]);
+  assertEquals(providers(env({ AI_API_KEY: "k", AI_BASE_URL: "https://x/", AI_MODELS: "m", GEMINI_API_KEY: "g" })).map((p) => p.name), ["custom", "gemini"]);
+});
+
+Deno.test("chatWithoutKeysFallsBack", async () => {
+  const r = await companionTurn({ text: "help" }, chat([]));
   assertEquals(r.raise_alert, true);
 });
 

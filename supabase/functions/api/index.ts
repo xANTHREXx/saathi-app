@@ -4,7 +4,7 @@
 //   STORE=memory SAATHI_SECRET=dev deno run -A supabase/functions/api/index.ts
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { makeHandler } from "./app.ts";
-import { aiConfig, chat } from "./ai.ts";
+import { chat, providers } from "./ai.ts";
 import { hmacWith } from "./crypto.ts";
 import { route } from "./route.ts";
 import { MemoryStore, PgStore } from "./store.ts";
@@ -24,14 +24,14 @@ const store = env("STORE") === "memory"
   ? new MemoryStore()
   : new PgStore(createClient(env("SUPABASE_URL")!, adminKey!, { auth: { persistSession: false } }));
 
-const ai = aiConfig(env);
+const ai = providers(env);
 const orsKey = env("ORS_API_KEY");
 
 Deno.serve(makeHandler({
   store,
   hmac: hmacWith(secret),
   gen: chat(ai),
-  aiConfigured: Boolean(ai.apiKey),
+  aiConfigured: ai.length > 0,
   route: (b) => route(b, orsKey),
   routesConfigured: Boolean(orsKey),
   livePageUrl: env("LIVE_PAGE_URL") || "http://localhost:8080/live/",
