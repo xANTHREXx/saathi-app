@@ -120,6 +120,7 @@ fun DestinationRow(s: UiState) {
         Text(
             when {
                 s.destLabel == null -> "Not sure where you're going: watching for long stops"
+                s.route.isEmpty() && s.noRoute -> "Going to ${s.destLabel} · no route found, watching for long stops"
                 s.route.isEmpty() -> "Going to ${s.destLabel} · finding the route"
                 else -> "Going to ${s.destLabel} · watching for detours"
             },

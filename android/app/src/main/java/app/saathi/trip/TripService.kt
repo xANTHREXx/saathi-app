@@ -137,7 +137,7 @@ class TripService : Service() {
             it.copy(onTrip = true, mode = mode, plate = i.getStringExtra(EXTRA_PLATE), app = i.getStringExtra(EXTRA_APP),
                 driver = i.getStringExtra(EXTRA_DRIVER), events = emptyList(), plateCheck = null,
                 startedAtMs = tripStartedAt * 1000, trail = emptyList(),
-                fromLabel = null, destLabel = null, route = emptyList(), vehicleNote = null)
+                fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null)
         }
         i.getStringExtra(EXTRA_PLATE)?.let { plate -> scope.launch(Dispatchers.IO) { checkVehicle(plate) } }
         val replay = i.getStringExtra(EXTRA_REPLAY)
@@ -220,14 +220,18 @@ class TripService : Service() {
     private fun plan(at: Fix, from: SavedPlace?, to: SavedPlace) {
         val mode = TripState.now.mode ?: Mode.WALK
         val key = from?.let { Destination.cacheKey(it.label, to.label, mode) }
-        TripState.update { it.copy(destLabel = to.label) }
+        TripState.update { it.copy(destLabel = to.label, route = emptyList(), noRoute = false) }
         planJob?.cancel()
         planJob = scope.launch(Dispatchers.IO) {
             val fresh = key?.let { RouteCache.get(this@TripService, it) }
                 ?: Api.route(from?.fix ?: at, to.fix, mode.name)
                     ?.let { RouteCache.Entry(it.points, it.durationS, System.currentTimeMillis() / 1000) }
                     ?.also { e -> key?.let { RouteCache.put(this@TripService, it, e) } }
-            val r = fresh ?: key?.let { RouteCache.stale(this@TripService, it) } ?: return@launch
+            val r = fresh ?: key?.let { RouteCache.stale(this@TripService, it) }
+            if (r == null) {
+                TripState.update { it.copy(noRoute = true) }
+                return@launch
+            }
             Log.i("Saathi", "route to ${to.label}: ${r.points.size} points, ${r.durationS} s")
             val start = if (from != null) tripStartedAt else System.currentTimeMillis() / 1000
             watcher?.plan(r.points, r.durationS, start)
@@ -255,7 +259,7 @@ class TripService : Service() {
         if (ui.onTrip) saveRecord(ui)
         watcher = null
         TripState.update { it.copy(onTrip = false, mode = null, plate = null, app = null, driver = null,
-            fromLabel = null, destLabel = null, route = emptyList(), vehicleNote = null) }
+            fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null) }
     }
 
     private fun saveRecord(ui: UiState) {

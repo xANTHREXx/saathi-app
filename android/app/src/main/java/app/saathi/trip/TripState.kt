@@ -36,6 +36,8 @@ data class UiState(
     val destLabel: String? = null,
     /** The expected route the watcher checks against; empty when unknown. */
     val route: List<Fix> = emptyList(),
+    /** True once a route was asked for and none came (offline, no key, bus or train). */
+    val noRoute: Boolean = false,
     /** About this vehicle, from other Saathi users: shown only to her, as counts. */
     val vehicleNote: String? = null,
 )
