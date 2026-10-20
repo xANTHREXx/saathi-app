@@ -55,11 +55,11 @@ object CrashTracker {
         val record = formatCrashRecord(t)
         val dir = File(ctx.filesDir, CRASH_DIR).apply { mkdirs() }
         val file = File(dir, "${System.currentTimeMillis()}.json")
-        val json = JSONObject().apply {
-            put("exceptionType", record.exceptionType)
-            put("message", record.message ?: JSONObject.NULL)
-            put("stackTrace", record.stackTrace)
-            put("crashedAt", record.crashedAt)
+        val json = kotlinx.serialization.json.buildJsonObject {
+            put("exceptionType", kotlinx.serialization.json.JsonPrimitive(record.exceptionType))
+            put("message", record.message?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull)
+            put("stackTrace", kotlinx.serialization.json.JsonPrimitive(record.stackTrace))
+            put("crashedAt", kotlinx.serialization.json.JsonPrimitive(record.crashedAt))
         }
         file.writeText(json.toString())
     }
