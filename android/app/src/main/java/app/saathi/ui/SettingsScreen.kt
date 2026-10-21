@@ -216,6 +216,20 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 stringResource(R.string.settings_dying_title), stringResource(R.string.settings_dying_body),
                 settings.dyingPhoneText, { onChange(settings.copy(dyingPhoneText = it)) }, Modifier.padding(top = 20.dp),
             )
+            SettingSwitch(
+                stringResource(R.string.settings_headset_title), stringResource(R.string.settings_headset_body),
+                settings.headsetHelp, { onChange(settings.copy(headsetHelp = it)) }, Modifier.padding(top = 12.dp),
+            )
+            SettingSwitch(
+                stringResource(R.string.settings_shake_title), stringResource(R.string.settings_shake_body),
+                settings.shakeCheckIn, { onChange(settings.copy(shakeCheckIn = it)) }, Modifier.padding(top = 12.dp),
+            )
+
+            Text(stringResource(R.string.settings_backtap_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
+            Text(
+                stringResource(R.string.settings_backtap_body),
+                style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+            )
         }
 
         SettingsSection(stringResource(R.string.settings_community)) {

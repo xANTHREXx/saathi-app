@@ -80,6 +80,7 @@ internal fun Context.watchingText(mode: Mode?, app: String?): String {
  * [TripEvent.detail] for an event with no number (a record from before the number was kept).
  */
 internal fun Context.eventText(e: TripEvent): String = when {
+    e.kind == EventKind.SHAKE -> getString(R.string.event_shake) // the one event with no number
     e.value <= 0 -> e.detail
     e.kind == EventKind.LONG_STOP -> quantity(R.plurals.event_long_stop, e.value, e.value)
     e.kind == EventKind.OFF_ROUTE -> getString(R.string.event_off_route, e.value)

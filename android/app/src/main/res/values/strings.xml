@@ -131,6 +131,13 @@
         <item quantity="one">%1$d min past arrival time</item>
         <item quantity="other">%1$d min past arrival time</item>
     </plurals>
+    <string name="event_shake">phone shaken hard</string>
+    <string name="help_now_label">Saathi Help</string>
+    <string name="help_now_short">Get help</string>
+    <string name="help_now_title">Getting help</string>
+    <string name="help_now_not_sent">Not sent. Nobody was texted.</string>
+    <string name="notif_pending_title">Texting your contacts in %1$d seconds</string>
+    <string name="notif_pending_text">You pressed the earphone button 3 times.</string>
     <plurals name="event_timer">
         <item quantity="one">your %1$d-minute check ran out</item>
         <item quantity="other">your %1$d-minute check ran out</item>
@@ -239,6 +246,12 @@
     <string name="settings_power_hint">Off at first, because many phones already use quick presses for the camera or Emergency SOS. If yours doesn\'t, pick a number and try it. If presses open your camera, set it back to Off and use the Quick Settings tile.</string>
     <string name="settings_dying_title">Low battery and switched-off texts</string>
     <string name="settings_dying_body">During a trip, text your contacts your last location if the battery reaches 5% or the phone is switched off. Some phones switch off too fast for the text to go.</string>
+    <string name="settings_headset_title">Earphone button for help</string>
+    <string name="settings_headset_body">On a trip, press your earphone button 3 times quickly. Your contacts are texted after 5 seconds unless you tap Don\'t text. Works while no music or video is playing.</string>
+    <string name="settings_shake_title">Shake for a check-in</string>
+    <string name="settings_shake_body">On a trip, shake the phone hard 3 times and Saathi asks \"Are you okay?\". Bumpy rides may set it off.</string>
+    <string name="settings_backtap_title">Back-tap for help</string>
+    <string name="settings_backtap_body">Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi\'s icon for the same Get help shortcut.</string>
     <string name="settings_community">Community sharing</string>
     <string name="settings_community_body">Share anonymously: count my rides by vehicle plate and add my reports to the community map. Never my name or number.</string>
     <string name="settings_improve">Help improve Saathi</string>

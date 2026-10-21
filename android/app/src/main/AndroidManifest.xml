@@ -52,6 +52,24 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!-- "Saathi Help": its own launcher entry, so back-tap gestures (Pixel Quick Tap, Samsung RegiStar)
+             can pick it from the app list. Opening it asks for help, with 5 s to undo. -->
+        <activity
+            android:name=".ui.HelpNowActivity"
+            android:exported="true"
+            android:label="@string/help_now_label"
+            android:taskAffinity="app.saathi.help"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity

@@ -23,6 +23,7 @@ object Notifier {
     const val GUARD_ID = 1
     const val CHECKIN_ID = 2
     const val ALERT_ID = 3
+    const val PENDING_ID = 4
     private const val GUARD = "guard"
     private const val CHECKIN = "checkin"
     private const val ALERT = "alert"
@@ -120,6 +121,23 @@ object Notifier {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)))
             .build()
         ctx.getSystemService(NotificationManager::class.java).notify(ALERT_ID, n)
+    }
+
+    /**
+     * The earphone button raised help: a few seconds to undo it without unlocking. Alum-before-send: this says
+     * a text is coming, not that one went. Goes by itself when the window closes.
+     */
+    fun showPending(ctx: Context, windowMs: Long) {
+        // The check-in channel: high priority but silent, so it doesn't make a sound in her bag.
+        val n = Notification.Builder(ctx, CHECKIN)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle(ctx.getString(R.string.notif_pending_title, (windowMs / 1000).toInt()))
+            .setContentText(ctx.getString(R.string.notif_pending_text))
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setTimeoutAfter(windowMs + 500)
+            .addAction(action(ctx, ctx.getString(R.string.speak_dont_text), service(ctx, TripService.ACTION_CANCEL_PENDING, 33)))
+            .build()
+        ctx.getSystemService(NotificationManager::class.java).notify(PENDING_ID, n)
     }
 
     /** Opens the dialer with 112 filled in; she presses call. Apps can't place emergency calls themselves. */

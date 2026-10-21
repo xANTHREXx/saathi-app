@@ -41,6 +41,10 @@ data class Settings(
     val checkMinutes: Int = 20,
     /** Text her contacts when a trip reaches the saved place it was headed to. Off: a routine text every trip teaches them to skim. */
     val arrivalText: Boolean = false,
+    /** On a trip, three quick presses of the earphone button ask for help (5 s to undo). Off until she turns it on. */
+    val headsetHelp: Boolean = false,
+    /** On a trip, a hard shake starts a check-in. Off until she turns it on: bumpy rides can set it off. */
+    val shakeCheckIn: Boolean = false,
 )
 
 @Serializable

@@ -8,11 +8,22 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.location.Geocoder
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.os.BatteryManager
 import android.os.IBinder
+import android.view.KeyEvent
 import android.os.SystemClock
 import android.util.Log
 import app.saathi.R
+import app.saathi.alert.Alarm
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
 import app.saathi.alert.SmsSender
@@ -27,6 +38,7 @@ import app.saathi.core.Mode
 import app.saathi.core.PowerPress
 import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
+import app.saathi.core.ShakeDetector
 import app.saathi.core.TripEvent
 import app.saathi.core.Watcher
 import app.saathi.core.arrivedText
@@ -70,6 +82,9 @@ class TripService : Service() {
         const val ACTION_CHECK_START = "app.saathi.CHECK_START"
         const val ACTION_CHECK_ADD = "app.saathi.CHECK_ADD"
         const val ACTION_CHECK_CANCEL = "app.saathi.CHECK_CANCEL"
+        /** "Don't text" on the earphone-button notification. */
+        const val ACTION_CANCEL_PENDING = "app.saathi.CANCEL_PENDING"
+        private const val HEADSET_UNDO_MS = 5_000L
         const val EXTRA_MINUTES = "minutes"
         /** What "Add 10 min" adds. */
         const val CHECK_ADD_MIN = 10
@@ -82,6 +97,9 @@ class TripService : Service() {
         const val EXTRA_SPEED = "speed"
 
         private const val HEARTBEAT_MS = 60_000L
+        /** Wired earphones send HEADSETHOOK; Bluetooth ones usually PLAY_PAUSE, or PLAY and PAUSE in turn. */
+        private val HEADSET_KEYS = setOf(KeyEvent.KEYCODE_HEADSETHOOK, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE)
 
         fun intent(ctx: Context, action: String) = Intent(ctx, TripService::class.java).setAction(action)
     }
@@ -136,6 +154,89 @@ class TripService : Service() {
 
     /** Whether a silence from this phone would mean something to her contacts. */
     private fun watching() = TripState.now.onTrip || TripState.now.checkAtMs != null
+
+    // --- trip-only gestures she turns on in Settings: the earphone button (help) and a hard shake (check-in)
+
+    private var media: MediaSession? = null
+    private val headsetPresses = PowerPress(needed = 3, windowS = 2.0)
+    private val shake = ShakeDetector()
+
+    private val shakeListener = object : SensorEventListener {
+        override fun onSensorChanged(e: SensorEvent) {
+            if (!shake.onSample(SystemClock.elapsedRealtime(), e.values[0], e.values[1], e.values[2])) return
+            val ui = TripState.now
+            if (!ui.onTrip || ui.alertActive || ui.checkInEndsAtMs != null) return
+            val event = TripEvent(EventKind.SHAKE, "phone shaken hard", System.currentTimeMillis() / 1000)
+            Log.i("Saathi", "shake: check-in")
+            TripState.update { it.copy(events = it.events + event) }
+            app.saathi.data.TelemetryManager.track(this@TripService, "checkin_triggered", mapOf("reason" to event.kind.name))
+            AlertManager.startCheckIn(event)
+        }
+        override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
+    }
+
+    private fun startGestures() {
+        val s = Store.settings(this)
+        if (s.shakeCheckIn) getSystemService(SensorManager::class.java)?.let { sm ->
+            sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let { sm.registerListener(shakeListener, it, SensorManager.SENSOR_DELAY_GAME) }
+        }
+        if (s.headsetHelp && media == null) startHeadset()
+    }
+
+    private fun stopGestures() {
+        runCatching { getSystemService(SensorManager::class.java)?.unregisterListener(shakeListener) }
+        media?.run { isActive = false; release() }
+        media = null
+    }
+
+    /**
+     * Android sends earphone presses to the app that played audio last. So Saathi holds a media session that
+     * says "playing" and plays a moment of silence, without asking for audio focus, so her music isn't paused.
+     * If she then plays music, her music app takes the button back: this works while nothing else is playing.
+     */
+    private fun startHeadset() {
+        val session = MediaSession(this, "SaathiHelp")
+        session.setCallback(object : MediaSession.Callback() {
+            override fun onMediaButtonEvent(intent: Intent): Boolean {
+                @Suppress("DEPRECATION") val e = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT) ?: return false
+                if (e.keyCode !in HEADSET_KEYS) return false
+                if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
+                    headsetPresses.onToggle(SystemClock.elapsedRealtime())) headsetHelp()
+                return true // ours while the session holds the button, so no other app acts on these presses
+            }
+        })
+        session.setPlaybackState(PlaybackState.Builder()
+            .setActions(PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE)
+            .setState(PlaybackState.STATE_PLAYING, 0, 1f).build())
+        session.isActive = true
+        media = session
+        scope.launch(Dispatchers.IO) { playSilence() }
+    }
+
+    private fun playSilence() = runCatching {
+        val rate = 8_000
+        val pcm = ShortArray(rate / 4) // a quarter second
+        val t = AudioTrack.Builder()
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+            .setAudioFormat(AudioFormat.Builder().setSampleRate(rate).setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+            .setTransferMode(AudioTrack.MODE_STATIC).setBufferSizeInBytes(pcm.size * 2).build()
+        t.write(pcm, 0, pcm.size)
+        t.play()
+        Thread.sleep(400)
+        t.stop(); t.release()
+    }.onFailure { Log.w("Saathi", "headset: silence not played: ${it.message}") }
+
+    /** Three presses: the same 5 s undo as the help tile, from a notification she can reach without the screen. */
+    private fun headsetHelp() {
+        val ui = TripState.now
+        if (ui.alertActive || ui.pendingAlertEndsAtMs != null) return
+        Log.i("Saathi", "earphone button: help")
+        AlertManager.raiseAfter(Reason.HEADSET, HEADSET_UNDO_MS)
+        Alarm(this).buzzOnce()
+        Notifier.showPending(this, HEADSET_UNDO_MS)
+    }
 
     // --- "Check on me": a check-in at a time she picks, for walks and waits no ride app knows about
 
@@ -193,7 +294,7 @@ class TripService : Service() {
         super.onCreate()
         Notifier.channels(this)
         AlertManager.init(this)
-        AlertManager.onOkay = { watcher?.reset() }
+        AlertManager.onOkay = { watcher?.reset(); shake.quiet(SystemClock.elapsedRealtime()) }
         registerReceiver(screen, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         })
@@ -230,6 +331,7 @@ class TripService : Service() {
             ACTION_CHECK_START -> startCheck(intent.getIntExtra(EXTRA_MINUTES, 0))
             ACTION_CHECK_ADD -> addToCheck()
             ACTION_CHECK_CANCEL -> cancelCheck()
+            ACTION_CANCEL_PENDING -> { AlertManager.cancelPendingAlert(); Notifier.cancel(this, Notifier.PENDING_ID) }
         }
         return START_STICKY
     }
@@ -260,6 +362,7 @@ class TripService : Service() {
                 fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null)
         }
         RunState.beat(this, onTrip = true) // don't wait for the next pulse to say a trip is running
+        stopGestures(); startGestures() // a new trip re-reads her gesture settings
         i.getStringExtra(EXTRA_PLATE)?.let { plate -> scope.launch(Dispatchers.IO) { checkVehicle(plate) } }
         app.saathi.data.TelemetryManager.track(this, "trip_started", mapOf(
             "mode" to mode.name,
@@ -410,6 +513,7 @@ class TripService : Service() {
         }
         watcher = null
         arrival = null
+        stopGestures()
         TripState.update { it.copy(onTrip = false, mode = null, plate = null, app = null, driver = null,
             fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null) }
         RunState.cleanStop(this) // ended on purpose: the quiet after this is not a kill
@@ -444,6 +548,7 @@ class TripService : Service() {
         runCatching { unregisterReceiver(screen) }
         runCatching { unregisterReceiver(batteryLevel) }
         runCatching { unregisterReceiver(shuttingDown) }
+        stopGestures()
         scope.cancel()
         // Only a stop with no trip running is clean; if Android took the service down mid-trip, say so.
         if (!TripState.now.onTrip) RunState.cleanStop(this)

@@ -10,7 +10,7 @@ data class Fix(val lat: Double, val lng: Double, val t: Long)
 enum class Mode { AUTO, CAB, BIKE, WALK, BUS, TRAIN }
 
 @Serializable
-enum class EventKind { LONG_STOP, OFF_ROUTE, LATE, TIMER }
+enum class EventKind { LONG_STOP, OFF_ROUTE, LATE, TIMER, SHAKE }
 
 /**
  * What the watcher noticed. [detail] is plain English, kept for the alert SMS, the live page and old records;

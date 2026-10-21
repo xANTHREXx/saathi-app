@@ -134,7 +134,8 @@ class SpeakForMeActivity : ComponentActivity() {
 }
 
 /** How long she has to say "Don't text" before contacts are told. */
-private const val UNDO_WINDOW_MS = 5_000L
+/** The few seconds to undo an accidental Speak for me or Saathi Help before contacts are texted. */
+internal const val UNDO_WINDOW_MS = 5_000L
 
 private fun languageName(tag: String) = when (tag.substringBefore('-')) {
     "kn" -> "ಕನ್ನಡ"; "hi" -> "हिन्दी"; "mr" -> "मराठी"; "ta" -> "தமிழ்"; "te" -> "తెలుగు"; "ml" -> "മലയാളം"
@@ -150,11 +151,11 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()
         .padding(horizontal = 14.dp, vertical = 8.dp)) {
         when {
-            s.alertActive -> ToldBanner(s.told)
-            pendingEnds != null -> PendingBanner(who, pendingEnds, onDontText = { if (AlertManager.cancelPendingAlert()) notSent = true })
+            s.alertActive -> HelpToldBanner(s.told)
+            pendingEnds != null -> PendingHelpBanner(who, pendingEnds, onDontText = { if (AlertManager.cancelPendingAlert()) notSent = true })
             notSent -> Text(stringResource(R.string.speak_not_sent), style = MaterialTheme.typography.bodySmall, color = c.fg2,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp))
-            else -> ToldBanner(s.told) // the instant between the window closing and the alert starting
+            else -> HelpToldBanner(s.told) // the instant between the window closing and the alert starting
         }
         Column(
             Modifier.padding(top = 12.dp).weight(1f).fillMaxWidth().clip(MaterialTheme.shapes.large)
@@ -189,7 +190,7 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
 
 /** The alert went out (madder): who was told, and what was sent. */
 @Composable
-private fun ToldBanner(told: List<String>) {
+internal fun HelpToldBanner(told: List<String>) {
     val c = Saathi.colors
     val ctx = LocalContext.current
     Row(
@@ -210,7 +211,7 @@ private fun ToldBanner(told: List<String>) {
 
 /** Before send (alum, never madder): a few seconds to undo an accidental tap. */
 @Composable
-private fun PendingBanner(who: String, endsAtMs: Long, onDontText: () -> Unit) {
+internal fun PendingHelpBanner(who: String, endsAtMs: Long, onDontText: () -> Unit) {
     val c = Saathi.colors
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }

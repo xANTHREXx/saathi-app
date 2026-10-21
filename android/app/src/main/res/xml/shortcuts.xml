@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press Saathi's icon: "Get help" opens Saathi Help (5 s to undo, then contacts are texted). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="help"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/help_now_short"
+        android:shortcutLongLabel="@string/help_now_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="app.saathi"
+            android:targetClass="app.saathi.ui.HelpNowActivity" />
+    </shortcut>
+</shortcuts>
