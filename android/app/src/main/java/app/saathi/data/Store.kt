@@ -39,6 +39,8 @@ data class Settings(
     val dyingPhoneText: Boolean = true,
     /** The "Check on me" length she picked last, in minutes. */
     val checkMinutes: Int = 20,
+    /** Text her contacts when a trip reaches the saved place it was headed to. Off: a routine text every trip teaches them to skim. */
+    val arrivalText: Boolean = false,
 )
 
 @Serializable

@@ -121,6 +121,7 @@
         <item quantity="other">%1$d min watched</item>
     </plurals>
     <string name="line_ends_with_ride">Ends on its own when the %1$s ride ends.</string>
+    <string name="line_ends_at_place">Ends on its own when you reach %1$s.</string>
     <plurals name="event_long_stop">
         <item quantity="one">stopped %1$d min</item>
         <item quantity="other">stopped %1$d min</item>
@@ -218,6 +219,8 @@
     <string name="contacts_empty_problem">Add at least one person, or alerts can\'t go anywhere.</string>
     <string name="settings_intro_contacts">Text %1$s that you added them</string>
     <string name="settings_places_hint">Home and work, say. Saathi uses them to notice a detour or a late arrival.</string>
+    <string name="settings_arrival_title">Text when I arrive</string>
+    <string name="settings_arrival_body">A trip ends on its own when you reach the saved place it was headed to. Turn this on to also text your contacts then, one text each trip.</string>
     <string name="settings_help_options">Help options</string>
     <string name="settings_speak_says">Speak for me says</string>
     <string name="settings_phrase_touched">\"This man touched me. He\'s still here. Please help me.\"</string>

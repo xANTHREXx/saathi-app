@@ -120,6 +120,7 @@
         <item quantity="other">%1$d मिनट नज़र रखी</item>
     </plurals>
     <string name="line_ends_with_ride">%1$s की राइड खत्म होते ही यह अपने-आप बंद हो जाएगा।</string>
+    <string name="line_ends_at_place">%1$s पहुँचते ही यह अपने-आप बंद हो जाएगा।</string>
     <plurals name="event_long_stop">
         <item quantity="one">%1$d मिनट से रुके हैं</item>
         <item quantity="other">%1$d मिनट से रुके हैं</item>
@@ -217,6 +218,8 @@
     <string name="contacts_empty_problem">कम से कम एक व्यक्ति जोड़ें, वरना अलर्ट किसी तक नहीं पहुँचेगा।</string>
     <string name="settings_intro_contacts">%1$s को मैसेज भेजें कि आपने उन्हें जोड़ा है</string>
     <string name="settings_places_hint">जैसे घर और ऑफ़िस। Saathi इनसे रास्ता बदलने या देर से पहुँचने का पता लगाता है।</string>
+    <string name="settings_arrival_title">पहुँचने पर मैसेज</string>
+    <string name="settings_arrival_body">सफ़र जिस सेव की हुई जगह की ओर था, वहाँ पहुँचते ही सफ़र अपने-आप खत्म हो जाता है। इसे चालू करें तो उसी समय आपके कॉन्टैक्ट को भी मैसेज जाएगा, हर सफ़र में एक।</string>
     <string name="settings_help_options">मदद के विकल्प</string>
     <string name="settings_speak_says">\"मेरी तरफ़ से बोलें\" यह कहता है</string>
     <string name="settings_phrase_touched">\"इस आदमी ने मुझे छुआ। वह अभी भी यहीं है। कृपया मेरी मदद करें।\"</string>

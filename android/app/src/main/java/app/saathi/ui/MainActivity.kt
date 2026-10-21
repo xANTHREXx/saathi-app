@@ -440,6 +440,9 @@ private fun LineDiagram(s: UiState, minutes: Int) {
             }, dim = false, filled = true, big = true)
         if (s.app != null) Text(stringResource(R.string.line_ends_with_ride, s.app), style = MaterialTheme.typography.bodySmall,
             color = c.fg2, modifier = Modifier.padding(start = 40.dp, top = 6.dp))
+        // Arriving ends the trip on its own, so say so while it's true.
+        else s.destLabel?.let { Text(stringResource(R.string.line_ends_at_place, ctx.placeLabel(it)), style = MaterialTheme.typography.bodySmall,
+            color = c.fg2, modifier = Modifier.padding(start = 40.dp, top = 6.dp)) }
     }
 }
 

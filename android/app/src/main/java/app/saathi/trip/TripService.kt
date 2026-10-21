@@ -16,6 +16,7 @@ import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
 import app.saathi.alert.SmsSender
+import app.saathi.core.Arrival
 import app.saathi.core.BATTERY_DEAD_PCT
 import app.saathi.core.BatteryWatch
 import app.saathi.core.Destination
@@ -28,6 +29,7 @@ import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
 import app.saathi.core.TripEvent
 import app.saathi.core.Watcher
+import app.saathi.core.arrivedText
 import app.saathi.core.batteryText
 import app.saathi.core.offText
 import app.saathi.core.recipients
@@ -248,6 +250,7 @@ class TripService : Service() {
         tripStartedAt = System.currentTimeMillis() / 1000
         fixes.clear()
         lowBattery.reset()
+        arrival = null
         planJob?.cancel()
         watcher = Watcher(mode, emptyList(), durationS = null, startedAt = tripStartedAt)
         TripState.update {
@@ -292,6 +295,13 @@ class TripService : Service() {
         TripState.update { it.copy(lastFix = fix, lastFixAtMs = System.currentTimeMillis(), trail = if (it.onTrip) (it.trail + fix).takeLast(600) else it.trail) }
         maybeGeocode(fix)
         if (fixes.size == 1 && !demoRoute) planFrom(fix)
+        // Never mid check-in or alert: arriving doesn't answer "Are you okay?".
+        val ui = TripState.now
+        if (ui.checkInEndsAtMs == null && !ui.alertActive && ui.pendingAlertEndsAtMs == null &&
+            arrival?.add(fix, fixes.first().t) == true) {
+            arrive()
+            return
+        }
         val event = watcher?.add(fix) ?: return
         Log.i("Saathi", "watcher: ${event.kind} ${event.detail}")
         TripState.update { it.copy(events = it.events + event) }
@@ -314,6 +324,20 @@ class TripService : Service() {
 
     // --- where the trip is headed, so the watcher can check for detours and late arrival
 
+    /** Set once the trip knows where it's headed. Null for "Not sure", when the trip runs until she ends it. */
+    @Volatile private var arrival: Arrival? = null
+
+    /** She reached the place the trip was headed: the trip ends as if she tapped End, so no long-stop check-in at home. */
+    private fun arrive() {
+        val label = TripState.now.destLabel ?: return
+        Log.i("Saathi", "arrived at $label")
+        if (Store.settings(this).arrivalText) {
+            val at = System.currentTimeMillis() / 1000
+            scope.launch(Dispatchers.IO) { textContacts("arrived") { name, _, _ -> arrivedText(name, label, at) } }
+        }
+        stopTrip()
+    }
+
     /** First fix: guess the destination from her saved places and past trips. */
     private fun planFrom(at: Fix) {
         val places = Store.settings(this).places
@@ -329,6 +353,7 @@ class TripService : Service() {
         val to = Store.settings(this).places.firstOrNull { it.label == label }
         if (to == null) {
             planJob?.cancel()
+            arrival = null
             watcher?.plan(emptyList(), null, System.currentTimeMillis() / 1000)
             TripState.update { it.copy(destLabel = null, route = emptyList()) }
             return
@@ -341,6 +366,7 @@ class TripService : Service() {
     private fun plan(at: Fix, from: SavedPlace?, to: SavedPlace) {
         val mode = TripState.now.mode ?: Mode.WALK
         val key = from?.let { Destination.cacheKey(it.label, to.label, mode) }
+        arrival = Arrival(to.fix) // known before any route comes back, so arriving works offline too
         TripState.update { it.copy(destLabel = to.label, route = emptyList(), noRoute = false) }
         planJob?.cancel()
         planJob = scope.launch(Dispatchers.IO) {
@@ -369,6 +395,7 @@ class TripService : Service() {
         val d = Json { ignoreUnknownKeys = true }.decodeFromString<DemoRoute>(text)
         val pts = d.points.map { Fix(it.lat, it.lng, 0) }
         watcher?.plan(pts, d.duration_s, tripStartedAt)
+        arrival = pts.lastOrNull()?.let { Arrival(it) }
         TripState.update { it.copy(destLabel = d.to, route = pts) }
         true
     }.getOrDefault(false)
@@ -382,6 +409,7 @@ class TripService : Service() {
             app.saathi.data.TelemetryManager.flush(this) // send what the trip queued while she has signal
         }
         watcher = null
+        arrival = null
         TripState.update { it.copy(onTrip = false, mode = null, plate = null, app = null, driver = null,
             fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null) }
         RunState.cleanStop(this) // ended on purpose: the quiet after this is not a kill

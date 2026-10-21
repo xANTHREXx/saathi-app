@@ -154,6 +154,10 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
 
         SettingsSection(stringResource(R.string.places_title), stringResource(R.string.settings_places_hint)) {
             PlacesEditor(settings.places, { onChange(settings.copy(places = it)) })
+            SettingSwitch(
+                stringResource(R.string.settings_arrival_title), stringResource(R.string.settings_arrival_body),
+                settings.arrivalText, { onChange(settings.copy(arrivalText = it)) }, Modifier.padding(top = 16.dp),
+            )
         }
 
         SettingsSection(stringResource(R.string.settings_help_options)) {
