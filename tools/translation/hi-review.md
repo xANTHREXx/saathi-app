@@ -570,3 +570,44 @@ Counts: 413 entries (14 are plurals with a "one" and an "other" form, so some en
 | `tile_finish_setup` | Finish setup first | पहले सेटअप पूरा करें |  |
 | `tile_tap_text_name` | Tap to text %1$s | %1$s को मैसेज करने के लिए टैप करें |  |
 | `tile_tap_text_contacts` | Tap to text your contacts | अपने कॉन्टैक्ट को मैसेज करने के लिए टैप करें |  |
+
+## New on 2026-10-22: alerting additions (not yet reviewed)
+
+Added with the "Check on me" timer, arrival, back-tap, earphone button, shake, Call 112 and the one-tap intro text. All are drafts. `ready_told_message`, `no_112_full` and `settings_intro_contacts` replace earlier wording in the tables above; `ready_told_write` and `settings_write_contacts` were removed.
+
+| String name | English | Hindi | Notes |
+|---|---|---|---|
+| `ready_told_sub` | One text from your SIM, so a Saathi alert doesn't surprise them. | आपकी SIM से एक मैसेज, ताकि Saathi का अलर्ट आने पर वे चौंकें नहीं। |  |
+| `ready_told_send` | Text them | उन्हें मैसेज भेजें |  |
+| `ready_told_message` | Hi, I've added you as a contact in Saathi, my travel safety app. If you ever get a text from my number starting "Saathi alert", it's real. Please call me straight away and open the location link. | नमस्ते, मैंने आपको Saathi में कॉन्टैक्ट के तौर पर जोड़ा है। यह मेरा सफ़र की सुरक्षा वाला ऐप है। अगर कभी मेरे नंबर से "Saathi alert" से शुरू होने वाला मैसेज आए, तो वह सच है। कृपया तुरंत मुझे कॉल करें और लोकेशन का लिंक खोलें। | Sent to her contacts from her SIM, in the app's language. Keeps the English "Saathi alert": the alert SMS itself is English. |
+| `intro_sent` | Sent to %1$s | %1$s को भेज दिया |  |
+| `intro_failed` | Couldn't send to %1$s. Try again. | %1$s को नहीं भेज पाए। फिर से कोशिश करें। |  |
+| `no_112_full` | Saathi doesn't call 112 for you. Tap Call 112 to dial it. | Saathi आपके लिए 112 पर कॉल नहीं करता। डायल करने के लिए "112 पर कॉल करें" दबाएँ। |  |
+| `call_112` | Call 112 | 112 पर कॉल करें |  |
+| `settings_intro_contacts` | Text %1$s that you added them | %1$s को मैसेज भेजें कि आपने उन्हें जोड़ा है |  |
+| `settings_dying_title` | Low battery and switched-off texts | बैटरी कम होने और फ़ोन बंद होने पर मैसेज |  |
+| `settings_dying_body` | During a trip, text your contacts your last location if the battery reaches 5% or the phone is switched off. Some phones switch off too fast for the text to go. | सफ़र के दौरान बैटरी 5% पर पहुँचे या फ़ोन बंद हो, तो आपके कॉन्टैक्ट को आपकी आख़िरी लोकेशन मैसेज की जाएगी। कुछ फ़ोन इतनी जल्दी बंद होते हैं कि मैसेज नहीं जा पाता। |  |
+| `check_title` | Check on me | मेरा हाल पूछें | ⚠ Feature name. "Check on me" rendered as "ask how I am". |
+| `check_sub` | No ride app? Saathi asks if you're okay when the time runs out. | राइड ऐप नहीं है? समय पूरा होने पर Saathi पूछेगा कि आप ठीक हैं या नहीं। |  |
+| `check_set` | Set a time | समय चुनें |  |
+| `check_minutes` | one: %1$d min<br>other: %1$d min | one: %1$d मिनट<br>other: %1$d मिनट |  |
+| `check_running` | Checking on you at %1$s | %1$s बजे आपका हाल पूछेंगे | ⚠ Word order around the time. |
+| `check_add` | Add 10 min | 10 मिनट और |  |
+| `check_cancel` | Cancel check | जाँच रद्द करें |  |
+| `event_timer` | one: your %1$d-minute check ran out<br>other: your %1$d-minute check ran out | one: आपका %1$d मिनट का समय पूरा हुआ<br>other: आपका %1$d मिनट का समय पूरा हुआ |  |
+| `line_ends_at_place` | Ends on its own when you reach %1$s. | %1$s पहुँचते ही यह अपने-आप बंद हो जाएगा। |  |
+| `settings_arrival_title` | Text when I arrive | पहुँचने पर मैसेज |  |
+| `settings_arrival_body` | A trip ends on its own when you reach the saved place it was headed to. Turn this on to also text your contacts then, one text each trip. | सफ़र जिस सेव की हुई जगह की ओर था, वहाँ पहुँचते ही सफ़र अपने-आप खत्म हो जाता है। इसे चालू करें तो उसी समय आपके कॉन्टैक्ट को भी मैसेज जाएगा, हर सफ़र में एक। |  |
+| `help_now_label` | Saathi Help | Saathi मदद | Shows in the app drawer beside Saathi; keep it short. |
+| `help_now_short` | Get help | मदद लें |  |
+| `help_now_title` | Getting help | मदद माँगी जा रही है |  |
+| `help_now_not_sent` | Not sent. Nobody was texted. | नहीं भेजा। किसी को मैसेज नहीं गया। |  |
+| `notif_pending_title` | Texting your contacts in %1$d seconds | %1$d सेकंड में आपके कॉन्टैक्ट को मैसेज जाएगा |  |
+| `notif_pending_text` | You pressed the earphone button 3 times. | आपने ईयरफ़ोन का बटन 3 बार दबाया। |  |
+| `event_shake` | phone shaken hard | फ़ोन ज़ोर से हिलाया गया |  |
+| `settings_headset_title` | Earphone button for help | मदद के लिए ईयरफ़ोन का बटन |  |
+| `settings_headset_body` | On a trip, press your earphone button 3 times quickly. Your contacts are texted after 5 seconds unless you tap Don't text. Works while no music or video is playing. | सफ़र के दौरान ईयरफ़ोन का बटन जल्दी-जल्दी 3 बार दबाएँ। 5 सेकंड बाद आपके कॉन्टैक्ट को मैसेज जाएगा, जब तक आप "मैसेज न भेजें" न दबाएँ। तभी काम करता है जब कोई गाना या वीडियो न चल रहा हो। | Quotes `speak_dont_text`. |
+| `settings_shake_title` | Shake for a check-in | हिलाने पर हाल पूछें |  |
+| `settings_shake_body` | On a trip, shake the phone hard 3 times and Saathi asks "Are you okay?". Bumpy rides may set it off. | सफ़र के दौरान फ़ोन को ज़ोर से 3 बार हिलाएँ, तो Saathi पूछेगा "क्या आप ठीक हैं?"। ऊबड़-खाबड़ रास्ते पर यह अपने-आप भी हो सकता है। |  |
+| `settings_backtap_title` | Back-tap for help | पीछे टैप करके मदद |  |
+| `settings_backtap_body` | Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi's icon for the same Get help shortcut. | कुछ फ़ोन में पीछे दो बार टैप करने पर कोई ऐप खुलता है। उसमें Saathi मदद चुनें। Pixel: सेटिंग्स › सिस्टम › जेस्चर › क्विक टैप। Samsung: Good Lock › RegiStar। रद्द करने के लिए 5 सेकंड मिलेंगे। Saathi के आइकन को दबाकर रखने पर भी "मदद लें" मिलता है। | ⚠ The menu paths are the phone makers' own; on a Hindi phone their labels may differ. |

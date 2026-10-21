@@ -1,5 +1,31 @@
 # Changelog & Agent Reference
 
+## [Unreleased] - 2026-10-22: More ways to ask for help, and texts that make silence mean something
+
+### What she gets
+- **Call 112** on the alert screen and the alert notification (opens the dialer with 112 filled in).
+- **"Tell them you added them" sends one text from her SIM**, naming the "Saathi alert" prefix. Contacts
+  added later are offered one; nobody is texted twice.
+- **Low battery and switched-off texts:** during a trip or a running timer, her contacts get her last location
+  when the battery reaches 5% or the phone shuts down. On by default (Settings › Help options).
+- **"Check on me" timer** on Home: 10, 20, 30 or 45 minutes, then the usual check-in. "Add 10 min" and
+  "Cancel check" work from the lock screen.
+- **Arriving ends the trip** when it reaches the saved place it was headed to. An optional arrival text is
+  off by default (Settings › Places).
+- **Saathi Help** in the app drawer and as a long-press shortcut, for back-tap gestures. 5 s to undo.
+- **Earphone button ×3** for help, and **shake ×3** for a check-in, both on trips only and off until she
+  turns them on.
+
+### For coding agents: rules to keep
+- A deliberate gesture (Saathi Help, earphone button) calls `AlertManager.raiseAfter(reason, 5 s)`. An unclear
+  signal (shake, timer) calls `AlertManager.startCheckIn(event)`, never `raise` directly.
+- The extra texts (`batteryText`, `offText`, `arrivedText` in `core/AlertText.kt`) are not alerts. They go
+  through `TripService.textContacts` and never set `alertActive`. None may say "safe".
+- The timer lives in `TripState.checkAtMs` and is persisted in `RunState.check` so a restarted service fires it.
+- New `EventKind`s (`TIMER`, `SHAKE`) need wording in `ui/Localised.kt` `eventText`.
+- New strings go in `values/` and `values-hi/` (`StringsParityTest`), and in the review sheet
+  `tools/translation/hi-review.md`.
+
 ## [Unreleased] - 2026-10-21: In-App Updater & Diagnostic Telemetry Subsystems
 
 ### Overview for Coding Agents
