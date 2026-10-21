@@ -12,3 +12,6 @@ captures/
 *.jks
 *.keystore
 *.p12
+
+# Local working media, too large for the repo
+demo-video/

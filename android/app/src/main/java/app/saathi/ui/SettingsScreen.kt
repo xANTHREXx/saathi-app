@@ -1,5 +1,9 @@
 package app.saathi.ui
 
+import android.app.StatusBarManager
+import android.content.ComponentName
+import android.graphics.drawable.Icon
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -41,12 +45,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import app.saathi.BuildConfig
+import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.core.SetupProblem
 import app.saathi.data.Api.Release
 import app.saathi.data.AppUpdateManager
 import app.saathi.data.Settings
 import app.saathi.data.TelemetryManager
+import app.saathi.trigger.HelpTileService
 import app.saathi.ui.setup.ContactsEditor
 import app.saathi.ui.setup.PermissionList
 import app.saathi.ui.setup.PlacesEditor
@@ -142,6 +148,28 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 }
             }
 
+            Text("Quick Settings tile", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
+            Text(
+                "Pull down from the top of the screen, even when locked, and tap Saathi help. You get 5 seconds to tap again if it was a mistake.",
+                style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+            )
+            if (Build.VERSION.SDK_INT >= 33) {
+                FilledTonalButton(
+                    onClick = {
+                        ctx.getSystemService(StatusBarManager::class.java)?.requestAddTileService(
+                            ComponentName(ctx, HelpTileService::class.java), "Saathi help",
+                            Icon.createWithResource(ctx, R.drawable.ic_tile_help), ctx.mainExecutor,
+                        ) { }
+                    },
+                    modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
+                ) { Text("Add to Quick Settings") }
+            } else {
+                Text(
+                    "Edit your Quick Settings (the pencil icon) and drag Saathi help in.",
+                    style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+
             Text("Power button", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
             FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PRESS_CHOICES.forEach { (n, label) ->
@@ -153,7 +181,7 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 }
             }
             Text(
-                "Many phones open the camera on a double press, and Android's own Emergency SOS uses 5 presses. Pick a count that doesn't clash with yours.",
+                "Many phones open the camera on a double press, and Android's own Emergency SOS uses 5 presses. Pick a count that doesn't clash with yours. If presses open your camera, turn this off and use the Quick Settings tile.",
                 style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
             )
         }

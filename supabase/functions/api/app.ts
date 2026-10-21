@@ -18,17 +18,31 @@ export interface Deps {
   routesConfigured: boolean;
   livePageUrl: string;
   sample: boolean;
+  /** Secret for GET /reports (the owner's dashboard). Unset or under 32 characters switches the route off. */
+  reportsToken?: string;
   now?: () => number;
 }
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-saathi-device",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-saathi-device, x-saathi-test",
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const gone = () => new Response(null, { status: 410, headers: CORS });
+
+const REPORTS_TOKEN_MIN = 32;
+const REPORTS_DEFAULT_DAYS = 30, REPORTS_MAX_DAYS = 365;
+
+/** Constant-time string compare: hash both to 32 bytes, then fold the differences over every byte. */
+async function sameSecret(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [x, y] = await Promise.all([a, b].map(async (v) => new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(v)))));
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
 
 async function body(req: Request): Promise<Record<string, unknown>> {
   try {
@@ -99,7 +113,9 @@ export function makeHandler(d: Deps) {
     // Supabase passes /api/<path>; `supabase functions serve` and plain Deno may pass /functions/v1/api/<path> or /<path>.
     const path = url.pathname.replace(/^(\/functions\/v1)?\/api(?=\/|$)/, "") || "/";
     const device = req.headers.get("x-saathi-device")?.slice(0, 64) || "";
-    const m = (method: string, re: RegExp) => (req.method === method ? re.exec(path) : null);
+    // A test phone's rows are tagged so reports and real users never see them.
+    const test = req.headers.get("x-saathi-test") === "1";
+    const m =(method: string, re: RegExp) => (req.method === method ? re.exec(path) : null);
     let hit: RegExpExecArray | null;
 
     try {
@@ -134,7 +150,7 @@ export function makeHandler(d: Deps) {
       // --- community: anonymous, rounded, consented, deletable
       if (m("POST", /^\/community\/point$/)) {
         if (!device) return json({ error: "missing device" }, 400);
-        const p = await toPoint(d.hmac, await body(req), device);
+        const p = await toPoint(d.hmac, await body(req), device, false, test);
         if (!p) return json({ error: "bad point" }, 400);
         await d.store.addPoint(p);
         return json({ ok: true });
@@ -145,18 +161,18 @@ export function makeHandler(d: Deps) {
         const key = await plateKey(d.hmac, b.plate);
         const t = Number(b.t);
         if (!key || !Number.isFinite(t)) return json({ error: "bad ride" }, 400);
-        await d.store.addRide({ plate_key: key, account: await accountKey(d.hmac, device), t: Math.floor(t), case_key: await caseKey(d.hmac, device, b.case), sample: false });
+        await d.store.addRide({ plate_key: key, account: await accountKey(d.hmac, device), t: Math.floor(t), case_key: await caseKey(d.hmac, device, b.case), sample: false, test });
         return json({ ok: true });
       }
       if (m("GET", /^\/community\/points$/)) {
         await ensureSeed();
-        return json({ sample: d.sample, points: await d.store.points(d.sample) });
+        return json({ sample: d.sample, points: await d.store.points(d.sample, test) });
       }
       if (m("GET", /^\/community\/vehicle$/)) {
         await ensureSeed();
         const key = await plateKey(d.hmac, url.searchParams.get("plate"));
         if (!key) return json({ rides: 0, reports: 0, flagged: false, sample: d.sample });
-        const v = await d.store.vehicle(key, Math.floor(now() / 1000) - WINDOW, d.sample);
+        const v = await d.store.vehicle(key, Math.floor(now() / 1000) - WINDOW, d.sample, test);
         return json({ ...vehicleSummary(v.reports, v.rides), sample: d.sample });
       }
       if (m("DELETE", /^\/community\/mine$/)) {
@@ -224,6 +240,7 @@ export function makeHandler(d: Deps) {
           message: c.message ? clean(c.message, 500) : null,
           stack_trace: clean(c.stackTrace ?? "", 8000),
           crashed_at: hourOf(c.crashedAt, nowMs),
+          test,
         }));
 
         const events = (Array.isArray(b.events) ? b.events.slice(0, MAX_EVENTS) : [])
@@ -234,12 +251,24 @@ export function makeHandler(d: Deps) {
             event_name: e.name as string,
             properties: cleanProps(e.properties),
             occurred_at: hourOf(e.occurredAt, nowMs),
+            test,
           }));
 
         // Junk-only batches still get a 200 so clients don't retry them forever.
         if (crashes.length) await d.store.addCrashes(crashes);
         if (events.length) await d.store.addEvents(events);
         return json({ ok: true, crashes: crashes.length, events: events.length });
+      }
+
+      // --- owner's dashboard: private, behind a secret bearer token, never cached
+      if (m("GET", /^\/reports$/) && d.reportsToken && d.reportsToken.length >= REPORTS_TOKEN_MIN) {
+        const given = /^Bearer (.+)$/.exec(req.headers.get("authorization") ?? "")?.[1] ?? "";
+        const noStore = { "Cache-Control": "no-store" };
+        if (!(await sameSecret(given, d.reportsToken))) return new Response(null, { status: 401, headers: { ...CORS, ...noStore } });
+        const n = Math.trunc(Number(url.searchParams.get("days") ?? REPORTS_DEFAULT_DAYS));
+        const days = Math.min(Math.max(Number.isFinite(n) ? n : REPORTS_DEFAULT_DAYS, 1), REPORTS_MAX_DAYS);
+        const report = await d.store.reports(url.searchParams.get("test") === "1", days);
+        return new Response(JSON.stringify(report), { status: 200, headers: { ...CORS, ...noStore, "Content-Type": "application/json" } });
       }
 
       return json({ error: "not found" }, 404);

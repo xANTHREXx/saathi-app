@@ -20,6 +20,7 @@ export interface CrashRow {
   message: string | null;
   stack_trace: string;
   crashed_at: string;
+  test: boolean;
 }
 
 export interface EventRow {
@@ -28,6 +29,7 @@ export interface EventRow {
   event_name: string;
   properties: Record<string, unknown>;
   occurred_at: string;
+  test: boolean;
 }
 
 /** Where the backend keeps state. Postgres on Supabase; memory for tests and running locally without Docker. */
@@ -36,15 +38,17 @@ export interface Store {
   putLive(s: LiveShare): Promise<void>;
   addPoint(p: PointRow): Promise<void>;
   addRide(r: RideRow): Promise<void>;
-  /** Public heatmap data: place, time band and kind only. */
-  points(includeSample: boolean): Promise<{ lat: number; lng: number; band: number; kind: string }[]>;
+  /** Public heatmap data: place, time band and kind only. Test-phone rows only show to test phones (`includeTest`). */
+  points(includeSample: boolean, includeTest: boolean): Promise<{ lat: number; lng: number; band: number; kind: string }[]>;
   /** Accounts that reported (points with this plate) and rode (rides with this plate) since `since`. */
-  vehicle(plateKey: string, since: number, includeSample: boolean): Promise<{ reports: string[]; rides: string[] }>;
+  vehicle(plateKey: string, since: number, includeSample: boolean, includeTest: boolean): Promise<{ reports: string[]; rides: string[] }>;
   hasSample(): Promise<boolean>;
   deleteMine(account: string, caseKey: string): Promise<number>;
   latestRelease(): Promise<ReleaseRow | null>;
   addCrashes(rows: CrashRow[]): Promise<void>;
   addEvents(rows: EventRow[]): Promise<void>;
+  /** The owner's dashboard numbers for the last `days` days (India time), real data or test phones only. See saathi_reports in the migrations. */
+  reports(test: boolean, days: number): Promise<unknown>;
 }
 
 export class MemoryStore implements Store {
@@ -59,11 +63,12 @@ export class MemoryStore implements Store {
   putLive(s: LiveShare) { this.live.set(s.token, s); return Promise.resolve(); }
   addPoint(p: PointRow) { this.pts.push(p); return Promise.resolve(); }
   addRide(r: RideRow) { this.rides.push(r); return Promise.resolve(); }
-  points(includeSample: boolean) {
-    return Promise.resolve(this.pts.filter((p) => includeSample || !p.sample).map(({ lat, lng, band, kind }) => ({ lat, lng, band, kind })));
+  points(includeSample: boolean, includeTest: boolean) {
+    return Promise.resolve(this.pts.filter((p) => (includeSample || !p.sample) && (includeTest || !p.test)).map(({ lat, lng, band, kind }) => ({ lat, lng, band, kind })));
   }
-  vehicle(plateKey: string, since: number, includeSample: boolean) {
-    const ok = (r: { plate_key: string | null; t: number; sample: boolean }) => r.plate_key === plateKey && r.t >= since && (includeSample || !r.sample);
+  vehicle(plateKey: string, since: number, includeSample: boolean, includeTest: boolean) {
+    const ok = (r: { plate_key: string | null; t: number; sample: boolean; test: boolean }) =>
+      r.plate_key === plateKey && r.t >= since && (includeSample || !r.sample) && (includeTest || !r.test);
     return Promise.resolve({ reports: this.pts.filter(ok).map((p) => p.account), rides: this.rides.filter(ok).map((r) => r.account) });
   }
   hasSample() { return Promise.resolve(this.pts.some((p) => p.sample)); }
@@ -87,11 +92,21 @@ export class MemoryStore implements Store {
     this.events.push(...rows);
     return Promise.resolve();
   }
+  /** A small stand-in for the SQL function: enough shape for tests, not the full report. */
+  reports(test: boolean, days: number) {
+    const ev = this.events.filter((e) => e.test === test);
+    const count = (name: string) => ev.filter((e) => e.event_name === name).length;
+    return Promise.resolve({
+      generated_at: new Date().toISOString(), days, test,
+      kpis: { active_installs: new Set(ev.map((e) => e.install_id)).size, trips: count("trip_started"), crashes: this.crashes.filter((c) => c.test === test).length },
+      daily: [], funnels: [], breakdowns: {}, crashes: [],
+    });
+  }
 }
 
 // Minimal slice of supabase-js we use, so this file type-checks without pulling the client into tests.
 // deno-lint-ignore no-explicit-any
-type Db = { from(table: string): any };
+type Db = { from(table: string): any; rpc(fn: string, args: Record<string, unknown>): any };
 
 // deno-lint-ignore no-explicit-any
 const must = ({ data, error }: { data: any; error: unknown }): any => {
@@ -115,15 +130,17 @@ export class PgStore implements Store {
   }
   async addPoint(p: PointRow) { must(await this.db.from("community_points").insert(p)); }
   async addRide(r: RideRow) { must(await this.db.from("vehicle_rides").insert(r)); }
-  async points(includeSample: boolean) {
+  async points(includeSample: boolean, includeTest: boolean) {
     let q = this.db.from("community_points").select("lat,lng,band,kind").order("t", { ascending: false }).limit(5000);
     if (!includeSample) q = q.eq("sample", false);
+    if (!includeTest) q = q.eq("test", false);
     return must(await q);
   }
-  async vehicle(plateKey: string, since: number, includeSample: boolean) {
+  async vehicle(plateKey: string, since: number, includeSample: boolean, includeTest: boolean) {
     const pick = async (table: string) => {
       let q = this.db.from(table).select("account").eq("plate_key", plateKey).gte("t", since).limit(10000);
       if (!includeSample) q = q.eq("sample", false);
+      if (!includeTest) q = q.eq("test", false);
       return (must(await q) as { account: string }[]).map((r) => r.account);
     };
     return { reports: await pick("community_points"), rides: await pick("vehicle_rides") };
@@ -161,5 +178,8 @@ export class PgStore implements Store {
   async addEvents(rows: EventRow[]) {
     if (rows.length === 0) return;
     must(await this.db.from("app_events").insert(rows));
+  }
+  async reports(test: boolean, days: number) {
+    return must(await this.db.rpc("saathi_reports", { want_test: test, days }));
   }
 }

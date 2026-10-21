@@ -5,11 +5,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-enum class Reason { NO_RESPONSE, POWER_BUTTON, NOTIFICATION, WIDGET_SOS, HOLD, SPEAK_FOR_ME, COMPANION, PLATE_MISMATCH }
+enum class Reason { NO_RESPONSE, POWER_BUTTON, NOTIFICATION, WIDGET_SOS, HOLD, SPEAK_FOR_ME, COMPANION, PLATE_MISMATCH, QS_TILE }
 
 private fun phrase(r: Reason) = when (r) {
     Reason.NO_RESPONSE -> "hasn't answered a check-in"
-    Reason.POWER_BUTTON, Reason.NOTIFICATION, Reason.WIDGET_SOS, Reason.HOLD -> "asked for help"
+    Reason.POWER_BUTTON, Reason.NOTIFICATION, Reason.WIDGET_SOS, Reason.HOLD, Reason.QS_TILE -> "asked for help"
     Reason.SPEAK_FOR_ME -> "used Speak for me"
     Reason.COMPANION -> "asked for help on a call"
     Reason.PLATE_MISMATCH -> "says the vehicle plate doesn't match the booking"

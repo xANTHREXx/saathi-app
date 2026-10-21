@@ -7,6 +7,7 @@ import app.saathi.core.TripEvent
 import app.saathi.core.alertText
 import app.saathi.core.okText
 import app.saathi.core.recipients
+import app.saathi.core.retryTargets
 import app.saathi.data.Store
 import app.saathi.data.TelemetryManager
 import app.saathi.trip.LocationOnce
@@ -37,6 +38,8 @@ object AlertManager {
     private lateinit var alarm: Alarm
     private lateinit var recorder: Recorder
     private val alertLog = mutableListOf<String>()
+    /** The text the current alert went out with, kept so a manual retry sends the same message. */
+    @Volatile private var lastAlertText: String? = null
 
     /** Called by the trip service when she says she's okay, so the watcher can start fresh. */
     var onOkay: (() -> Unit)? = null
@@ -123,6 +126,7 @@ object AlertManager {
             val fixAge = if (ui.lastFixAtMs == 0L) 0 else (System.currentTimeMillis() - ui.lastFixAtMs) / 1000
             val text = alertText(s.name.ifBlank { "Your contact" }, reason, ui.plate, event ?: ui.events.lastOrNull(),
                 ui.place.label, ui.lastFix?.copy(t = ui.lastFixAtMs / 1000), fixAge, liveUrl)
+            lastAlertText = text
             val r = SmsSender.send(app, to, text)
             alertLog += "${reason.name} at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
             Log.i("Saathi", "alert ${reason.name}: $text")
@@ -137,8 +141,26 @@ object AlertManager {
         }
     }
 
+    /**
+     * Her one manual retry: texts the same alert to only the contacts it could not reach. Does nothing
+     * unless an alert is active with failures, so it can never start a second alert or text anyone twice.
+     */
+    fun resend() {
+        scope.launch(Dispatchers.IO) {
+            val ui = TripState.now
+            val text = lastAlertText
+            if (!ui.alertActive || ui.smsFailed.isEmpty() || text == null) return@launch
+            val to = retryTargets(Store.settings(app).contacts, TripState.city(), ui.smsFailed)
+            val r = SmsSender.send(app, to, text)
+            alertLog += "RETRY at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
+            TripState.update { it.copy(told = (it.told + r.sent).distinct(), smsFailed = r.failed) }
+            Notifier.showAlerted(app, TripState.now.told, r.failed)
+        }
+    }
+
     /** She's okay: stop everything, tell contacts only if an alert went out. */
     fun imOkay() {
+        lastAlertText = null
         if (TripState.now.practice) { endPractice(); return } // a practice: nothing was sent, so nothing to take back
         clearPending() // she says she's fine: a Speak for me window still counting down never goes out
         val wasAlert = TripState.now.alertActive

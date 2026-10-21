@@ -69,6 +69,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -88,8 +89,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.material3.AlertDialog
+import app.saathi.core.recipients
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -97,12 +106,23 @@ import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
 import app.saathi.core.Reason
 import app.saathi.data.Settings
+import app.saathi.BuildConfig
 import app.saathi.data.Store
+import app.saathi.data.TestDevice
 import app.saathi.data.TripRecord
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.trip.UiState
+import app.saathi.ui.setup.Perm
 import app.saathi.ui.setup.SetupFlow
+import app.saathi.ui.setup.firstMissingRequired
+import app.saathi.ui.setup.readAllPerms
+import android.net.Uri
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import app.saathi.R
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import app.saathi.ui.theme.PlateText
 import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiMark
@@ -207,9 +227,12 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
     val ctx = LocalContext.current
     var showDemo by remember { mutableStateOf(false) }
 
+    // The map only peeks above the sheet, scaled to the screen so short phones keep room for the sheet's last rows.
+    val peek = (LocalConfiguration.current.screenHeightDp * 0.2f).coerceIn(112f, 184f)
     Column(Modifier.fillMaxSize()) {
     Box(Modifier.fillMaxWidth().weight(1f)) {
-        TripMap(s, Modifier.fillMaxWidth().height(340.dp))
+        // Tall enough to run under the sheet, short enough that her position dot stays above it.
+        TripMap(s, Modifier.fillMaxWidth().height((peek + 120f).dp))
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -223,7 +246,7 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
                 }
                 s.plate?.let { p -> MapChip { PlateText(p) } }
             }
-            Spacer(Modifier.height(236.dp))
+            Spacer(Modifier.height(peek.dp))
             Surface(
                 Modifier.fillMaxWidth(), shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 color = MaterialTheme.colorScheme.background,
@@ -234,7 +257,7 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
                     if (s.alertActive) ToldBanner(s)
                     if (s.onTrip) OnTrip(s) else Ready()
                     AfterTrip(settings, onChange)
-                    if (showDemo) DemoPanel()
+                    if (showDemo) DemoPanel(settings, onChange)
                 }
             }
         }
@@ -261,6 +284,7 @@ private fun MapChip(modifier: Modifier = Modifier, content: @Composable () -> Un
 @Composable
 private fun ToldBanner(s: UiState) {
     val c = Saathi.colors
+    val no112 = stringResource(R.string.no_112)
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.helpContainer).padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -273,7 +297,7 @@ private fun ToldBanner(s: UiState) {
                 Text(buildString {
                     append("Live location link sent")
                     if (s.recording) append(" · recording on this phone")
-                    append(" · emergency step simulated")
+                    append(" · $no112")
                 }, style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
                 if (s.smsFailed.isNotEmpty()) Text("Couldn't send to ${names(s.smsFailed)}. Retrying.",
                     style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer)
@@ -318,6 +342,8 @@ private fun OnTrip(s: UiState) {
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { delay(15_000); tick++ } }
     val minutes = remember(s.trail.size, s.startedAtMs, tick) { watchedMinutes(s) }
+    var endArmed by remember { mutableStateOf(false) }
+    LaunchedEffect(endArmed) { if (endArmed) { delay(4_000); endArmed = false } }
 
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.Top) {
@@ -325,8 +351,9 @@ private fun OnTrip(s: UiState) {
                 Text(s.driver?.let { "With $it" } ?: s.place.label ?: "On your way", style = MaterialTheme.typography.titleLarge,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.size(8.dp).background(c.ok, CircleShape))
-                    Text("Watching your ${s.app?.let { "$it " } ?: ""}${modeLabel(s)}", style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+                    // Green only while all is quiet: alum at a check-in, madder once contacts were told.
+                    Box(Modifier.size(8.dp).background(if (s.alertActive) c.help else if (s.checkInEndsAtMs != null) c.alum else c.ok, CircleShape))
+                    Text("Watching your${s.app?.let { "$it " } ?: ""}${modeLabel(s)}", style = MaterialTheme.typography.bodyMedium, color = c.fg2)
                 }
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -335,15 +362,20 @@ private fun OnTrip(s: UiState) {
             }
         }
         DestinationRow(s)
-        LineDiagram(s, minutes)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Her two actions come before the thread, so they are on screen without scrolling. Never during a
+        // check-in or alert, when ending the trip is the wrong thing to offer.
+        if (s.checkInEndsAtMs == null && !s.alertActive) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (s.plate != null) FilledTonalButton(onClick = {
                 ctx.startActivity(Intent(ctx, PlateCheckActivity::class.java).putExtra(PlateCheckActivity.EXTRA_BOOKED, s.plate))
-            }) { Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Check plate") }
-            FilledTonalButton(onClick = { ctx.startForegroundService(TripService.intent(ctx, TripService.ACTION_STOP_TRIP)) }) {
-                Icon(Icons.Rounded.StopCircle, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End trip")
+            }, Modifier.weight(1f)) { Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.check_plate)) }
+            // The first tap only arms it, and it disarms itself, so one stray tap can't stop the watching.
+            if (endArmed) Button(onClick = { ctx.startForegroundService(TripService.intent(ctx, TripService.ACTION_STOP_TRIP)) }, Modifier.weight(1f)) {
+                Icon(Icons.Rounded.StopCircle, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.end_trip_armed))
+            } else FilledTonalButton(onClick = { endArmed = true }, Modifier.weight(1f)) {
+                Icon(Icons.Rounded.StopCircle, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.end_trip))
             }
         }
+        LineDiagram(s, minutes)
     }
 }
 
@@ -383,6 +415,9 @@ private fun LineDiagram(s: UiState, minutes: Int) {
                 }
                 if (shown == 0) Box(Modifier.width(3.dp).height(18.dp).background(c.starOff, RoundedCornerShape(2.dp)))
             }
+            // Only the newest stars fit; say how much of the thread runs further back.
+            if (minutes > shown) Text(stringResource(R.string.thread_earlier, minutes - shown), style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                modifier = Modifier.padding(start = 14.dp, top = 2.dp))
         }
         }
         s.events.forEach { e ->
@@ -422,8 +457,14 @@ private fun Ready() {
     val c = Saathi.colors
     var autoOpen by remember { mutableStateOf(false) }
     var plate by remember { mutableStateOf("") }
+    var perms by remember { mutableStateOf(readAllPerms(ctx)) }
+    // Back from system settings, she should see the fix land.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { perms = readAllPerms(ctx) }
+    val ridesOn = perms[Perm.RIDES] == true
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Uber, Ola and Rapido rides start on their own", style = MaterialTheme.typography.titleLarge)
+        // The promise is only made when it is true: with ride access off, she is asked to start trips herself.
+        Text(stringResource(if (ridesOn) R.string.ready_title_rides else R.string.ready_title_manual), style = MaterialTheme.typography.titleLarge)
+        ReadyStatus(perms)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ModeChip(Icons.AutoMirrored.Rounded.DirectionsWalk, "Walk", Modifier.weight(1f)) { startTrip(ctx, "WALK") }
             ModeChip(Icons.Rounded.DirectionsBus, "Bus", Modifier.weight(1f)) { startTrip(ctx, "BUS") }
@@ -435,6 +476,45 @@ private fun Ready() {
             Button(onClick = { startTrip(ctx, "AUTO", plate.ifBlank { null }); autoOpen = false }, Modifier.height(56.dp)) { Text("Start") }
         }
     }
+}
+
+/** Is she actually armed? Reads the real permission state, and a missing one is one tap from its fix. */
+@Composable
+private fun ReadyStatus(perms: Map<Perm, Boolean>) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    val missing = firstMissingRequired(perms)
+    val fix: Perm? = missing ?: if (perms[Perm.RIDES] != true) Perm.RIDES else null
+    // One full sentence per permission, so a translation never has to slot a title into a template.
+    val text = stringResource(if (fix != null) permOffText(fix) else R.string.status_ready)
+    val open = {
+        ctx.startActivity(
+            if (fix == Perm.RIDES) Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+            else Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}")),
+        )
+    }
+    Row(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+            .then(if (fix != null) Modifier.background(c.alum.copy(alpha = 0.16f)).clickable(role = Role.Button, onClick = open) else Modifier)
+            .heightIn(min = 48.dp).padding(horizontal = if (fix != null) 14.dp else 0.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(Modifier.size(8.dp).background(if (fix != null) c.alum else c.ok, CircleShape))
+        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+            color = if (fix != null) MaterialTheme.colorScheme.onBackground else c.fg2)
+        if (fix != null) Text(stringResource(R.string.status_fix), style = MaterialTheme.typography.labelLarge, color = c.alum)
+    }
+}
+
+@StringRes
+private fun permOffText(p: Perm): Int = when (p) {
+    Perm.LOCATION -> R.string.perm_off_location
+    Perm.LOCATION_ALWAYS -> R.string.perm_off_location_always
+    Perm.SMS -> R.string.perm_off_sms
+    Perm.NOTIFICATIONS -> R.string.perm_off_notifications
+    Perm.LOCK_SCREEN -> R.string.perm_off_lock_screen
+    Perm.BACKGROUND -> R.string.perm_off_background
+    Perm.RIDES, Perm.MICROPHONE -> R.string.perm_off_rides
 }
 
 @Composable
@@ -480,13 +560,26 @@ private fun Tile(icon: ImageVector, label: String, modifier: Modifier, onClick: 
 @Composable
 // quiet: help was already raised, so I'm okay owns the screen and this steps back to a tonal plate.
 private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean = false) {
+    // Once help is raised, holding again does nothing, so the plate stops pretending to be a control.
+    if (quiet) { HelpRaised(modifier); return }
     val c = Saathi.colors
     val scope = rememberCoroutineScope()
     val fill = remember { Animatable(0f) }
     var holding by remember { mutableStateOf(false) }
-    val who = names(settings.contacts.map { it.name }.take(2))
+    // Name who will really be texted: the same city-aware list the alert uses, not just the first two contacts.
+    val named = recipients(settings.contacts, TripState.city()).map { it.name }
+    val who = names(named.take(2)) + if (named.size > 2) " +${named.size - 2}" else ""
+    var confirmNow by remember { mutableStateOf(false) }
+    val spoken = if (who.isNotBlank()) stringResource(R.string.help_spoken, who) else stringResource(R.string.help_spoken_none)
+    val raiseLabel = stringResource(R.string.help_action)
     Box(
-        modifier.clip(RoundedCornerShape(32.dp)).background(if (quiet) c.helpContainer else c.help)
+        modifier.clip(RoundedCornerShape(32.dp)).background(c.help)
+            // TalkBack and Switch Access cannot hold, so they get one deliberate activation, confirmed first.
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription = spoken
+                onClick(label = raiseLabel) { confirmNow = true; true }
+            }
             .pointerInput(Unit) {
                 detectTapGestures(onPress = {
                     holding = true
@@ -494,6 +587,8 @@ private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean =
                     job = scope.launch {
                         fill.snapTo(0f); fill.animateTo(1f, tween(2000, easing = LinearEasing))
                         AlertManager.raise(Reason.HOLD)
+                        // Fired: stop saying "Keep holding" while her finger is still down.
+                        holding = false
                     }
                     tryAwaitRelease()
                     job.cancel(); holding = false
@@ -501,14 +596,50 @@ private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean =
                 })
             },
     ) {
+        if (confirmNow) AlertDialog(
+            onDismissRequest = { confirmNow = false },
+            title = { Text(stringResource(R.string.help_dialog_title)) },
+            text = { Text(if (who.isNotBlank()) stringResource(R.string.help_dialog_text, who) else stringResource(R.string.help_dialog_text_none)) },
+            // Filled madder with white text (about 5:1); red text on the dark dialog surface was about 3:1.
+            confirmButton = { Button({ confirmNow = false; AlertManager.raise(Reason.HOLD) }, Modifier.heightIn(min = 52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = c.help, contentColor = Color.White)) { Text(stringResource(R.string.help_dialog_send)) } },
+            dismissButton = { FilledTonalButton({ confirmNow = false }, Modifier.heightIn(min = 52.dp)) { Text(stringResource(R.string.help_dialog_cancel)) } },
+        )
         Box(Modifier.fillMaxHeight().fillMaxWidth(fill.value).background(Color.Black.copy(alpha = 0.22f)))
         Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.Bottom) {
             Column {
-                Text(if (holding) "Keep holding…" else if (quiet) "Hold to alert again" else "Hold for help", style = if (quiet) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium, color = if (quiet) c.onHelpContainer else Color.White)
-                Text(if (who.isNotBlank()) "2 seconds · texts $who" else "2 seconds · texts your contacts",
-                    style = MaterialTheme.typography.bodySmall, color = if (quiet) c.onHelpContainer.copy(alpha = 0.8f) else c.onHelpContainer.let { if (c.isDark) it else Color(0xFFFFE3DF) },
-                    maxLines = 2, modifier = Modifier.padding(top = 4.dp))
+                Text(stringResource(if (holding) R.string.help_holding else R.string.help_title), style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                Text(if (who.isNotBlank()) stringResource(R.string.help_sub, who) else stringResource(R.string.help_sub_none),
+                    style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.92f), // ~4.9:1 on madder; the old tint was about 4.2:1
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
             }
+        }
+    }
+}
+
+/**
+ * Help is already raised: a status, not a control. It says so, and if a text did not go out it offers
+ * the one thing she can still do, which is try those contacts again.
+ */
+@Composable
+private fun HelpRaised(modifier: Modifier) {
+    val c = Saathi.colors
+    val s by TripState.ui.collectAsState()
+    val failed = s.smsFailed
+    val raised = stringResource(R.string.raised_title)
+    Column(
+        modifier.clip(RoundedCornerShape(32.dp)).background(c.helpContainer).padding(18.dp)
+            .semantics(mergeDescendants = true) { stateDescription = raised },
+        verticalArrangement = Arrangement.Bottom,
+    ) {
+        Text(raised, style = MaterialTheme.typography.titleLarge, color = c.onHelpContainer)
+        if (failed.isEmpty()) Text(stringResource(R.string.raised_told), style = MaterialTheme.typography.bodySmall,
+            color = c.onHelpContainer.copy(alpha = 0.8f), modifier = Modifier.padding(top = 4.dp))
+        else {
+            Text(stringResource(R.string.raised_failed, names(failed)), style = MaterialTheme.typography.bodySmall,
+                color = c.onHelpContainer, modifier = Modifier.padding(top = 4.dp))
+            Button(onClick = { AlertManager.resend() }, Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = c.help, contentColor = Color.White)) { Text(stringResource(R.string.raised_retry)) }
         }
     }
 }
@@ -629,6 +760,8 @@ private fun TripsTab() {
 @Composable
 private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit, onDelete: () -> Unit) {
     var confirm by remember { mutableStateOf(false) }
+    // An armed delete disarms itself, so a stray tap later can't erase a record.
+    LaunchedEffect(confirm) { if (confirm) { delay(4_000); confirm = false } }
     val c = Saathi.colors
     Column(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerLow)
@@ -659,14 +792,32 @@ private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit, onDel
 }
 
 @Composable
-private fun DemoPanel() {
+private fun DemoPanel(settings: Settings, onChange: (Settings) -> Unit) {
     val ctx = LocalContext.current
     var cityOverride by remember { mutableStateOf("") }
+    val isTest = TestDevice.resolve(settings.testDevice, BuildConfig.DEBUG)
     Column(
         Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
+                value = isTest, role = Role.Switch,
+                onValueChange = { onChange(settings.copy(testDevice = it)); TestDevice.update(it) },
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("This is a test phone", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "Its trips, reports and stats are kept out of real numbers.",
+                    style = MaterialTheme.typography.bodyMedium, color = Saathi.colors.fg2,
+                )
+            }
+            Switch(checked = isTest, onCheckedChange = null)
+        }
         Text("Demo panel (sample data)", style = MaterialTheme.typography.titleSmall)
         OutlinedButton(onClick = { startTrip(ctx, "AUTO", "KA05AB1234", "Uber", replay = "blr-auto") }) { Text("Replay: Bengaluru Uber auto, 30×") }
         OutlinedButton(onClick = { startTrip(ctx, "BUS", replay = "pune-bus") }) { Text("Replay: Pune bus, 30×") }

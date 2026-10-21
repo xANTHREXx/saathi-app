@@ -56,6 +56,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import app.saathi.R
 import androidx.compose.ui.unit.sp
 import app.saathi.alert.AlertManager
 import app.saathi.core.Reason
@@ -199,7 +201,7 @@ private fun ToldBanner(told: List<String>) {
         Column {
             Text(if (told.isEmpty()) "Telling your contacts…" else "${told.joinToString(" and ")} ${if (told.size == 1) "was" else "were"} told",
                 style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
-            Text("Live location sent · recording on this phone · emergency step simulated",
+            Text("Live location sent · recording on this phone · ${stringResource(R.string.no_112)}",
                 style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
         }
     }

@@ -33,6 +33,12 @@ class AlertTextTest {
     }
 
     @Test
+    fun quickSettingsTileReadsAsAskedForHelp() {
+        val s = alertText("Priya", Reason.QS_TILE, null, null, null, null, 0, null, ist)
+        assertTrue(s, s.startsWith("Saathi alert: Priya asked for help."))
+    }
+
+    @Test
     fun alertTextWithoutAnyFixStillSends() {
         val s = alertText("Priya", Reason.SPEAK_FOR_ME, null, null, null, null, 0, null, ist)
         assertTrue(s, s.startsWith("Saathi alert: Priya used Speak for me."))

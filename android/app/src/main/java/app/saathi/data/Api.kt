@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
  * phone knows. Community calls carry the device id, which the server only ever stores as a keyed hash.
  */
 object Api {
-    private val http = OkHttpClient.Builder().callTimeout(12, TimeUnit.SECONDS).build()
+    private val http = OkHttpClient.Builder().callTimeout(12, TimeUnit.SECONDS).addInterceptor(TestDevice.interceptor).build()
     private val jsonType = "application/json".toMediaType()
 
     /** `rides`: Saathi users who rode it; `reports`: those who said something felt off. Both over 90 days. */

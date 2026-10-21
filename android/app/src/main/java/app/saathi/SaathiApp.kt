@@ -3,10 +3,13 @@ package app.saathi
 import android.app.Application
 import app.saathi.data.CrashTracker
 import app.saathi.data.TelemetryManager
+import app.saathi.data.TestDevice
 
 class SaathiApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        // Before anything can call the backend: says whether this is a test phone.
+        TestDevice.init(this)
         // Register uncaught crash handler before anything else runs
         CrashTracker.install(this)
         // Flush any crashes recorded from previous run

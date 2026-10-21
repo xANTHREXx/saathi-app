@@ -2,4 +2,46 @@
 <resources>
     <string name="app_name">Saathi</string>
     <string name="widget_description">SOS speaks for you and alerts your contacts. Slide to start a trip.</string>
+
+    <!-- Home: Ready -->
+    <string name="ready_title_rides">Uber, Ola and Rapido rides start on their own</string>
+    <string name="ready_title_manual">How are you travelling?</string>
+    <string name="status_ready">Watching is on. Location, texts and check-ins are ready.</string>
+    <string name="status_fix">Fix</string>
+    <string name="perm_off_location">Location is off. Saathi can\'t see your trip.</string>
+    <string name="perm_off_location_always">Location isn\'t allowed all the time. Saathi stops watching when the screen is off.</string>
+    <string name="perm_off_sms">Texts are off. Saathi can\'t text your contacts.</string>
+    <string name="perm_off_notifications">Notifications are off. Check-ins can\'t reach you.</string>
+    <string name="perm_off_lock_screen">Check-ins can\'t show over the lock screen.</string>
+    <string name="perm_off_background">Battery saving may stop Saathi in the middle of a trip.</string>
+    <string name="perm_off_rides">Rides won\'t start on their own yet.</string>
+
+    <!-- Home: help -->
+    <string name="help_title">Hold for help</string>
+    <string name="help_holding">Keep holding…</string>
+    <string name="help_sub">2 seconds · texts %1$s</string>
+    <string name="help_sub_none">2 seconds · add a contact in Settings</string>
+    <string name="help_spoken">Raise help. Texts %1$s.</string>
+    <string name="help_spoken_none">Raise help. No contacts yet, add one in Settings.</string>
+    <string name="help_action">Raise help now</string>
+    <string name="help_dialog_title">Send help now?</string>
+    <string name="help_dialog_text">Saathi will text %1$s your live location.</string>
+    <string name="help_dialog_text_none">Saathi will start recording and sound the alarm. You have no contacts yet.</string>
+    <string name="help_dialog_send">Send help</string>
+    <string name="help_dialog_cancel">Cancel</string>
+    <string name="raised_title">Help already raised</string>
+    <string name="raised_told">Your contacts were told</string>
+    <string name="raised_failed">Couldn\'t reach %1$s</string>
+    <string name="raised_retry">Try again</string>
+
+    <!-- Home: trip -->
+    <string name="check_plate">Check plate</string>
+    <string name="end_trip">End trip</string>
+    <string name="end_trip_armed">Tap again to end</string>
+    <string name="thread_earlier">%1$d min earlier</string>
+
+    <!-- Alerts -->
+    <string name="no_112">Saathi doesn\'t call 112</string>
+    <string name="no_112_full">Saathi doesn\'t call 112. Call it yourself if you need to.</string>
+    <string name="alert_none_reached">No one was reached</string>
 </resources>

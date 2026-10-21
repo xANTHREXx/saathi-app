@@ -21,12 +21,12 @@ export const round3 = (x: number) => Math.round(x * 1000) / 1000;
 
 export interface PointRow {
   lat: number; lng: number; t: number; band: number; kind: string;
-  plate_key: string | null; account: string; case_key: string | null; sample: boolean;
+  plate_key: string | null; account: string; case_key: string | null; sample: boolean; test: boolean;
 }
-export interface RideRow { plate_key: string; account: string; t: number; case_key: string | null; sample: boolean }
+export interface RideRow { plate_key: string; account: string; t: number; case_key: string | null; sample: boolean; test: boolean }
 
-/** Anonymous point: rounded place, time band, kind, keyed plate. No names, no numbers. Null when the input is junk. */
-export async function toPoint(h: Hmac, body: Record<string, unknown>, device: string, sample = false): Promise<PointRow | null> {
+/** Anonymous point: rounded place, time band, kind, keyed plate. No names, no numbers. Null when the input is junk. `test` marks a test phone's row. */
+export async function toPoint(h: Hmac, body: Record<string, unknown>, device: string, sample = false, test = false): Promise<PointRow | null> {
   const lat = Number(body.lat), lng = Number(body.lng), t = Number(body.t);
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(t)) return null;
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
@@ -37,6 +37,7 @@ export async function toPoint(h: Hmac, body: Record<string, unknown>, device: st
     account: await accountKey(h, device),
     case_key: await caseKey(h, device, body.case),
     sample,
+    test,
   };
 }
 

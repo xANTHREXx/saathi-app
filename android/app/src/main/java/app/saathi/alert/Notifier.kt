@@ -1,6 +1,7 @@
 package app.saathi.alert
 
 import android.app.Notification
+import app.saathi.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -85,11 +86,11 @@ object Notifier {
         val text = buildString {
             append(if (told.isEmpty()) "No SMS went out." else "Told: ${told.joinToString()}.")
             if (failed.isNotEmpty()) append(" Failed: ${failed.joinToString()}.")
-            append(" Emergency step: simulated.")
+            append(" ${ctx.getString(R.string.no_112)}.")
         }
         val n = Notification.Builder(ctx, ALERT)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("Your contacts were told")
+            .setContentTitle(if (told.isEmpty()) ctx.getString(R.string.alert_none_reached) else "Your contacts were told")
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setVisibility(Notification.VISIBILITY_PUBLIC)

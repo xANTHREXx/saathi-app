@@ -246,7 +246,7 @@ The palette is three dyes on two grounds: indigo, madder and alum on night indig
 - **Ink 3** (night-ink-3 / day-ink-3): `outline` and `SaathiColors.fg3`. Used only for marks: the sheet handle (at 50%), the start station ring, the walked route on the map, and small fact icons.
 - **Hair** (night-hair / day-hair): 1dp edges on chips, cards and dividers, and the rule above the pinned help row.
 - **Star Off** (night-star-off / day-star-off): the rail under the stars and the faint "thread runs further back" stars.
-- **Ok Green** (night-ok / day-ok): the "watching" status dot, setup checks that are done, and the plate-match disc. It is never used as a fill for a control.
+- **Ok Green** (night-ok / day-ok): the "watching" status dot while all is quiet (it turns alum at a check-in and madder once contacts were told), setup checks that are done, and the plate-match disc. It is never used as a fill for a control.
 - **Plate White / Plate Black**: used only inside `PlateText`, which imitates a real Indian number plate in both themes.
 
 ### Named Rules
@@ -281,7 +281,7 @@ Font provenance: `res/font/figtree.ttf` is the Figtree variable font from the Go
 
 ## Layout
 
-The trip tab stacks a 340dp map behind a scrolling column. The column holds a top chip row (status-bar padded, 16dp gutters, 8dp gaps), then a 236dp spacer, then the sheet. The sheet has 28dp top corners and a 36x4dp handle 10dp from the top, and stacks its sections 14dp apart with 16dp horizontal gutters. A 92%-opaque ground scrim sits behind the status bar so the clock stays readable when the sheet scrolls under it. Below the scroll region, a 1dp hair rule and the help row are pinned above the Material navigation bar (Trip, My trips, Map, Settings).
+The trip tab stacks a map behind a scrolling column. The map peeks above the sheet by 20% of screen height (clamped to 112 to 184dp), and the map is that peek plus 120dp tall so her position stays above the sheet. The column holds a top chip row (status-bar padded, 16dp gutters, 8dp gaps), then a spacer of the peek height, then the sheet. On a trip the sheet reads status, then Check plate and End trip, then the line diagram. The sheet has 28dp top corners and a 36x4dp handle 10dp from the top, and stacks its sections 14dp apart with 16dp horizontal gutters. A 92%-opaque ground scrim sits behind the status bar so the clock stays readable when the sheet scrolls under it. Below the scroll region, a 1dp hair rule and the help row are pinned above the Material navigation bar (Trip, My trips, Map, Settings).
 
 The help row splits 1.15 : 1. Hold for help sits on the left. Speak for me and Call Saathi stack on the right as two tiles. Gaps are 10dp, and the row is at least 140dp high and grows with font scale.
 
@@ -316,7 +316,8 @@ Corners are generously round and come from the M3 shape scale: extra-small 8dp, 
 ### Reversed Plate (signature)
 There is exactly one full-contrast plate per screen.
 - **Hold for help:** madder ground, white headlineMedium label, and a bodySmall line naming who gets texted. It has 32dp corners and 18dp padding with content anchored to the bottom. Holding for 2s (linear) fills the plate with a dark wash and raises the alert. Releasing early drains the fill over 250ms.
-- **Quiet help (during an alert):** the plate steps back to madder container with an onHelpContainer "Hold to alert again" label in titleLarge, so that I'm okay owns the screen.
+- **Help raised (during an alert):** the plate steps back to madder container and stops being a control. It reads "Help already raised" in titleLarge with a line "Your contacts were told", so that I'm okay owns the screen. If a text failed, it names who could not be reached and offers one "Try again" button (madder, white text, 48dp) that resends only to them. It has no press handler and no dialog.
+- **Send help dialog:** TalkBack and Switch Access activate Hold for help once, behind a "Send help now?" dialog. "Send help" is a filled madder button with white text, at least 52dp; Cancel is tonal.
 - **I'm okay:** an inverse-surface plate (light on night, dark on day) with a check icon and a headlineMedium label, 88dp tall on Home and 96 to 108dp on check-in. It sits directly under the told banner during an alert.
 
 ### Chips
@@ -344,7 +345,7 @@ A vertical trip line. It shows a dim start station (ink-3 ring, fg2 title), then
 osmdroid tiles pass through a luminance-only colour matrix. At night it is inverted onto the indigo ramp (10,14,30 to 52,64,110). By day it maps onto a pale indigo ramp (190,196,214 to 250,251,253). Streets read as quiet structure. Her route draws as a 60%-alpha ink-3 hairline, with ajrakh stars stamped every 34px (in indigo while on a trip, in ink-3 afterwards). Her position is an indigo dot with a white ring inside a 20% indigo halo. With no fix yet, the map shows an 18%-opacity star on surface 2.
 
 ### Told Banner
-A madder-container row with 20dp corners and 14dp padding. It holds a 36dp madder disc with a white check, a titleSmall "X and Y were told", and a bodySmall line at 80% stating what was sent and that the emergency step is simulated.
+A madder-container row with 20dp corners and 14dp padding. It holds a 36dp madder disc with a white check, a titleSmall "X and Y were told", and a bodySmall line at 80% stating what was sent and that Saathi doesn't call 112.
 
 ### Check-in Countdown
 A 200dp ring with a 12dp stroke on surface 3, draining clockwise in alum from 12 o'clock with a round cap. Seconds sit in the centre at 72sp. The ring never turns red.
@@ -364,7 +365,8 @@ Night ground with 28dp corners. One madder Help tile (22dp corners, 30sp bold wh
 ### Do:
 - **Do** read every colour through `MaterialTheme.colorScheme` or `Saathi.colors`, so both night and day resolve.
 - **Do** keep exactly one reversed plate per screen: Hold for help normally, I'm okay during an alert or check-in.
-- **Do** step the help plate back to helpContainer with "Hold to alert again" while an alert is active.
+- **Do** step the help plate back to helpContainer as a "Help already raised" status while an alert is active, with no press handler.
+- **Do** hide End trip and Check plate during a check-in or alert, and make End trip arm on the first tap ("Tap again to end", disarming after 4 seconds).
 - **Do** pin help outside the scroll, under a 1dp hair rule.
 - **Do** stamp one ajrakh star per watched minute, and turn the newest one alum when the trip stalls.
 - **Do** use alum for anything that asks for attention before a message is sent.

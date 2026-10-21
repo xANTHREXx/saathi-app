@@ -23,4 +23,19 @@ class RecipientsTest {
     fun recipientsUnknownCityUsesAnywhereFirst() {
         assertEquals(listOf(amma), recipients(listOf(amma, aditi), null))
     }
+
+    @Test
+    fun retryTargetsOnlyThoseNotReached() {
+        assertEquals(listOf(riya), retryTargets(listOf(amma, riya, aditi), "Bengaluru", listOf("Riya")))
+    }
+
+    @Test
+    fun retryTargetsNeverTextsSomeoneAlreadyTold() {
+        assertEquals(emptyList<Contact>(), retryTargets(listOf(amma, riya), "Bengaluru", emptyList()))
+    }
+
+    @Test
+    fun retryTargetsSkipsAFailedContactWhoIsNoLongerARecipient() {
+        assertEquals(emptyList<Contact>(), retryTargets(listOf(amma, riya, aditi), "Bengaluru", listOf("Aditi")))
+    }
 }

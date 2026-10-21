@@ -52,7 +52,7 @@ export async function seedRows(h: Hmac, now = Math.floor(Date.now() / 1000)) {
       if (p) points.push(p);
     }
     for (let i = 0; i < v.rides; i++) {
-      rides.push({ plate_key: key, account: await accountKey(h, `seed-r-${v.plate}-${i}`), t: now - Math.floor(r() * 80) * 86400, case_key: null, sample: true });
+      rides.push({ plate_key: key, account: await accountKey(h, `seed-r-${v.plate}-${i}`), t: now - Math.floor(r() * 80) * 86400, case_key: null, sample: true, test: false });
     }
   }
   return { points, rides };

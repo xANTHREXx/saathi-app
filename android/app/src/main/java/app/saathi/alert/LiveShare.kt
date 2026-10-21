@@ -2,6 +2,7 @@ package app.saathi.alert
 
 import app.saathi.BuildConfig
 import app.saathi.core.Fix
+import app.saathi.data.TestDevice
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 /** The live-location page contacts open from the SMS. Needs data; everything else works without it. */
 object LiveShare {
-    private val http = OkHttpClient.Builder().callTimeout(4, TimeUnit.SECONDS).build()
+    private val http = OkHttpClient.Builder().callTimeout(4, TimeUnit.SECONDS).addInterceptor(TestDevice.interceptor).build()
     private val jsonType = "application/json".toMediaType()
     var token: String? = null
         private set

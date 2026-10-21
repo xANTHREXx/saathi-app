@@ -3,7 +3,9 @@
 <!-- impeccable:product-schema 1 -->
 
 Source of truth: `../../2026-10-18-saathi-prd.md` (v1.2, confirmed by the user 2026-10-18). This file
-holds the durable product record; the PRD holds requirement IDs and acceptance criteria.
+holds the durable product record; the PRD holds requirement IDs and acceptance criteria. Since
+2026-10-20 (v2) the project is open source and aimed at real use; `../../BRIEF.md` and
+`../../DECISIONS.md` carry the current phase.
 
 ## Platform
 
@@ -28,6 +30,10 @@ anything; they receive SMS and open a live-location link in any browser.
 
 Not users in this version: police, helplines, NGOs, ride platforms.
 
+**Secondary audience of the project itself (set 2026-10-20): hiring managers**, who judge it as proof
+of designing and shipping end to end, from research insight to working app. Real use by women comes
+first; "it shipped and here is what happened" outweighs polish.
+
 Demo persona (fictional): Priya, 26, moved from Pune to Bengaluru; metro then an Uber auto home
 after a late shift.
 
@@ -41,16 +47,20 @@ on the phone, and afterwards turns the trip into a sealed record with guidance o
 report. Small reports from many women add up into a map of where trouble happens and flags on
 vehicles reported again and again.
 
-Success, measured as behaviour: most of her commutes are watched; ride-app trips start with no
+Current phase success: the app is tested on a real phone, a few women use it on real commutes, and
+what happened is written down as the basis of a portfolio case study. Product success, measured as
+behaviour: most of her commutes are watched; ride-app trips start with no
 action and others in under 10 seconds; few false alarms (watch for more than 2 per 10 trips); every
 alert reaches at least one contact, offline included; small "nothing major" reports get filed; she
 is still using it after 7 days.
 
 ## Positioning
 
-Every safety app has a button, but a woman who freezes cannot press it. Saathi works when she does
-nothing: trips start on their own, the watcher decides on rules, and silence after a check-in is
-itself the trigger. It works offline over her own SIM, its contacts and language follow her when she
+Every safety app has a button, but a woman who is busy, scared or cannot reach her phone may not
+press it. Saathi works when she does nothing: trips start on their own, the watcher decides on rules,
+and silence after a check-in is itself the trigger. (The earlier "a woman who freezes cannot press a
+button" framing is not backed by the two discovery interviews, where neither woman froze and both
+acted; do not lean on it until real women's accounts support it.) It works offline over her own SIM, its contacts and language follow her when she
 moves cities, and her small unreported incidents become shared evidence other women can use.
 
 ## Operating Context
@@ -64,10 +74,13 @@ moves cities, and her small unreported incidents become shared evidence other wo
   reporting guidance, draft, optional small report.
 - Languages follow her location: the state's language, then Hindi, then English (Kannada, Marathi,
   Hindi, English in the demo).
-- Hackathon context: Google Cloud AI Builder Cup 2026, theme Sustainability & Social Impact, judged
-  40% technical merit and Gen AI, 25% problem alignment, 25% innovation, 10% UX. Backend on Cloud
-  Run and Firebase; APK via Firebase App Distribution. After the cup (2026-10-20) the backend moved to
-  Supabase so it runs with no billing; the Cloud Run server is in git history before that date.
+- Origin: built for the Google Cloud AI Builder Cup 2026 (submitted 2026-10-18; theme Sustainability &
+  Social Impact). The cup version stays at github.com/xANTHREXx/saathi.
+- v2 (from 2026-10-20): runs free with no billing account and is published as MIT open source at
+  github.com/xANTHREXx/saathi-app. Backend is Supabase (project Saathi_Mumbai, ap-south-1) with
+  OpenRouteService routes; companion replies use Groq first, Gemini as fallback. The live page is on
+  GitHub Pages. The Cloud Run server is in git history before that date.
+- First users get a direct APK. Not yet tried on a real phone.
 
 ## Capabilities and Constraints
 
@@ -86,7 +99,10 @@ moves cities, and her small unreported incidents become shared evidence other wo
 - **Safety copy:** never "you're safe", never a promise of rescue, never a request to describe what
   happened. Legal content always cites sources and says "This is information, not legal advice."
 - **Restricted permissions** (notification access, SMS, background location) mean a direct APK for
-  the hackathon; a Play Store release needs a policy review.
+  the first users; a Play Store release needs a policy review.
+- **Free tier only:** every service must run with no card or billing account.
+- **Unreviewed advice stays out:** the reporting guide and speak-for-me translations need a qualified
+  reviewer and a native speaker before real women rely on them.
 - **Terminology:** trip, watcher, check-in, alert, Speak for me, companion, sealed record,
   fingerprint, seal, reporting guidance, community data, heatmap, vehicle flag, area note.
 - **Undecided:** the product name (Saathi is the working name, not yet confirmed); whether the loud
@@ -109,8 +125,8 @@ moves cities, and her small unreported incidents become shared evidence other wo
   data, fictional people, routes and vehicles; app screenshots in `.superpowers/`.
 - **Absences future work must not fabricate:** no testimonials, no user counts, no real community
   data (anything shown carries a "Sample data" badge), no helpline, NGO or legal reviewer, no
-  partnerships with ride platforms or police. The emergency step in the demo is labelled
-  "simulated".
+  partnerships with ride platforms or police. Saathi never calls 112 (there is no emergency
+  call step in the code); alerts say so plainly: "Saathi doesn't call 112".
 
 ## Product Principles
 

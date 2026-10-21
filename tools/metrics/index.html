@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Saathi metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Indigo Cloth tokens from DESIGN.md. Night is the default; day follows the system. */
+:root {
+  --ground: #0D1222;
+  --s1: #141A2E;
+  --s2: #1B2340;
+  --s3: #252F52;
+  --ink: #EEF0F7;
+  --ink2: #AAB2CC;
+  --ink3: #6F7899;          /* marks only, never text */
+  --brand: #8FA2E8;
+  --brand-container: #25336B;
+  --on-brand-container: #DCE2FF;
+  --madder: #C7372F;        /* alerts and crashes only */
+  --alum: #E7B94A;
+  --ok: #7BD3A4;
+  --hair: #FFFFFF14;
+  --star-off: #FFFFFF24;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #F5F6FA;
+    --s1: #FFFFFF;
+    --s2: #EEF0F7;
+    --s3: #E2E6F2;
+    --ink: #11162A;
+    --ink2: #4D5675;
+    --ink3: #8790AD;
+    --brand: #2E3F86;
+    --brand-container: #DCE2FF;
+    --on-brand-container: #18245A;
+    --madder: #B42A23;
+    --alum: #8A5F00;
+    --ok: #1E7A4C;
+    --hair: #0D12221A;
+    --star-off: #2E3F8626;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 15px/21px Figtree, "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.top { border-top: 4px solid transparent; }
+body.is-test .top { border-top-color: var(--alum); }
+.top .wrap { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; flex-wrap: wrap; }
+.mark { width: 28px; height: 28px; border-radius: 9px; background: var(--brand-container); display: grid; place-items: center; flex: none; }
+.mark svg { width: 17px; height: 17px; }
+h1 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.015em; }
+h2 { margin: 28px 0 10px; font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.005em; }
+h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; }
+.sub { margin: 0; color: var(--ink2); font-size: 13px; line-height: 18px; }
+.pill {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 13px; line-height: 18px; font-weight: 500; color: var(--alum);
+  background: color-mix(in srgb, var(--alum) 16%, transparent);
+}
+
+.card { background: var(--s1); border: 1px solid var(--hair); border-radius: 24px; padding: 18px; min-width: 0; }
+
+/* controls */
+.btn {
+  min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; cursor: pointer;
+  font-weight: 600; font-size: 15px; background: var(--brand); color: var(--ground);
+}
+.btn.tonal { background: var(--s3); color: var(--ink); }
+.btn:disabled { opacity: .6; cursor: default; }
+.linkbtn { background: none; border: 0; padding: 8px 4px; min-height: 40px; color: var(--brand); text-decoration: underline; cursor: pointer; font-size: 14px; }
+.seg { display: inline-flex; background: var(--s2); border-radius: 999px; padding: 4px; gap: 2px; }
+.seg button {
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+  font-size: 14px; font-weight: 500; color: var(--ink2);
+}
+.seg button[aria-pressed="true"] { background: var(--brand-container); color: var(--on-brand-container); font-weight: 600; }
+
+.field { display: block; margin: 0 0 14px; }
+.field > span { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--ink2); }
+.field input[type="text"], .field input[type="password"] {
+  width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px;
+  background: var(--s1); border: 1px solid var(--ink3); color: var(--ink);
+}
+.field input:focus { outline: 2px solid var(--brand); outline-offset: 0; border-color: var(--brand); }
+.check { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; min-height: 40px; color: var(--ink2); font-size: 14px; }
+.check input { width: 20px; height: 20px; accent-color: var(--brand); flex: none; }
+
+.note { margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--s2); border-left: 4px solid var(--alum); color: var(--ink); font-size: 14px; }
+
+#connect { max-width: 520px; margin: 8px auto 0; }
+#connect p { margin: 0 0 16px; color: var(--ink2); }
+
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 8px 0 14px; }
+.bar .spacer { flex: 1 1 0; }
+.updated { color: var(--ink2); font-size: 13px; }
+
+/* KPI tiles */
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.tile { background: var(--s2); border-radius: 20px; padding: 14px; min-width: 0; }
+.tile .label { display: flex; align-items: center; gap: 6px; color: var(--ink2); font-size: 13px; line-height: 18px; font-weight: 500; }
+.tile .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--madder); flex: none; }
+.tile .value { margin: 4px 0 2px; font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; }
+.tile .small { color: var(--ink2); font-size: 13px; line-height: 18px; }
+
+/* charts */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; }
+.chart { position: relative; width: 100%; margin-top: 10px; }
+.empty { margin: 14px 0 4px; color: var(--ink2); }
+
+/* funnels */
+.steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
+.steprow { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.steprow .lbl { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.steprow .val { font-weight: 600; flex: none; }
+.track { height: 12px; border-radius: 999px; background: var(--s3); margin: 6px 0 4px; overflow: hidden; }
+.fill { height: 100%; border-radius: 999px; background: var(--brand); min-width: 2px; }
+.fill.alert { background: var(--madder); }
+.pcts { color: var(--ink2); font-size: 13px; line-height: 18px; }
+
+/* table */
+.tablewrap { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+th { color: var(--ink2); font-size: 13px; font-weight: 500; white-space: nowrap; }
+td.num, th.num { text-align: right; }
+td.msg { min-width: 260px; color: var(--ink2); overflow-wrap: anywhere; }
+td.when { white-space: nowrap; }
+
+footer { margin: 32px 0 8px; color: var(--ink2); font-size: 13px; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="-10 -10 20 20"><g fill="#fff"><rect x="-7.2" y="-7.2" width="14.4" height="14.4"/><rect x="-7.2" y="-7.2" width="14.4" height="14.4" transform="rotate(45)"/></g></svg>
+    </span>
+    <h1>Saathi metrics</h1>
+    <span id="testPill" class="pill" hidden>Test phones</span>
+  </div>
+  <div class="wrap" style="padding-top:0"><p class="sub">Private. Anonymous counts, read with your key.</p></div>
+</header>
+
+<main class="wrap">
+  <section id="connect" class="card" aria-labelledby="connectTitle">
+    <h2 id="connectTitle" style="margin-top:0">Connect</h2>
+    <p>This page holds no data. It asks your own server for the numbers each time, using your key.</p>
+    <form id="connectForm" autocomplete="off">
+      <label class="field"><span>API address</span>
+        <input id="apiUrl" type="text" inputmode="url" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
+      <label class="field"><span>Key</span>
+        <input id="apiKey" type="password" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"></label>
+      <label class="check"><input id="remember" type="checkbox"> Remember on this computer</label>
+      <div id="connectError" class="note" role="alert" hidden></div>
+      <button id="connectBtn" class="btn" type="submit">Connect</button>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Range" id="rangeSeg">
+        <button type="button" data-days="7" aria-pressed="false">7 days</button>
+        <button type="button" data-days="30" aria-pressed="true">30 days</button>
+        <button type="button" data-days="90" aria-pressed="false">90 days</button>
+      </div>
+      <div class="seg" role="group" aria-label="Data" id="modeSeg">
+        <button type="button" data-test="0" aria-pressed="true">Real data</button>
+        <button type="button" data-test="1" aria-pressed="false">Test phones</button>
+      </div>
+      <button id="refresh" class="btn tonal" type="button">Refresh</button>
+      <span class="spacer"></span>
+      <span id="updated" class="updated"></span>
+      <button id="forget" class="linkbtn" type="button">Forget key</button>
+    </div>
+    <div id="testBanner" class="note" hidden>You are looking at test phones only. Real users' numbers are not in here.</div>
+    <div id="msg" class="note" role="status" hidden></div>
+    <div id="chartsOff" class="note" hidden>The charts couldn't load, so only the figures, funnels and tables show. Check your connection and refresh.</div>
+
+    <section aria-label="Key figures"><div id="kpis" class="kpis"></div></section>
+
+    <h2>Trends</h2>
+    <section id="trends" class="grid" aria-label="Trends by day"></section>
+
+    <h2>Funnels</h2>
+    <section id="funnels" class="grid" aria-label="Funnels"></section>
+
+    <h2>Breakdowns</h2>
+    <section id="breakdowns" class="grid" aria-label="Breakdowns"></section>
+
+    <h2>Crashes</h2>
+    <section class="card" aria-label="Crashes">
+      <div id="crashes"></div>
+    </section>
+  </div>
+</main>
+
+<footer>Anonymous counts only. No names, numbers, places or plates.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+  integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(() => {
+  'use strict';
+
+  const DEFAULT_URL = 'https://psxkhdxqhzhpfhwxucpz.supabase.co/functions/v1/api';
+  const STORE_KEY = 'saathi-metrics-connection';
+  const $ = (id) => document.getElementById(id);
+  const num = new Intl.NumberFormat('en-IN');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const hasCharts = typeof window.Chart !== 'undefined';
+
+  let conn = null;          // { url, key }, in memory only
+  let range = 30;
+  let test = false;
+  let seq = 0;              // ignores answers to requests that were overtaken
+  let connected = false;
+  let charts = [];
+  let lastReport = null;
+
+  // ---- small helpers
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  const n0 = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const fmt = (v) => num.format(n0(v));
+  function pct(a, b) {
+    if (!(b > 0)) return null;
+    const p = Math.round((a / b) * 1000) / 10;
+    return `${p}%`;
+  }
+  const nice = (s) => {
+    const t = String(s ?? 'unknown').replace(/_/g, ' ').trim() || 'unknown';
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  function dayDate(s) {
+    const [y, m, d] = String(s).split('-').map(Number);
+    return new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  }
+  const dayShort = (s) => dayDate(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const dayLong = (s) => dayDate(s).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const when = (iso) => {
+    const t = new Date(iso);
+    return Number.isNaN(t.getTime()) ? '' : t.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+  };
+
+  // ---- remembering the key (only ever when asked to)
+
+  function readSaved() {
+    for (const kind of ['localStorage', 'sessionStorage']) {
+      try {
+        const o = JSON.parse(window[kind].getItem(STORE_KEY) || 'null');
+        if (o && typeof o.url === 'string' && typeof o.key === 'string') return { url: o.url, key: o.key, remembered: kind === 'localStorage' };
+      } catch { /* storage blocked: fall through to memory only */ }
+    }
+    return null;
+  }
+  function clearSaved() {
+    for (const kind of ['localStorage', 'sessionStorage']) {
+      try { window[kind].removeItem(STORE_KEY); } catch { /* ignore */ }
+    }
+  }
+  function save(c, remember) {
+    clearSaved();
+    try { window[remember ? 'localStorage' : 'sessionStorage'].setItem(STORE_KEY, JSON.stringify(c)); } catch { /* memory only */ }
+  }
+
+  // ---- talking to the server
+
+  async function fetchReport() {
+    let res;
+    try {
+      res = await fetch(`${conn.url}/reports?days=${range}&test=${test ? 1 : 0}`, {
+        headers: { Authorization: `Bearer ${conn.key}` },
+        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer',
+      });
+    } catch {
+      return { error: "Couldn't reach the server." };
+    }
+    if (res.status === 401) return { error: "That key didn't work.", status: 401 };
+    if (res.status === 404) return { error: "Reports aren't switched on: set REPORTS_TOKEN in Supabase.", status: 404 };
+    if (!res.ok) return { error: `The server had a problem (error ${res.status}). Try again in a minute.` };
+    try {
+      const data = await res.json();
+      if (!data || typeof data !== 'object') throw new Error('shape');
+      return { data };
+    } catch {
+      return { error: "The server's answer wasn't what this page expects." };
+    }
+  }
+
+  function setBusy(on) {
+    $('refresh').disabled = on;
+    $('connectBtn').disabled = on;
+    $('refresh').textContent = on ? 'Loading…' : 'Refresh';
+  }
+  function showMsg(text) {
+    $('msg').hidden = !text;
+    $('msg').textContent = text || '';
+  }
+  function showConnectError(text) {
+    $('connectError').hidden = !text;
+    $('connectError').textContent = text || '';
+  }
+
+  function showApp(on) {
+    connected = on;
+    $('app').hidden = !on;
+    $('connect').hidden = on;
+  }
+
+  async function refresh() {
+    if (!conn) return;
+    const mine = ++seq;
+    setBusy(true);
+    showMsg('');
+    const out = await fetchReport();
+    if (mine !== seq) return;
+    setBusy(false);
+    if (out.error) {
+      if (!connected) {
+        if (out.status === 401) clearSaved();
+        showConnectError(out.error);
+        conn = null;
+        return;
+      }
+      if (out.status === 401) { clearSaved(); disconnect(); showConnectError(out.error); return; }
+      showMsg(out.error);
+      return;
+    }
+    if (!connected) {
+      save(conn, $('remember').checked);
+      showApp(true);
+      showConnectError('');
+    }
+    lastReport = out.data;
+    render(out.data);
+  }
+
+  function disconnect() {
+    seq++;
+    conn = null;
+    lastReport = null;
+    destroyCharts();
+    for (const id of ['kpis', 'trends', 'funnels', 'breakdowns', 'crashes']) $(id).replaceChildren();
+    $('apiKey').value = '';
+    showApp(false);
+    setBusy(false);
+  }
+
+  // ---- rendering
+
+  function destroyCharts() {
+    for (const c of charts) { try { c.destroy(); } catch { /* ignore */ } }
+    charts = [];
+  }
+
+  function render(r) {
+    destroyCharts();
+    const k = r.kpis || {};
+    const daily = Array.isArray(r.daily) ? r.daily : [];
+    const isTest = r.test === true;
+    document.body.classList.toggle('is-test', isTest);
+    $('testPill').hidden = !isTest;
+    $('testBanner').hidden = !isTest;
+    $('chartsOff').hidden = hasCharts;
+    $('updated').textContent = r.generated_at ? `Updated ${when(r.generated_at)} IST` : '';
+
+    renderKpis(k, r.days || range);
+    renderTrends(daily);
+    renderFunnels(Array.isArray(r.funnels) ? r.funnels : []);
+    renderBreakdowns(r.breakdowns || {});
+    renderCrashes(Array.isArray(r.crashes) ? r.crashes : []);
+  }
+
+  function renderKpis(k, days) {
+    const tiles = [
+      {
+        label: 'Active installs', value: fmt(k.active_installs),
+        small: n0(k.installs_window_days) && n0(k.installs_window_days) < days
+          ? `Seen in the last ${fmt(k.installs_window_days)} days. Older events aren't kept.`
+          : `Seen in the last ${fmt(days)} days`,
+      },
+      { label: 'Trips', value: fmt(k.trips), small: `${fmt(k.auto_trips)} started on their own` },
+      { label: 'Alerts sent', value: fmt(k.alerts), small: `${fmt(k.checkins_timed_out)} check-ins timed out`, alert: true },
+      {
+        label: 'Check-ins answered', value: pct(n0(k.checkins_answered), n0(k.checkins)) ?? '–',
+        small: n0(k.checkins) ? `${fmt(k.checkins_answered)} of ${fmt(k.checkins)} check-ins` : 'No check-ins yet',
+      },
+      {
+        label: 'Plate read rate', value: pct(n0(k.plate_reads), n0(k.plate_scans)) ?? '–',
+        small: n0(k.plate_scans) ? `${fmt(k.plate_reads)} of ${fmt(k.plate_scans)} photos` : 'No plate photos yet',
+      },
+      { label: 'Crashes', value: fmt(k.crashes), small: `${fmt(k.crash_installs)} installs hit`, alert: true },
+    ];
+    const host = $('kpis');
+    host.replaceChildren();
+    for (const t of tiles) {
+      const tile = el('div', 'tile');
+      const label = el('div', 'label');
+      if (t.alert) label.append(el('span', 'dot'));
+      label.append(el('span', '', t.label));
+      tile.append(label, el('div', 'value', t.value), el('div', 'small', t.small));
+      host.append(tile);
+    }
+  }
+
+  // Chart.js, themed from the CSS tokens each time so day/night follows the system.
+  function chartBase() {
+    const C = window.Chart;
+    C.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    C.defaults.font.size = 12;
+    C.defaults.color = css('--ink2');
+    C.defaults.animation = reduceMotion.matches ? false : { duration: 300 };
+  }
+
+  function card(host, title, note) {
+    const c = el('div', 'card');
+    c.append(el('h3', '', title));
+    if (note) c.append(el('p', 'sub', note));
+    host.append(c);
+    return c;
+  }
+
+  function chartBox(parent, height) {
+    const box = el('div', 'chart');
+    box.style.height = `${height}px`;
+    const canvas = document.createElement('canvas');
+    box.append(canvas);
+    parent.append(box);
+    return canvas;
+  }
+
+  const tooltipStyle = () => ({
+    backgroundColor: css('--s3'), titleColor: css('--ink'), bodyColor: css('--ink2'),
+    borderColor: css('--hair'), borderWidth: 1, padding: 10, cornerRadius: 8, boxPadding: 4,
+  });
+
+  function lineChart(parent, daily, sets) {
+    const canvas = chartBox(parent, 200);
+    const labels = daily.map((d) => dayShort(d.day));
+    const dense = daily.length > 31;
+    charts.push(new window.Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: sets.map((s) => ({
+          label: s.label,
+          data: daily.map((d) => n0(d[s.key])),
+          borderColor: s.color,
+          backgroundColor: `${s.color}26`,
+          fill: s.fill !== false,
+          borderDash: s.dash || [],
+          borderWidth: 2,
+          pointRadius: dense ? 0 : 2,
+          pointHoverRadius: 4,
+          pointBackgroundColor: s.color,
+          tension: 0.25,
+        })),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: window.innerWidth < 480 ? 4 : 7 }, border: { color: css('--hair') } },
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: css('--hair') }, border: { display: false } },
+        },
+        plugins: {
+          legend: { display: sets.length > 1, labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: { ...tooltipStyle(), callbacks: { title: (items) => (items[0] ? dayLong(daily[items[0].dataIndex].day) : '') } },
+        },
+      },
+    }));
+  }
+
+  function renderTrends(daily) {
+    const host = $('trends');
+    host.replaceChildren();
+    const defs = [
+      ['Active installs', 'Different installs seen each day', [{ key: 'active_installs', label: 'Active installs', color: css('--brand') }]],
+      ['Trips', 'Started, and how many started on their own', [
+        { key: 'trips', label: 'Trips', color: css('--brand') },
+        { key: 'auto_trips', label: 'Started on their own', color: css('--ink2'), dash: [5, 4], fill: false },
+      ]],
+      ['Check-ins', 'Fired, and how many timed out', [
+        { key: 'checkins', label: 'Fired', color: css('--alum') },
+        { key: 'checkins_timed_out', label: 'Timed out', color: css('--brand'), fill: false },
+      ]],
+      ['Alerts sent', null, [{ key: 'alerts', label: 'Alerts', color: css('--madder') }]],
+      ['Crashes', null, [{ key: 'crashes', label: 'Crashes', color: css('--madder') }]],
+    ];
+    if (!daily.length) {
+      card(host, 'Trends', null).append(el('p', 'empty', 'No data yet'));
+      return;
+    }
+    if (hasCharts) chartBase();
+    for (const [title, note, sets] of defs) {
+      const c = card(host, title, note);
+      if (hasCharts) lineChart(c, daily, sets);
+    }
+  }
+
+  const SIBLINGS = new Set(['Check-ins']);   // answered and timed out both come from fired
+
+  function renderFunnels(funnels) {
+    const host = $('funnels');
+    host.replaceChildren();
+    if (!funnels.length) {
+      const c = card(host, 'Funnels', null);
+      c.append(el('p', 'empty', 'No data yet'));
+      return;
+    }
+    for (const f of funnels) {
+      const steps = Array.isArray(f.steps) ? f.steps : [];
+      const c = card(host, String(f.name ?? ''), null);
+      const first = n0(steps[0] && steps[0].value);
+      if (!(first > 0)) { c.append(el('p', 'empty', 'No data yet')); continue; }
+      const top = Math.max(...steps.map((s) => n0(s.value)), 1);
+      const list = el('ol', 'steps');
+      steps.forEach((s, i) => {
+        const v = n0(s.value);
+        const li = el('li');
+        const row = el('div', 'steprow');
+        row.append(el('span', 'lbl', String(s.label ?? '')), el('span', 'val', fmt(v)));
+        const track = el('div', 'track');
+        const fill = el('div', /alert/i.test(String(s.label)) ? 'fill alert' : 'fill');
+        fill.style.width = `${Math.min(100, (v / top) * 100)}%`;
+        track.append(fill);
+        const prev = SIBLINGS.has(f.name) ? first : n0(steps[i - 1] && steps[i - 1].value);
+        const bits = [];
+        if (i === 0) bits.push('Start');
+        else {
+          const ofFirst = pct(v, first);
+          const ofPrev = pct(v, prev);
+          if (ofFirst) bits.push(`${ofFirst} of first`);
+          if (ofPrev && i > 1 && !SIBLINGS.has(f.name)) bits.push(`${ofPrev} of previous`);
+        }
+        li.append(row, track, el('div', 'pcts', bits.join(' · ')));
+        list.append(li);
+      });
+      c.append(list);
+    }
+  }
+
+  function barChart(parent, rows, opts) {
+    const canvas = chartBox(parent, Math.max(120, rows.length * 36 + 56));
+    charts.push(new window.Chart(canvas, {
+      type: 'bar',
+      data: { labels: rows.map((r) => r.label), datasets: opts.datasets(rows) },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true, stacked: !!opts.stacked, ticks: { precision: 0 }, grid: { color: css('--hair') }, border: { display: false } },
+          y: { stacked: !!opts.stacked, grid: { display: false }, border: { color: css('--hair') } },
+        },
+        plugins: {
+          legend: { display: (opts.datasets(rows).length > 1), labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: { ...tooltipStyle(), callbacks: { afterBody: (items) => (opts.after && items[0] ? opts.after(rows[items[0].dataIndex]) : []) } },
+        },
+      },
+    }));
+  }
+
+  function renderBreakdowns(b) {
+    const host = $('breakdowns');
+    host.replaceChildren();
+    if (hasCharts) chartBase();
+    const list = (v) => (Array.isArray(v) ? v : []);
+    const sections = [
+      {
+        title: 'Alerts by reason', note: 'How help was asked for', color: css('--madder'),
+        rows: list(b.alerts_by_reason).map((r) => ({ label: nice(r.reason), n: n0(r.count), avg: r.avg_contacts, offline: n0(r.offline) })),
+        datasets: (rows) => [{ label: 'Alerts', data: rows.map((r) => r.n), backgroundColor: css('--madder'), borderRadius: 6 }],
+        after: (r) => [`Contacts told, on average: ${r.avg === null || r.avg === undefined ? '–' : n0(r.avg)}`, `Sent without a live link: ${fmt(r.offline)}`],
+      },
+      {
+        title: 'Check-ins by reason', note: 'Why Saathi asked', color: css('--alum'),
+        rows: list(b.checkins_by_reason).map((r) => ({ label: nice(r.reason), n: n0(r.count) })),
+        datasets: (rows) => [{ label: 'Check-ins', data: rows.map((r) => r.n), backgroundColor: css('--alum'), borderRadius: 6 }],
+      },
+      {
+        title: 'Trips by mode', note: 'Started on their own, and by hand', color: css('--brand'),
+        rows: list(b.trips_by_mode).map((r) => ({ label: nice(r.mode), n: n0(r.count), auto: Math.min(n0(r.auto_detected), n0(r.count)) })),
+        stacked: true,
+        datasets: (rows) => [
+          { label: 'On their own', data: rows.map((r) => r.auto), backgroundColor: css('--brand'), borderRadius: 6 },
+          { label: 'By hand', data: rows.map((r) => r.n - r.auto), backgroundColor: css('--ink2'), borderRadius: 6 },
+        ],
+      },
+      {
+        title: 'Installs by version', note: 'Different installs seen on each version', color: css('--brand'),
+        rows: list(b.installs_by_version).map((r) => ({ label: `Version ${n0(r.version_code)}`, n: n0(r.installs) })),
+        datasets: (rows) => [{ label: 'Installs', data: rows.map((r) => r.n), backgroundColor: css('--brand'), borderRadius: 6 }],
+      },
+    ];
+    for (const s of sections) {
+      const c = card(host, s.title, s.note);
+      if (!s.rows.length) { c.append(el('p', 'empty', 'No data yet')); continue; }
+      if (hasCharts) barChart(c, s.rows, s);
+      else {
+        const ul = el('ul', 'sub');
+        for (const r of s.rows) ul.append(el('li', '', `${r.label}: ${fmt(r.n)}`));
+        c.append(ul);
+      }
+    }
+  }
+
+  function renderCrashes(rows) {
+    const host = $('crashes');
+    host.replaceChildren();
+    if (!rows.length) { host.append(el('p', 'empty', 'No data yet')); return; }
+    const wrap = el('div', 'tablewrap');
+    const table = el('table');
+    const head = el('tr');
+    [['Crash', ''], ['Version', ''], ['Crashes', 'num'], ['Installs hit', 'num'], ['First seen', ''], ['Last seen', ''], ['Latest message', '']]
+      .forEach(([t, cls]) => head.append(Object.assign(el('th', cls, t), { scope: 'col' })));
+    const thead = el('thead');
+    thead.append(head);
+    table.append(thead);
+    const body = el('tbody');
+    for (const r of rows) {
+      const tr = el('tr');
+      tr.append(
+        el('td', '', String(r.exception_type ?? '')),
+        el('td', '', String(r.version_name ?? '')),
+        el('td', 'num', fmt(r.crashes)),
+        el('td', 'num', fmt(r.installs_hit)),
+        el('td', 'when', when(r.first_seen)),
+        el('td', 'when', when(r.last_seen)),
+        el('td', 'msg', String(r.latest_message ?? '')),
+      );
+      body.append(tr);
+    }
+    table.append(body);
+    wrap.append(table);
+    host.append(wrap);
+  }
+
+  // ---- wiring
+
+  function setPressed(group, match) {
+    for (const b of group.querySelectorAll('button')) b.setAttribute('aria-pressed', match(b) ? 'true' : 'false');
+  }
+
+  $('rangeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-days]');
+    if (!b) return;
+    range = Number(b.dataset.days);
+    setPressed($('rangeSeg'), (x) => x === b);
+    refresh();
+  });
+  $('modeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-test]');
+    if (!b) return;
+    test = b.dataset.test === '1';
+    setPressed($('modeSeg'), (x) => x === b);
+    refresh();
+  });
+  $('refresh').addEventListener('click', refresh);
+  $('forget').addEventListener('click', () => {
+    clearSaved();
+    disconnect();
+    showConnectError('');
+    $('remember').checked = false;
+  });
+
+  $('connectForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = $('apiUrl').value.trim().replace(/\/+$/, '');
+    const key = $('apiKey').value.trim();
+    if (!/^https?:\/\//i.test(url)) { showConnectError('The API address should start with https://'); return; }
+    if (!key) { showConnectError('Paste your key first.'); return; }
+    showConnectError('');
+    conn = { url, key };
+    refresh();
+  });
+
+  try {
+    reduceMotion.addEventListener('change', () => lastReport && render(lastReport));
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => lastReport && render(lastReport));
+  } catch { /* older browsers: charts keep their colours until the next refresh */ }
+
+  // start
+  const saved = readSaved();
+  $('apiUrl').value = saved ? saved.url : DEFAULT_URL;
+  if (saved) {
+    $('remember').checked = saved.remembered;
+    conn = { url: saved.url, key: saved.key };
+    refresh();
+  }
+})();
+</script>
+</body>
+</html>

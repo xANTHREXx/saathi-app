@@ -48,6 +48,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import app.saathi.R
 import androidx.compose.ui.unit.sp
 import app.saathi.alert.AlertManager
 import app.saathi.trip.TripState
@@ -136,7 +138,7 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                         if (s.recording) Fact(Icons.Rounded.Mic, "Recording on this phone", big = true)
                         if (s.smsFailed.isNotEmpty()) Text("Couldn't send to ${s.smsFailed.joinToString()}. Retrying.",
                             style = MaterialTheme.typography.bodyMedium, color = c.onHelpContainer)
-                        Text("Emergency step: simulated", style = MaterialTheme.typography.labelMedium, color = c.alum)
+                        Text(stringResource(R.string.no_112_full), style = MaterialTheme.typography.labelMedium, color = c.alum)
                     }
                 }
                 Spacer(Modifier.weight(1f))

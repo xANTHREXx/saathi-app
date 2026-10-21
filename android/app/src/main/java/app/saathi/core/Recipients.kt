@@ -20,3 +20,10 @@ fun recipients(all: List<Contact>, city: String?): List<Contact> {
     }
     return matched.ifEmpty { all }
 }
+
+/**
+ * Who a manual "Try again" texts: only the contacts an alert could not reach, and only those who would
+ * still be recipients now. Contacts already told are never texted twice.
+ */
+fun retryTargets(all: List<Contact>, city: String?, failed: List<String>): List<Contact> =
+    recipients(all, city).filter { it.name in failed }

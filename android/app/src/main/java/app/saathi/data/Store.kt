@@ -23,6 +23,8 @@ data class Settings(
     val crashReports: Boolean = true,
     /** Send anonymous usage events. Off until she agrees. */
     val usageStats: Boolean = false,
+    /** A test phone's data is kept out of real numbers. Null until set: debug builds count as test phones, release builds don't. */
+    val testDevice: Boolean? = null,
 )
 
 @Serializable

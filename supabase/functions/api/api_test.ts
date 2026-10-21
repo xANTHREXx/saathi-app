@@ -20,14 +20,16 @@ function app(over: Partial<Deps> = {}) {
     livePageUrl: "https://example.github.io/saathi/live/", sample: false, now: () => clock, ...over,
   };
   const handle = makeHandler(deps);
-  const call = (method: string, path: string, body?: unknown, device = "dev-1") =>
+  const call = (method: string, path: string, body?: unknown, device = "dev-1", test = false) =>
     handle(new Request(`http://x/functions/v1/api${path}`, {
-      method, headers: { "content-type": "application/json", "x-saathi-device": device },
+      method, headers: { "content-type": "application/json", "x-saathi-device": device, ...(test ? { "x-saathi-test": "1" } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     }));
   const raw = (path: string, text: string) =>
     handle(new Request(`http://x/functions/v1/api${path}`, { method: "POST", body: text }));
-  return { store, call, raw, tick: (ms: number) => (clock += ms) };
+  const reports = (query = "", auth?: string) =>
+    handle(new Request(`http://x/functions/v1/api/reports${query}`, { headers: auth === undefined ? {} : { authorization: auth } }));
+  return { store, call, raw, reports, tick: (ms: number) => (clock += ms) };
 }
 
 // --- companion (ported from the earlier Express server's tests)
@@ -245,6 +247,22 @@ Deno.test("vehicleRidesAndReports", async () => {
   assertEquals(v, { rides: 2, reports: 3, flagged: true, sample: false });
 });
 
+Deno.test("testPhoneRowsAreTaggedAndHiddenFromRealUsers", async () => {
+  const a = app();
+  const t = 1_760_800_000 - 86400;
+  await a.call("POST", "/community/ride", { plate: "KA05AB1234", t }, "real");
+  await a.call("POST", "/community/ride", { plate: "KA05AB1234", t }, "tester", true);
+  await a.call("POST", "/community/point", { lat: 1, lng: 1, t, kind: "alert", plate: "KA05AB1234" }, "tester", true);
+  assertEquals(a.store.rides.map((r) => r.test), [false, true]);
+  assertEquals(a.store.pts.map((p) => p.test), [true]);
+  const plain = await (await a.call("GET", "/community/vehicle?plate=KA05AB1234")).json();
+  assertEquals(plain, { rides: 1, reports: 0, flagged: false, sample: false });
+  const tester = await (await a.call("GET", "/community/vehicle?plate=KA05AB1234", undefined, "tester", true)).json();
+  assertEquals(tester, { rides: 2, reports: 1, flagged: false, sample: false });
+  assertEquals((await (await a.call("GET", "/community/points")).json()).points, []);
+  assertEquals((await (await a.call("GET", "/community/points", undefined, "tester", true)).json()).points.length, 1);
+});
+
 Deno.test("oldRidesAndReportsDontCount", async () => {
   const a = app();
   const old = 1_760_800_000 - 91 * 86400;
@@ -335,6 +353,52 @@ Deno.test("versionEndpointReturnsLatestRelease", async () => {
       isMandatory: true,
     },
   });
+});
+
+// --- owner's reports
+
+const RTOKEN = "r".repeat(32);
+
+Deno.test("reportsAreOffWithoutAToken", async () => {
+  for (const reportsToken of [undefined, "", "short-token"]) {
+    const a = app({ reportsToken });
+    assertEquals((await a.reports("", `Bearer ${reportsToken}`)).status, 404);
+  }
+});
+
+Deno.test("reportsRejectMissingOrWrongToken", async () => {
+  const a = app({ reportsToken: RTOKEN });
+  for (const auth of [undefined, "", "Bearer ", "Bearer wrong", `Bearer ${"r".repeat(31)}`, `Bearer ${RTOKEN}x`, RTOKEN, `Basic ${RTOKEN}`]) {
+    const r = await a.reports("", auth);
+    assertEquals(r.status, 401);
+    assertEquals(await r.text(), "");
+    assertEquals(r.headers.get("cache-control"), "no-store");
+  }
+});
+
+Deno.test("reportsReturnJsonWithTheRightToken", async () => {
+  const a = app({ reportsToken: RTOKEN });
+  a.store.events.push({ install_id: IID, version_code: 1, event_name: "trip_started", properties: {}, occurred_at: startOfHour(CLOCK), test: false });
+  const r = await a.reports("?days=7", `Bearer ${RTOKEN}`);
+  assertEquals(r.status, 200);
+  assertEquals(r.headers.get("cache-control"), "no-store");
+  assertMatch(r.headers.get("content-type") ?? "", /application\/json/);
+  const b = await r.json();
+  assertEquals([b.days, b.test, b.kpis.trips], [7, false, 1]);
+});
+
+Deno.test("reportsClampDaysAndPassTheTestFlagThrough", async () => {
+  const a = app({ reportsToken: RTOKEN });
+  const get = async (q: string) => await (await a.reports(q, `Bearer ${RTOKEN}`)).json();
+  assertEquals((await get("")).days, 30);
+  assertEquals((await get("?days=0")).days, 1);
+  assertEquals((await get("?days=-5")).days, 1);
+  assertEquals((await get("?days=9999")).days, 365);
+  assertEquals((await get("?days=abc")).days, 30);
+  assertEquals((await get("?days=12.9")).days, 12);
+  assertEquals((await get("")).test, false);
+  assertEquals((await get("?test=0")).test, false);
+  assertEquals((await get("?test=1")).test, true);
 });
 
 const IID = "123e4567-e89b-42d3-a456-426614174000";
@@ -478,6 +542,15 @@ Deno.test("telemetryScrubsCrashMessageAndStackTrace", async () => {
   const c = a.store.crashes[0];
   assertEquals(c.message, "bad contact [number] for [email] near [place]");
   assertEquals(c.stack_trace, "java.lang.IllegalStateException: call [number]\n\tat app.saathi.ui.MainActivity.onCreate(MainActivity.kt:123)");
+});
+
+Deno.test("telemetryRowsCarryTheTestFlag", async () => {
+  const a = app();
+  const body = { installId: IID, events: [ev()], crashes: [{ exceptionType: "E", stackTrace: "s" }] };
+  await a.call("POST", "/telemetry", body);
+  await a.call("POST", "/telemetry", body, "dev-1", true);
+  assertEquals(a.store.events.map((e) => e.test), [false, true]);
+  assertEquals(a.store.crashes.map((c) => c.test), [false, true]);
 });
 
 Deno.test("telemetryEndpointStoresCrashesAndEventsWithTruncation", async () => {

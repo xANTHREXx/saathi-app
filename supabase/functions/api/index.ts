@@ -38,4 +38,5 @@ Deno.serve(makeHandler({
   routesConfigured: Boolean(orsKey),
   livePageUrl: env("LIVE_PAGE_URL") || "http://localhost:8080/live/",
   sample: env("SEED_DEMO") === "true",
+  reportsToken: env("REPORTS_TOKEN"),
 }));
