@@ -23,6 +23,8 @@ object RunState {
     private const val BACKGROUND_DONE = "background_done"
     private const val STOPPED_AT = "stopped_at"
     private const val STOPPED_SEEN = "stopped_seen"
+    private const val CHECK_AT = "check_at"
+    private const val CHECK_MIN = "check_min"
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
@@ -68,6 +70,18 @@ object RunState {
     }
 
     fun markStopSeen(ctx: Context) { prefs(ctx).edit().putBoolean(STOPPED_SEEN, true).apply() }
+
+    /**
+     * The "Check on me" timer, kept here so a service Android restarts still fires it: when it is due
+     * and its length in minutes, or null when none is set.
+     */
+    fun check(ctx: Context): Pair<Long, Int>? = prefs(ctx).let { p ->
+        p.getLong(CHECK_AT, 0L).takeIf { it > 0 }?.let { it to p.getInt(CHECK_MIN, 0) }
+    }
+
+    fun setCheck(ctx: Context, atMs: Long?, minutes: Int = 0) {
+        prefs(ctx).edit().apply { if (atMs == null) remove(CHECK_AT).remove(CHECK_MIN) else putLong(CHECK_AT, atMs).putInt(CHECK_MIN, minutes) }.apply()
+    }
 
     /** She said she turned on her phone maker's background settings. */
     fun backgroundDone(ctx: Context): Boolean = prefs(ctx).getBoolean(BACKGROUND_DONE, false)

@@ -14,6 +14,7 @@ import app.saathi.trip.UiState
 import app.saathi.ui.CheckInActivity
 import app.saathi.ui.MainActivity
 import app.saathi.ui.SpeakForMeActivity
+import app.saathi.ui.clockTime
 import app.saathi.ui.eventText
 import app.saathi.ui.quantity
 import app.saathi.ui.watchingText
@@ -58,16 +59,26 @@ object Notifier {
         }
         // The power button is only promised when it is on.
         val powerOn = !s.onTrip && Store.settings(ctx).powerPresses > 0
+        val checkAt = s.checkAtMs?.takeIf { !s.alertActive }
         val b = Notification.Builder(ctx, GUARD)
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
             .setContentTitle(title)
-            .setContentText(ctx.getString(if (powerOn) R.string.guard_text_power else R.string.guard_text_lock))
+            .setContentText(
+                if (checkAt != null) ctx.getString(R.string.check_running, ctx.clockTime(checkAt))
+                else ctx.getString(if (powerOn) R.string.guard_text_power else R.string.guard_text_lock),
+            )
             .setOngoing(true)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, MainActivity::class.java, 10))
             .addAction(action(ctx, ctx.getString(R.string.action_help), service(ctx, TripService.ACTION_HELP, 11)))
-            .addAction(action(ctx, ctx.getString(R.string.tile_speak), activity(ctx, SpeakForMeActivity::class.java, 12)))
-        if (s.onTrip) b.addAction(action(ctx, ctx.getString(R.string.notif_action_stop), service(ctx, TripService.ACTION_STOP_TRIP, 13)))
+        // Only three actions show. With a timer running, its two controls take the places of Speak for me and Stop.
+        if (checkAt != null) {
+            b.addAction(action(ctx, ctx.getString(R.string.check_add), service(ctx, TripService.ACTION_CHECK_ADD, 14)))
+            b.addAction(action(ctx, ctx.getString(R.string.check_cancel), service(ctx, TripService.ACTION_CHECK_CANCEL, 15)))
+        } else {
+            b.addAction(action(ctx, ctx.getString(R.string.tile_speak), activity(ctx, SpeakForMeActivity::class.java, 12)))
+            if (s.onTrip) b.addAction(action(ctx, ctx.getString(R.string.notif_action_stop), service(ctx, TripService.ACTION_STOP_TRIP, 13)))
+        }
         return b.build()
     }
 

@@ -19,12 +19,14 @@ import app.saathi.alert.SmsSender
 import app.saathi.core.BATTERY_DEAD_PCT
 import app.saathi.core.BatteryWatch
 import app.saathi.core.Destination
+import app.saathi.core.EventKind
 import app.saathi.core.Fingerprint
 import app.saathi.core.Fix
 import app.saathi.core.Mode
 import app.saathi.core.PowerPress
 import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
+import app.saathi.core.TripEvent
 import app.saathi.core.Watcher
 import app.saathi.core.batteryText
 import app.saathi.core.offText
@@ -63,6 +65,12 @@ class TripService : Service() {
         const val ACTION_HELP = "app.saathi.HELP"
         const val ACTION_OK = "app.saathi.OK"
         const val ACTION_SET_DEST = "app.saathi.SET_DEST"
+        const val ACTION_CHECK_START = "app.saathi.CHECK_START"
+        const val ACTION_CHECK_ADD = "app.saathi.CHECK_ADD"
+        const val ACTION_CHECK_CANCEL = "app.saathi.CHECK_CANCEL"
+        const val EXTRA_MINUTES = "minutes"
+        /** What "Add 10 min" adds. */
+        const val CHECK_ADD_MIN = 10
         const val EXTRA_DEST = "dest"
         const val EXTRA_MODE = "mode"
         const val EXTRA_PLATE = "plate"
@@ -125,7 +133,46 @@ class TripService : Service() {
     }
 
     /** Whether a silence from this phone would mean something to her contacts. */
-    private fun watching() = TripState.now.onTrip
+    private fun watching() = TripState.now.onTrip || TripState.now.checkAtMs != null
+
+    // --- "Check on me": a check-in at a time she picks, for walks and waits no ride app knows about
+
+    private var checkJob: Job? = null
+
+    private fun startCheck(minutes: Int) {
+        if (minutes <= 0) return
+        if (!TripState.now.onTrip) lowBattery.reset() // a timer on its own counts as a trip for the low-battery text
+        setCheck(System.currentTimeMillis() + minutes * 60_000L, minutes)
+    }
+
+    private fun addToCheck() {
+        val at = TripState.now.checkAtMs ?: return
+        setCheck(at + CHECK_ADD_MIN * 60_000L, TripState.now.checkMinutes + CHECK_ADD_MIN)
+    }
+
+    private fun cancelCheck() {
+        checkJob?.cancel(); checkJob = null
+        TripState.update { it.copy(checkAtMs = null, checkMinutes = 0) }
+        RunState.setCheck(this, null)
+    }
+
+    /** Waits until [atMs], then the usual check-in: silence after it alerts, as on a trip. A time already past fires now. */
+    private fun setCheck(atMs: Long, minutes: Int) {
+        TripState.update { it.copy(checkAtMs = atMs, checkMinutes = minutes) }
+        RunState.setCheck(this, atMs, minutes)
+        checkJob?.cancel()
+        checkJob = scope.launch {
+            delay((atMs - System.currentTimeMillis()).coerceAtLeast(0))
+            if (TripState.now.checkAtMs != atMs) return@launch // moved or cancelled meanwhile
+            TripState.update { it.copy(checkAtMs = null, checkMinutes = 0) }
+            RunState.setCheck(this@TripService, null)
+            val event = TripEvent(EventKind.TIMER, "her $minutes-minute check ran out", System.currentTimeMillis() / 1000, minutes)
+            Log.i("Saathi", "check timer: ${event.detail}")
+            TripState.update { it.copy(events = it.events + event) }
+            app.saathi.data.TelemetryManager.track(this@TripService, "checkin_triggered", mapOf("reason" to event.kind.name))
+            AlertManager.startCheckIn(event)
+        }
+    }
 
     /**
      * A plain text to her contacts for the city she is in, with her last location. Not an alert: no alarm,
@@ -150,6 +197,8 @@ class TripService : Service() {
         })
         registerReceiver(batteryLevel, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         registerReceiver(shuttingDown, IntentFilter(Intent.ACTION_SHUTDOWN))
+        // A timer set before Android restarted the service still fires.
+        RunState.check(this)?.let { (at, minutes) -> setCheck(at, minutes) }
         // A pulse every minute, so a phone that kills Saathi mid-trip leaves a trace (see RunState).
         scope.launch {
             while (true) {
@@ -159,7 +208,7 @@ class TripService : Service() {
         }
         // Keep the notification and widget in step with the state.
         scope.launch {
-            TripState.ui.map { listOf(it.onTrip, it.alertActive, it.told, it.destLabel, it.vehicleNote) }.distinctUntilChanged().collect {
+            TripState.ui.map { listOf(it.onTrip, it.alertActive, it.told, it.destLabel, it.vehicleNote, it.checkAtMs) }.distinctUntilChanged().collect {
                 getSystemService(NotificationManager::class.java).notify(Notifier.GUARD_ID, Notifier.guard(this@TripService, TripState.now))
                 runCatching { SaathiWidget().updateAll(this@TripService) }
             }
@@ -176,6 +225,9 @@ class TripService : Service() {
             ACTION_HELP -> AlertManager.raise(Reason.NOTIFICATION)
             ACTION_OK -> AlertManager.imOkay()
             ACTION_SET_DEST -> setDestination(intent.getStringExtra(EXTRA_DEST))
+            ACTION_CHECK_START -> startCheck(intent.getIntExtra(EXTRA_MINUTES, 0))
+            ACTION_CHECK_ADD -> addToCheck()
+            ACTION_CHECK_CANCEL -> cancelCheck()
         }
         return START_STICKY
     }

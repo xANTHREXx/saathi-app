@@ -129,6 +129,20 @@
         <item quantity="one">पहुँचने के तय समय से %1$d मिनट देर</item>
         <item quantity="other">पहुँचने के तय समय से %1$d मिनट देर</item>
     </plurals>
+    <plurals name="event_timer">
+        <item quantity="one">आपका %1$d मिनट का समय पूरा हुआ</item>
+        <item quantity="other">आपका %1$d मिनट का समय पूरा हुआ</item>
+    </plurals>
+    <string name="check_title">मेरा हाल पूछें</string>
+    <string name="check_sub">राइड ऐप नहीं है? समय पूरा होने पर Saathi पूछेगा कि आप ठीक हैं या नहीं।</string>
+    <string name="check_set">समय चुनें</string>
+    <plurals name="check_minutes">
+        <item quantity="one">%1$d मिनट</item>
+        <item quantity="other">%1$d मिनट</item>
+    </plurals>
+    <string name="check_running">%1$s बजे आपका हाल पूछेंगे</string>
+    <string name="check_add">10 मिनट और</string>
+    <string name="check_cancel">जाँच रद्द करें</string>
 
     <!-- Home: help -->
     <string name="tile_speak">मेरी तरफ़ से बोलें</string>

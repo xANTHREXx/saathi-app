@@ -130,6 +130,20 @@
         <item quantity="one">%1$d min past arrival time</item>
         <item quantity="other">%1$d min past arrival time</item>
     </plurals>
+    <plurals name="event_timer">
+        <item quantity="one">your %1$d-minute check ran out</item>
+        <item quantity="other">your %1$d-minute check ran out</item>
+    </plurals>
+    <string name="check_title">Check on me</string>
+    <string name="check_sub">No ride app? Saathi asks if you\'re okay when the time runs out.</string>
+    <string name="check_set">Set a time</string>
+    <plurals name="check_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <string name="check_running">Checking on you at %1$s</string>
+    <string name="check_add">Add 10 min</string>
+    <string name="check_cancel">Cancel check</string>
 
     <!-- Home: help -->
     <string name="tile_speak">Speak for me</string>

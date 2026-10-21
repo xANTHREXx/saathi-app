@@ -84,6 +84,7 @@ internal fun Context.eventText(e: TripEvent): String = when {
     e.kind == EventKind.LONG_STOP -> quantity(R.plurals.event_long_stop, e.value, e.value)
     e.kind == EventKind.OFF_ROUTE -> getString(R.string.event_off_route, e.value)
     e.kind == EventKind.LATE -> quantity(R.plurals.event_late, e.value, e.value)
+    e.kind == EventKind.TIMER -> quantity(R.plurals.event_timer, e.value, e.value)
     else -> e.detail
 }
 

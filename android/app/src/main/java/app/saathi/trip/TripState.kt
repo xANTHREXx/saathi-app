@@ -47,6 +47,10 @@ data class UiState(
     val practice: Boolean = false,
     /** The practice ran out without an answer. */
     val practiceOver: Boolean = false,
+    /** "Check on me": when the check-in starts unless she cancels. Null when no timer is set. Works on or off a trip. */
+    val checkAtMs: Long? = null,
+    /** The timer's length in minutes, including any "Add 10 min", for the check-in's words. */
+    val checkMinutes: Int = 0,
 )
 
 /** One shared state for the service, the screens, the widget. */

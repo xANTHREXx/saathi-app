@@ -37,6 +37,8 @@ data class Settings(
     val introduced: List<String> = emptyList(),
     /** During a trip, text her contacts when the battery reaches 5% or the phone is switched off. */
     val dyingPhoneText: Boolean = true,
+    /** The "Check on me" length she picked last, in minutes. */
+    val checkMinutes: Int = 20,
 )
 
 @Serializable

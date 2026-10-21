@@ -259,6 +259,7 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
                         .background(Saathi.colors.fg3.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
                     if (s.alertActive) ToldBanner(s)
                     if (s.onTrip) OnTrip(s) else Ready()
+                    if (!s.alertActive && s.checkInEndsAtMs == null) CheckOnMe(s, settings, onChange)
                     AfterTrip(settings, onChange)
                     if (readyCardVisible(s.onTrip, s.alertActive, settings.contacts.isNotEmpty(),
                             settings.readyCardDismissed, settings.contactsToldAsked, settings.tileAsked)) ReadyCard(settings, onChange)
