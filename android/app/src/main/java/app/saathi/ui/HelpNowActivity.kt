@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.saathi.R
@@ -84,6 +87,7 @@ class HelpNowActivity : ComponentActivity() {
 @Composable
 private fun HelpNow(who: String, onClose: () -> Unit) {
     val s by TripState.ui.collectAsState()
+    val ctx = LocalContext.current
     var notSent by rememberSaveable { mutableStateOf(false) }
     val pendingEnds = s.pendingAlertEndsAtMs
     Column(
@@ -100,8 +104,14 @@ private fun HelpNow(who: String, onClose: () -> Unit) {
         }
         Spacer(Modifier.weight(1f))
         if (s.alertActive) OkayPlate(height = 96) { AlertManager.imOkay(); onClose() }
-        FilledTonalButton(onClose, Modifier.fillMaxWidth().padding(top = 10.dp).height(52.dp), shape = RoundedCornerShape(20.dp)) {
-            Text(stringResource(R.string.action_close))
+        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (s.alertActive) FilledTonalButton(
+                onClick = { runCatching { ctx.startActivity(Notifier.dial112()) } },
+                Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(20.dp),
+            ) { Text(stringResource(R.string.call_112)) }
+            FilledTonalButton(onClose, Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(20.dp)) {
+                Text(stringResource(R.string.action_close))
+            }
         }
     }
 }
