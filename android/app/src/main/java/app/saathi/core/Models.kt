@@ -12,8 +12,12 @@ enum class Mode { AUTO, CAB, BIKE, WALK, BUS, TRAIN }
 @Serializable
 enum class EventKind { LONG_STOP, OFF_ROUTE, LATE }
 
+/**
+ * What the watcher noticed. [detail] is plain English, kept for the alert SMS, the live page and old records;
+ * the app's own screens word it from [kind] and [value] (minutes, or metres for OFF_ROUTE) in her language.
+ */
 @Serializable
-data class TripEvent(val kind: EventKind, val detail: String, val at: Long)
+data class TripEvent(val kind: EventKind, val detail: String, val at: Long, val value: Int = 0)
 
 /** A place she goes often (home, work, college), set once. Used to guess where a trip is headed. */
 @Serializable

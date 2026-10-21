@@ -1,11 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Saathi</string>
+    <!-- App and shared labels -->
+    <string name="app_name" translatable="false">Saathi</string>
     <string name="widget_description">SOS speaks for you and alerts your contacts. Slide to start a trip.</string>
+    <string name="lang_name">English</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_done">Done</string>
+    <string name="action_save">Save</string>
+    <string name="action_add">Add</string>
+    <string name="action_back">Back</string>
+    <string name="action_remove">Remove %1$s</string>
+    <string name="action_help">Help</string>
+    <string name="im_okay">I\'m okay</string>
+    <string name="names_none">your contacts</string>
+    <string name="names_pair">%1$s and %2$s</string>
 
-    <!-- Home: Ready -->
+    <!-- Navigation -->
+    <string name="nav_trip">Trip</string>
+    <string name="nav_my_trips">My trips</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home: ready, status and mode chips -->
     <string name="ready_title_rides">Uber, Ola and Rapido rides start on their own</string>
     <string name="ready_title_manual">How are you travelling?</string>
+    <string name="home_ready_snackbar">Saathi is ready. Uber, Ola and Rapido trips start on their own.</string>
     <string name="status_ready">Watching is on. Location, texts and check-ins are ready.</string>
     <string name="status_fix">Fix</string>
     <string name="perm_off_location">Location is off. Saathi can\'t see your trip.</string>
@@ -14,9 +34,104 @@
     <string name="perm_off_notifications">Notifications are off. Check-ins can\'t reach you.</string>
     <string name="perm_off_lock_screen">Check-ins can\'t show over the lock screen.</string>
     <string name="perm_off_background">Battery saving may stop Saathi in the middle of a trip.</string>
+    <string name="status_keep_done">I\'ve done this</string>
+    <string name="perm_off_keep_running">Your phone may stop Saathi in the background, in the middle of a trip.</string>
     <string name="perm_off_rides">Rides won\'t start on their own yet.</string>
+    <string name="mode_walk">Walk</string>
+    <string name="mode_bus">Bus</string>
+    <string name="mode_train">Train</string>
+    <string name="mode_auto">Auto</string>
+    <string name="mode_cab">Cab</string>
+    <string name="mode_bike">Bike</string>
+    <string name="ready_plate_label">Auto plate, if you can see it</string>
+    <string name="ready_start">Start</string>
+
+    <!-- Home: Two more things -->
+    <string name="ready_card_title">Two more things</string>
+    <string name="ready_card_not_now">Not now</string>
+    <string name="ready_card_done">Done</string>
+    <string name="ready_told_title">Tell %1$s you added them</string>
+    <string name="ready_told_names_two">%1$s and %2$s</string>
+    <plurals name="ready_told_names_more">
+        <item quantity="one">%1$s and %2$d other</item>
+        <item quantity="other">%1$s and %2$d others</item>
+    </plurals>
+    <string name="ready_told_names_none">your contacts</string>
+    <string name="ready_told_sub">So a text from Saathi doesn\'t surprise them.</string>
+    <string name="ready_told_write">Write message</string>
+    <string name="ready_told_message">Hi, I\'ve added you as a contact in Saathi, my travel safety app. If a message from my number ever says I need help, it\'s real. Please call me and open the location link.</string>
+    <string name="ready_tile_title">Add the help tile</string>
+    <string name="ready_tile_sub">Pull down from the top, even when locked, and tap Saathi help.</string>
+    <string name="ready_tile_add">Add</string>
+    <string name="ready_tile_how">How</string>
+    <string name="ready_tile_steps">Edit Quick Settings (the pencil) and drag Saathi help in.</string>
+    <string name="help_tile_label">Saathi help</string>
+
+    <!-- Home: trip -->
+    <string name="trip_on_your_way">On your way</string>
+    <string name="trip_with_driver">With %1$s</string>
+    <string name="trip_watching_auto">Watching your auto</string>
+    <string name="trip_watching_cab">Watching your cab</string>
+    <string name="trip_watching_bike">Watching your bike taxi</string>
+    <string name="trip_watching_bus">Watching your bus</string>
+    <string name="trip_watching_train">Watching your train</string>
+    <string name="trip_watching_walk">Watching your walk</string>
+    <string name="trip_watching_trip">Watching your trip</string>
+    <string name="trip_watching_auto_app">Watching your %1$s auto</string>
+    <string name="trip_watching_cab_app">Watching your %1$s cab</string>
+    <string name="trip_watching_bike_app">Watching your %1$s bike taxi</string>
+    <string name="trip_watching_bus_app">Watching your %1$s bus</string>
+    <string name="trip_watching_train_app">Watching your %1$s train</string>
+    <string name="trip_watching_walk_app">Watching your %1$s walk</string>
+    <string name="trip_watching_trip_app">Watching your %1$s trip</string>
+    <plurals name="trip_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <string name="trip_watched">watched</string>
+    <string name="trip_dest_unsure">Not sure where you\'re going: watching for long stops</string>
+    <string name="trip_dest_no_route">Going to %1$s · no route found, watching for long stops</string>
+    <string name="trip_dest_finding">Going to %1$s · finding the route</string>
+    <string name="trip_dest_watching">Going to %1$s · watching for detours</string>
+    <string name="trip_dest_pick">Pick</string>
+    <string name="trip_dest_change">Change</string>
+    <string name="trip_dest_not_sure">Not sure</string>
+    <string name="check_plate">Check plate</string>
+    <string name="end_trip">End trip</string>
+    <string name="end_trip_armed">Tap again to end</string>
+    <plurals name="thread_earlier">
+        <item quantity="one">%1$d min earlier</item>
+        <item quantity="other">%1$d min earlier</item>
+    </plurals>
+    <string name="line_started">Started %1$s</string>
+    <string name="line_started_plain">Started</string>
+    <string name="line_plate_matched">plate matched</string>
+    <string name="line_plate_mismatch">plate didn\'t match</string>
+    <string name="line_you">You</string>
+    <string name="line_you_at">You · %1$s</string>
+    <string name="line_checking_in">Checking in</string>
+    <plurals name="line_min_watched_quiet">
+        <item quantity="one">%1$d min watched, all quiet</item>
+        <item quantity="other">%1$d min watched, all quiet</item>
+    </plurals>
+    <plurals name="line_min_watched">
+        <item quantity="one">%1$d min watched</item>
+        <item quantity="other">%1$d min watched</item>
+    </plurals>
+    <string name="line_ends_with_ride">Ends on its own when the %1$s ride ends.</string>
+    <plurals name="event_long_stop">
+        <item quantity="one">stopped %1$d min</item>
+        <item quantity="other">stopped %1$d min</item>
+    </plurals>
+    <string name="event_off_route">%1$d m off route</string>
+    <plurals name="event_late">
+        <item quantity="one">%1$d min past arrival time</item>
+        <item quantity="other">%1$d min past arrival time</item>
+    </plurals>
 
     <!-- Home: help -->
+    <string name="tile_speak">Speak for me</string>
+    <string name="tile_call">Call Saathi</string>
     <string name="help_title">Hold for help</string>
     <string name="help_holding">Keep holding…</string>
     <string name="help_sub">2 seconds · texts %1$s</string>
@@ -33,15 +148,360 @@
     <string name="raised_told">Your contacts were told</string>
     <string name="raised_failed">Couldn\'t reach %1$s</string>
     <string name="raised_retry">Try again</string>
-
-    <!-- Home: trip -->
-    <string name="check_plate">Check plate</string>
-    <string name="end_trip">End trip</string>
-    <string name="end_trip_armed">Tap again to end</string>
-    <string name="thread_earlier">%1$d min earlier</string>
-
-    <!-- Alerts -->
+    <string name="told_telling">Telling your contacts…</string>
+    <plurals name="told_names">
+        <item quantity="one">%1$s was told</item>
+        <item quantity="other">%1$s were told</item>
+    </plurals>
+    <string name="told_link">Live location link sent</string>
+    <string name="told_recording">recording on this phone</string>
+    <string name="told_failed_retrying">Couldn\'t send to %1$s. Retrying.</string>
     <string name="no_112">Saathi doesn\'t call 112</string>
     <string name="no_112_full">Saathi doesn\'t call 112. Call it yourself if you need to.</string>
     <string name="alert_none_reached">No one was reached</string>
+
+    <!-- Home: after a trip -->
+    <string name="consent_title">Help other women?</string>
+    <string name="consent_body">Count this ride anonymously, and add your answer to the community map. Never your name or number. You can change this in Settings.</string>
+    <string name="consent_stats">Also send anonymous usage stats: which features get used, never where you go.</string>
+    <string name="consent_yes">Yes, share</string>
+    <string name="consent_no">No thanks</string>
+    <string name="felt_title">Anything felt off on that trip?</string>
+    <string name="felt_sub">You don\'t need to say what happened.</string>
+    <string name="felt_nothing">Nothing</string>
+    <string name="felt_off">Something felt off, nothing major</string>
+    <string name="felt_happened">Something happened</string>
+
+    <!-- My trips -->
+    <string name="trips_title">My trips</string>
+    <string name="trips_empty">Trips Saathi watched will appear here, each with its sealed record.</string>
+    <string name="trips_plate_matched">Plate check: matched (%1$s)</string>
+    <string name="trips_plate_mismatch">Plate check: saw %1$s, booked %2$s</string>
+    <string name="trips_plate_other">Plate check: %1$s</string>
+    <string name="trips_alert_sent">Alert sent at %1$s. Told: %2$s</string>
+    <string name="trips_alert_none">No one was reached at %1$s.</string>
+    <string name="trips_alert_retry">Tried again at %1$s. Told: %2$s</string>
+    <string name="trips_sealed">Sealed · fingerprints</string>
+    <string name="trips_evidence_location">location log</string>
+    <string name="trips_evidence_audio">audio %1$s</string>
+    <string name="trips_guide">Reporting options and draft</string>
+    <string name="trips_delete">Delete</string>
+    <string name="trips_delete_armed">Tap again to delete</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_you">You</string>
+    <string name="settings_you_hint">Shown in alerts, like \"%1$s hasn\'t answered a check-in.\"</string>
+    <string name="settings_name_label">Your first name</string>
+    <string name="settings_name_problem">Your name is shown in alerts.</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_follow">Saathi follows your phone\'s language.</string>
+    <string name="settings_people">People to text</string>
+    <string name="contacts_hint">If you don\'t answer a check-in, Saathi texts these people from your own SIM.</string>
+    <string name="contacts_empty_problem">Add at least one person, or alerts can\'t go anywhere.</string>
+    <string name="settings_write_contacts">Write them a message about Saathi</string>
+    <string name="settings_places_hint">Home and work, say. Saathi uses them to notice a detour or a late arrival.</string>
+    <string name="settings_help_options">Help options</string>
+    <string name="settings_speak_says">Speak for me says</string>
+    <string name="settings_phrase_touched">\"This man touched me. He\'s still here. Please help me.\"</string>
+    <string name="settings_phrase_following">\"This man is following me. Please help me.\"</string>
+    <string name="settings_phrase_help">\"I need help. Please stay with me and call for help.\"</string>
+    <string name="settings_tile">Quick Settings tile</string>
+    <string name="settings_tile_body">Pull down from the top of the screen, even when locked, and tap Saathi help. You get 5 seconds to tap again if it was a mistake.</string>
+    <string name="settings_tile_add">Add to Quick Settings</string>
+    <string name="settings_tile_manual">Edit your Quick Settings (the pencil icon) and drag Saathi help in.</string>
+    <string name="settings_power">Power button</string>
+    <plurals name="settings_presses">
+        <item quantity="one">%1$d press</item>
+        <item quantity="other">%1$d presses</item>
+    </plurals>
+    <string name="settings_off">Off</string>
+    <string name="settings_power_hint">Off at first, because many phones already use quick presses for the camera or Emergency SOS. If yours doesn\'t, pick a number and try it. If presses open your camera, set it back to Off and use the Quick Settings tile.</string>
+    <string name="settings_community">Community sharing</string>
+    <string name="settings_community_body">Share anonymously: count my rides by vehicle plate and add my reports to the community map. Never my name or number.</string>
+    <string name="settings_improve">Help improve Saathi</string>
+    <string name="settings_crash_title">Send crash reports</string>
+    <string name="settings_crash_body">If Saathi crashes, send what went wrong. Numbers, names and places are removed first.</string>
+    <string name="settings_usage_title">Send usage stats</string>
+    <string name="settings_usage_body">Which features get used, rounded to the hour. Never where you go or who you text.</string>
+    <string name="settings_permissions">Permissions</string>
+    <string name="settings_permissions_hint">Tap Allow on anything that\'s missing.</string>
+    <string name="settings_practice">Practice</string>
+    <string name="settings_practice_button">Practise a check-in</string>
+    <string name="settings_practice_hint">Lock your phone. Saathi rings in 5 seconds.</string>
+    <string name="settings_app">App</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_checking">Checking…</string>
+    <string name="settings_up_to_date">You\'re on the latest version.</string>
+    <string name="settings_update_failed">Couldn\'t check for updates. Try again later.</string>
+
+    <!-- Setup: flow -->
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_continue">Continue</string>
+    <string name="setup_finish">Finish</string>
+    <string name="setup_start_practice">Start practice</string>
+    <string name="setup_skip">Skip</string>
+    <string name="setup_skip_practice">Skip practice</string>
+    <string name="setup_later">Set up later</string>
+    <string name="setup_skip_title">Skip for now?</string>
+    <string name="setup_skip_body">Without these, Saathi can\'t watch trips or send alerts. You can finish this in Settings.</string>
+    <string name="setup_go_back">Go back</string>
+    <string name="setup_skip_anyway">Skip anyway</string>
+
+    <!-- Setup: people to text -->
+    <string name="setup_contacts_title">Who should we tell?</string>
+    <string name="setup_name_hint">Shown in alerts: \"%1$s hasn\'t answered a check-in.\"</string>
+    <string name="contacts_heading">People to text</string>
+    <string name="contacts_empty">No one yet. Pick at least one person you\'d want to know.</string>
+    <string name="contacts_choose">Choose from contacts</string>
+    <string name="contacts_type">Type a number instead</string>
+    <string name="contacts_name">Name</string>
+    <string name="contacts_phone">Phone number</string>
+    <string name="contacts_phone_hint">With country code, like +91 98765 43210</string>
+    <string name="contacts_city_anywhere">Texted wherever you are</string>
+    <string name="contacts_city_in">Texted when you\'re in %1$s</string>
+    <string name="contacts_anywhere">Anywhere</string>
+    <string name="contacts_other_city">Other city…</string>
+    <string name="contacts_which_city">Which city?</string>
+    <string name="contacts_city">City</string>
+    <string name="problem_phone_missing">Add a phone number for %1$s.</string>
+    <string name="problem_phone_incomplete">This number looks incomplete. Add the country code, like +91.</string>
+    <string name="problem_name_missing">Add a name for this number.</string>
+    <string name="problem_your_name">Add your first name, so contacts know who the alert is from.</string>
+    <string name="problem_no_contacts">Add at least one person to text.</string>
+
+    <!-- Setup: permissions -->
+    <string name="perm_heading">Let Saathi watch your trips</string>
+    <string name="perm_subheading">Android asks once for each. Saathi uses them only on trips and alerts.</string>
+    <string name="perm_optional">Optional</string>
+    <string name="perm_location">Location</string>
+    <string name="perm_location_why">To know where your trip goes.</string>
+    <string name="perm_location_always">Location all the time</string>
+    <string name="perm_location_always_why">So Saathi keeps watching with the screen off.</string>
+    <string name="perm_sms">Text messages</string>
+    <string name="perm_sms_why">Alerts go from your own SIM, even with no data.</string>
+    <string name="perm_notifications">Notifications</string>
+    <string name="perm_notifications_why">For check-ins and the trip card.</string>
+    <string name="perm_lock_screen">Check-ins over the lock screen</string>
+    <string name="perm_lock_screen_why">So \'Are you okay?\' shows even when your phone is locked.</string>
+    <string name="perm_background">Keep running in the background</string>
+    <string name="perm_background_why">So Android doesn\'t stop Saathi mid-trip.</string>
+    <string name="perm_rides">Notice Uber, Ola and Rapido rides</string>
+    <string name="perm_rides_why">Trips start on their own when a ride is booked.</string>
+    <string name="perm_microphone">Microphone</string>
+    <string name="perm_microphone_why">Records only after help is raised.</string>
+    <string name="perm_allow_label">Allow %1$s</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_allowed">Allowed</string>
+    <string name="perm_always_steps">Tap Allow, then Permissions › Location › Allow all the time.</string>
+    <string name="perm_after_first">After the first one</string>
+    <string name="perm_needed">Needed so alerts can reach your contacts.</string>
+
+    <!-- Setup and Settings: keep Saathi running -->
+    <string name="perm_keep_title">Keep Saathi running</string>
+    <string name="perm_keep_why">Your phone stops apps in the background. Saathi has to keep watching during a trip.</string>
+    <string name="perm_keep_open">Open settings</string>
+    <string name="perm_keep_needed">Needed so Saathi keeps watching during a trip.</string>
+    <string name="oem_xiaomi_1">Turn on Autostart for Saathi.</string>
+    <string name="oem_xiaomi_2">In Battery saver, choose No restrictions.</string>
+    <string name="oem_xiaomi_3">In recent apps, hold Saathi and tap the lock.</string>
+    <string name="oem_vivo_1">Turn on Autostart for Saathi.</string>
+    <string name="oem_vivo_2">In Battery, allow Saathi to run in the background.</string>
+    <string name="oem_vivo_3">In recent apps, lock Saathi.</string>
+    <string name="oem_oppo_1">Turn on Auto launch for Saathi.</string>
+    <string name="oem_oppo_2">In Battery, allow background activity for Saathi.</string>
+    <string name="oem_oppo_3">In recent apps, lock Saathi.</string>
+    <string name="oem_oneplus_1">Turn on Auto launch for Saathi.</string>
+    <string name="oem_oneplus_2">In Battery, choose Don\'t optimise for Saathi.</string>
+    <string name="oem_oneplus_3">In recent apps, lock Saathi.</string>
+    <string name="oem_samsung_1">In Battery, open Background usage limits.</string>
+    <string name="oem_samsung_2">Take Saathi out of Sleeping apps and Deep sleeping apps.</string>
+    <string name="oem_samsung_3">Add Saathi to Never sleeping apps.</string>
+    <string name="oem_huawei_1">Open App launch and set Saathi to Manage manually.</string>
+    <string name="oem_huawei_2">Turn on Auto-launch, Secondary launch and Run in background.</string>
+    <string name="oem_huawei_3">In recent apps, lock Saathi.</string>
+
+    <!-- Home: the phone stopped Saathi -->
+    <string name="stopped_text">Your phone stopped Saathi at %1$s, during a trip. It wasn\'t watching after that.</string>
+    <string name="stopped_text_yesterday">Your phone stopped Saathi yesterday at %1$s, during a trip. It wasn\'t watching after that.</string>
+    <string name="stopped_text_date">Your phone stopped Saathi on %1$s at %2$s, during a trip. It wasn\'t watching after that.</string>
+    <string name="stopped_fix">Fix this</string>
+    <string name="stopped_dismiss">Dismiss</string>
+
+    <!-- Setup: places -->
+    <string name="places_title">Places you go often</string>
+    <string name="places_hint_setup">With two places, Saathi knows where a trip from one is going and notices detours. You can skip this.</string>
+    <string name="place_home">Home</string>
+    <string name="place_work">Work</string>
+    <string name="place_college">College</string>
+    <string name="place_other">Other</string>
+    <string name="places_add">Add a place</string>
+    <string name="places_name_label">Name this place</string>
+    <string name="places_name_placeholder">Gym</string>
+    <string name="places_name_problem">Give this place a name first.</string>
+    <string name="places_search">Search an address or place</string>
+    <string name="places_search_note">Addresses you type are looked up with OpenRouteService.</string>
+    <string name="places_clear">Clear</string>
+    <string name="places_use_current">Use my current location</string>
+    <string name="places_searching">Searching…</string>
+    <string name="places_no_matches">No matches. Try a landmark or area name.</string>
+    <string name="places_locate_failed">Couldn\'t find where you are. Try again outside, or search instead.</string>
+    <string name="places_allow_location">Allow location to use where you are, or search instead.</string>
+    <string name="places_near_here">Near your current location</string>
+    <string name="places_saved">Saved place</string>
+    <string name="places_from_location">From your location</string>
+
+    <!-- Setup: practice -->
+    <string name="practice_title">One practice, so the real one isn\'t a surprise.</string>
+    <string name="practice_body">On a trip, if something looks wrong, Saathi rings loudly and asks if you\'re okay. Let\'s try it once. Nothing is sent.</string>
+    <string name="practice_fact_rings">It rings, even on silent</string>
+    <string name="practice_fact_lock">It shows over your lock screen</string>
+    <string name="practice_fact_tap">Tap I\'m okay to stop it</string>
+    <string name="practice_lock_now">Lock your phone now</string>
+    <string name="practice_will_check">Saathi will check in, like on a trip.</string>
+    <string name="practice_tap_okay">Tap I\'m okay on the check-in.</string>
+    <string name="practice_done">Practice done</string>
+    <string name="practice_done_body">That\'s what a check-in feels like. You can practise again from Settings.</string>
+
+    <!-- Check-in screen -->
+    <string name="checkin_title">Are you okay?</string>
+    <string name="checkin_pill_practice">Practice</string>
+    <string name="checkin_body">If you don\'t answer, Saathi will text your contacts with your location.</string>
+    <string name="checkin_body_practice">This is a practice. Nothing will be sent.</string>
+    <string name="checkin_seconds">seconds before your contacts get a text</string>
+    <string name="checkin_seconds_practice">seconds left in the practice</string>
+    <string name="checkin_fact_alarm">Alarm on</string>
+    <string name="checkin_fact_vibrating">Vibrating</string>
+    <string name="checkin_fact_lock">Over lock screen</string>
+    <string name="checkin_stalled">The thread has stopped moving.</string>
+    <string name="checkin_practice_over">Practice over</string>
+    <string name="checkin_practice_over_body">On a real trip, your contacts would get a text now with where you are.</string>
+    <string name="checkin_nothing_sent">Nothing was sent.</string>
+    <string name="checkin_recording">Recording on this phone</string>
+    <string name="checkin_none">No check-in right now</string>
+
+    <!-- Speak for me -->
+    <string name="speak_speaking">%1$s · speaking</string>
+    <string name="speak_not_sent">Not sent. Speak for me is still on screen.</string>
+    <string name="speak_again">Say it again</string>
+    <string name="speak_told_sub">Live location sent · recording on this phone · %1$s</string>
+    <string name="speak_texting">Texting %1$s in %2$d…</string>
+    <string name="speak_hint">Tap Don\'t text if you opened this by mistake.</string>
+    <string name="speak_dont_text">Don\'t text</string>
+
+    <!-- Plate check -->
+    <string name="plate_title">Check the plate</string>
+    <string name="plate_title_match">It matches your booking</string>
+    <string name="plate_title_mismatch">This isn\'t the plate you booked</string>
+    <string name="plate_body">Snap the number plate of the vehicle in front of you. Saathi compares it with your booking.</string>
+    <string name="plate_body_match">The plate in front of you is the one your ride app booked.</string>
+    <string name="plate_body_mismatch">The vehicle in front of you has a different number from your booking.</string>
+    <string name="plate_in_front">In front of you</string>
+    <string name="plate_booked">Booked</string>
+    <string name="plate_none_shown">No plate shown</string>
+    <string name="plate_unreadable">Couldn\'t read the plate. Type it below.</string>
+    <string name="plate_type_label">Or type the plate you see</string>
+    <string name="plate_compare">Compare</string>
+    <string name="plate_reading">Reading the plate…</string>
+    <string name="plate_snap">Snap the plate</string>
+    <string name="plate_dont_get_in">Don\'t get in</string>
+    <string name="plate_tell_contacts">Tell my contacts</string>
+    <string name="plate_its_fine">It\'s fine</string>
+    <string name="plate_notif_title">Your ride is here. Check the plate</string>
+    <string name="plate_notif_text">Snap the number plate and Saathi will compare it with %1$s.</string>
+    <string name="plate_notif_text_booking">Snap the number plate and Saathi will compare it with your booking.</string>
+
+    <!-- Companion call -->
+    <string name="companion_title">Saathi is on the call</string>
+    <string name="companion_online">Speak out loud, so anyone near you hears you\'re on a call.</string>
+    <string name="companion_offline">No connection. Use Help or Speak for me.</string>
+    <string name="companion_told">Your contacts were told: %1$s</string>
+    <string name="companion_type">Or type</string>
+    <string name="companion_send">Send</string>
+    <string name="companion_listening">Listening…</string>
+    <string name="companion_hold">Hold to talk</string>
+    <string name="companion_end">End call</string>
+
+    <!-- Community map -->
+    <string name="map_title">Community map</string>
+    <string name="map_sample">Sample data</string>
+    <string name="map_sub">Where women reported something, even small things, in the last 90 days. Never names, never exact places.</string>
+    <string name="map_after_9">After 9 pm</string>
+    <string name="map_all_day">All day</string>
+    <string name="map_offline">No connection. The map needs data.</string>
+    <plurals name="map_note">
+        <item quantity="one">%1$d report within %2$d m of here in the last 90 days.</item>
+        <item quantity="other">%1$d reports within %2$d m of here in the last 90 days.</item>
+    </plurals>
+    <plurals name="map_note_night">
+        <item quantity="one">%1$d report after 9 pm within %2$d m of here in the last 90 days.</item>
+        <item quantity="other">%1$d reports after 9 pm within %2$d m of here in the last 90 days.</item>
+    </plurals>
+
+    <!-- Reporting guide (chrome only; the guide text stays English) -->
+    <string name="guide_title">What you can do next</string>
+    <string name="guide_english_note">The guide below is in English for now.</string>
+    <string name="guide_draft_heading">Draft complaint</string>
+    <string name="guide_copy">Copy the draft, to edit and send yourself</string>
+    <string name="guide_no_record">No trip record yet, so there\'s no draft. Trips Saathi watches leave one.</string>
+
+    <!-- Update dialog -->
+    <string name="update_important">Important update</string>
+    <string name="update_available">Update available (v%1$s)</string>
+    <string name="update_mandatory">This fixes something important. Please update soon.</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_metered">This is a large download (about 100 MB). Use Wi‑Fi if you can.</string>
+    <string name="update_allow_install">Allow Saathi to install updates, then come back and tap Install.</string>
+    <string name="update_err_installer">Couldn\'t open the installer. Try again later.</string>
+    <string name="update_err_mismatch">The download didn\'t check out, so it wasn\'t installed. Try again later.</string>
+    <string name="update_err_failed">Couldn\'t download the update. Check your connection and try again.</string>
+    <string name="update_button">Update</string>
+    <string name="update_install">Install</string>
+    <string name="update_later">Later</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_guard">Saathi is ready</string>
+    <string name="notif_channel_checkin">Check-ins</string>
+    <string name="notif_channel_alert">Alerts sent</string>
+    <string name="notif_guard_ready">Saathi is ready</string>
+    <string name="notif_guard_alert">Alert sent to %1$s</string>
+    <string name="guard_text_power">Press the power button to get help</string>
+    <string name="guard_text_lock">Help and Speak for me work from the lock screen</string>
+    <string name="notif_action_stop">Stop watching</string>
+    <string name="notif_checkin_practice_title">Practice check-in</string>
+    <string name="notif_checkin_practice_text">This is a practice. Nothing will be sent. Tap I\'m okay.</string>
+    <plurals name="notif_checkin_text">
+        <item quantity="one">Your trip: %1$s. Your contacts will be told in %2$d second.</item>
+        <item quantity="other">Your trip: %1$s. Your contacts will be told in %2$d seconds.</item>
+    </plurals>
+    <string name="notif_alert_none">No SMS went out.</string>
+    <string name="notif_alert_told">Told: %1$s.</string>
+    <string name="notif_alert_failed">Failed: %1$s.</string>
+    <string name="notif_alert_no_112">Saathi doesn\'t call 112.</string>
+    <string name="vehicle_notif_title">Before you get in: %1$s</string>
+    <plurals name="vehicle_flag_text">
+        <item quantity="one">This vehicle has %1$d report from other women in the last 90 days.</item>
+        <item quantity="other">This vehicle has %1$d reports from other women in the last 90 days.</item>
+    </plurals>
+    <string name="vehicle_flag_more">You can continue, or cancel and rebook in your ride app.</string>
+    <string name="vehicle_sample">(Sample data)</string>
+    <plurals name="vehicle_rides">
+        <item quantity="one">%1$d ride with Saathi users</item>
+        <item quantity="other">%1$d rides with Saathi users</item>
+    </plurals>
+    <string name="vehicle_none_raised">none raised a concern</string>
+    <string name="ride_watcher_label">Saathi ride watcher</string>
+
+    <!-- Home-screen widget and Quick Settings tile -->
+    <string name="widget_help">Help</string>
+    <string name="widget_sub">One tap speaks for you and texts your contacts</string>
+    <string name="widget_sub_trip">Watching your trip · one tap speaks for you and texts your contacts</string>
+    <string name="widget_slide">Slide for Walk, Bus, Train</string>
+    <string name="widget_back">Back to SOS</string>
+    <string name="tile_contacts_told">Contacts told</string>
+    <string name="tile_texting_soon">Texting in 5 s · tap to stop</string>
+    <string name="tile_finish_setup">Finish setup first</string>
+    <string name="tile_tap_text_name">Tap to text %1$s</string>
+    <string name="tile_tap_text_contacts">Tap to text your contacts</string>
 </resources>

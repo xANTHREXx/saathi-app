@@ -39,3 +39,16 @@ class PlateTest {
         assertEquals(null, Plate.find("Your driver is on the way"))
     }
 }
+
+class PlateCheckNoteTest {
+    @Test
+    fun readsAMatch() = org.junit.Assert.assertEquals(PlateCheck(true, "KA05AB1234", null), parsePlateCheck("match: KA05AB1234"))
+
+    @Test
+    fun readsAMismatch() = org.junit.Assert.assertEquals(
+        PlateCheck(false, "KA05XY9876", "KA05AB1234"), parsePlateCheck("mismatch: saw KA05XY9876, booked KA05AB1234"),
+    )
+
+    @Test
+    fun unknownTextIsNull() = org.junit.Assert.assertNull(parsePlateCheck("something else"))
+}

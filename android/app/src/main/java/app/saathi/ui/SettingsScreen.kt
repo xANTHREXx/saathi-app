@@ -1,9 +1,9 @@
 package app.saathi.ui
 
-import android.app.StatusBarManager
-import android.content.ComponentName
-import android.graphics.drawable.Icon
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -22,12 +22,16 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,11 +39,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -52,7 +60,6 @@ import app.saathi.data.Api.Release
 import app.saathi.data.AppUpdateManager
 import app.saathi.data.Settings
 import app.saathi.data.TelemetryManager
-import app.saathi.trigger.HelpTileService
 import app.saathi.ui.setup.ContactsEditor
 import app.saathi.ui.setup.PermissionList
 import app.saathi.ui.setup.PlacesEditor
@@ -63,12 +70,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val PHRASES = listOf(
-    "touched" to "\"This man touched me. He's still here. Please help me.\"",
-    "following" to "\"This man is following me. Please help me.\"",
-    "help" to "\"I need help. Please stay with me and call for help.\"",
+    "touched" to R.string.settings_phrase_touched,
+    "following" to R.string.settings_phrase_following,
+    "help" to R.string.settings_phrase_help,
 )
 
-private val PRESS_CHOICES = listOf(3 to "3 presses", 4 to "4", 6 to "6", 0 to "Off")
+private val PRESS_CHOICES = listOf(3, 4, 6, 0)
 
 /** Everything she set up, editable. Every change is saved straight away through [onChange]. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -76,6 +83,8 @@ private val PRESS_CHOICES = listOf(3 to "3 presses", 4 to "4", 6 to "6", 0 to "O
 fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
     val c = Saathi.colors
     val ctx = LocalContext.current
+    // The tile dialog can answer after a recomposition; save onto what is current, not what was captured.
+    val latest by rememberUpdatedState(settings)
 
     // Her name: the field shows what she typed, but only a non-blank name is ever saved.
     var name by rememberSaveable { mutableStateOf(settings.name) }
@@ -99,9 +108,12 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(28.dp),
     ) {
-        Text("Settings", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(top = 8.dp))
 
-        SettingsSection("You", "Shown in alerts, like \"${name.trim().ifBlank { "Priya" }} hasn't answered a check-in.\"") {
+        SettingsSection(
+            stringResource(R.string.settings_you),
+            stringResource(R.string.settings_you_hint, name.trim().ifBlank { "Priya" }),
+        ) {
             OutlinedTextField(
                 name,
                 {
@@ -110,16 +122,18 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                     if (saved.isNotEmpty() && saved != settings.name) onChange(settings.copy(name = saved))
                 },
                 Modifier.fillMaxWidth(),
-                label = { Text("Your first name") },
+                label = { Text(stringResource(R.string.settings_name_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                 supportingText = if (name.isBlank()) {
-                    { ProblemText("Your name is shown in alerts.") }
+                    { ProblemText(stringResource(R.string.settings_name_problem)) }
                 } else null,
             )
         }
 
-        SettingsSection("People to text", "If you don't answer a check-in, Saathi texts these people from your own SIM.") {
+        SettingsSection(stringResource(R.string.settings_language)) { LanguageRow() }
+
+        SettingsSection(stringResource(R.string.settings_people), stringResource(R.string.contacts_hint)) {
             ContactsEditor(
                 contacts = settings.contacts, onContactsChange = { onChange(settings.copy(contacts = it)) },
                 formOpen = formOpen, onFormOpenChange = { formOpen = it },
@@ -127,66 +141,76 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 formPhone = formPhone, onFormPhoneChange = { formPhone = it },
                 problem = problem, problemNonce = problemNonce,
                 onProblemChange = { p -> problem = p; if (p != null) problemNonce++ },
-                emptyProblem = "Add at least one person, or alerts can't go anywhere.",
+                emptyProblem = stringResource(R.string.contacts_empty_problem),
             )
+            if (settings.contacts.isNotEmpty()) TextButton(
+                onClick = {
+                    if (writeAboutSaathi(ctx, settings.contacts) && !settings.contactsToldAsked) {
+                        onChange(settings.copy(contactsToldAsked = true))
+                    }
+                },
+                Modifier.heightIn(min = 48.dp),
+            ) { Text(stringResource(R.string.settings_write_contacts)) }
         }
 
-        SettingsSection("Places you go often", "Home and work, say. Saathi uses them to notice a detour or a late arrival.") {
+        SettingsSection(stringResource(R.string.places_title), stringResource(R.string.settings_places_hint)) {
             PlacesEditor(settings.places, { onChange(settings.copy(places = it)) })
         }
 
-        SettingsSection("Help options") {
-            Text("Speak for me says", style = MaterialTheme.typography.titleSmall)
+        SettingsSection(stringResource(R.string.settings_help_options)) {
+            Text(stringResource(R.string.settings_speak_says), style = MaterialTheme.typography.titleSmall)
             Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                PHRASES.forEach { (key, text) ->
+                PHRASES.forEach { (key, textRes) ->
                     FilterChip(
                         selected = settings.phraseKey == key,
                         onClick = { if (settings.phraseKey != key) onChange(settings.copy(phraseKey = key)) },
-                        label = { Text(text, Modifier.padding(vertical = 8.dp)) },
+                        label = { Text(stringResource(textRes), Modifier.padding(vertical = 8.dp)) },
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
 
-            Text("Quick Settings tile", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
+            Text(stringResource(R.string.settings_tile), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
             Text(
-                "Pull down from the top of the screen, even when locked, and tap Saathi help. You get 5 seconds to tap again if it was a mistake.",
+                stringResource(R.string.settings_tile_body),
                 style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
             )
             if (Build.VERSION.SDK_INT >= 33) {
                 FilledTonalButton(
-                    onClick = {
-                        ctx.getSystemService(StatusBarManager::class.java)?.requestAddTileService(
-                            ComponentName(ctx, HelpTileService::class.java), "Saathi help",
-                            Icon.createWithResource(ctx, R.drawable.ic_tile_help), ctx.mainExecutor,
-                        ) { }
-                    },
+                    // Home's "Two more things" card reads the same flag, so adding it here ticks it off there.
+                    onClick = { requestHelpTile(ctx) { if (tileRequestDone(it)) onChange(latest.copy(tileAsked = true)) } },
                     modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
-                ) { Text("Add to Quick Settings") }
+                ) { Text(stringResource(R.string.settings_tile_add)) }
             } else {
                 Text(
-                    "Edit your Quick Settings (the pencil icon) and drag Saathi help in.",
+                    stringResource(R.string.settings_tile_manual),
                     style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
                 )
             }
 
-            Text("Power button", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
+            Text(stringResource(R.string.settings_power), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
             FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PRESS_CHOICES.forEach { (n, label) ->
+                PRESS_CHOICES.forEach { n ->
                     FilterChip(
                         selected = settings.powerPresses == n,
                         onClick = { if (settings.powerPresses != n) onChange(settings.copy(powerPresses = n)) },
-                        label = { Text(label) },
+                        label = {
+                            Text(when (n) {
+                                3 -> pluralStringResource(R.plurals.settings_presses, n, n)
+                                0 -> stringResource(R.string.settings_off)
+                                else -> "$n"
+                            })
+                        },
                     )
                 }
             }
             Text(
-                "Many phones open the camera on a double press, and Android's own Emergency SOS uses 5 presses. Pick a count that doesn't clash with yours. If presses open your camera, turn this off and use the Quick Settings tile.",
+                stringResource(R.string.settings_power_hint),
                 style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
             )
         }
 
-        SettingsSection("Community sharing") {
+        SettingsSection(stringResource(R.string.settings_community)) {
             Row(
                 Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
                     value = settings.communityConsent, role = Role.Switch,
@@ -196,14 +220,14 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    "Share anonymously: count my rides by vehicle plate and add my reports to the community map. Never my name or number.",
+                    stringResource(R.string.settings_community_body),
                     Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
                 )
                 Switch(checked = settings.communityConsent, onCheckedChange = null)
             }
         }
 
-        SettingsSection("Help improve Saathi") {
+        SettingsSection(stringResource(R.string.settings_improve)) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
@@ -214,9 +238,9 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Send crash reports", style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.settings_crash_title), style = MaterialTheme.typography.titleSmall)
                         Text(
-                            "If Saathi crashes, send what went wrong. Numbers, names and places are removed first.",
+                            stringResource(R.string.settings_crash_body),
                             style = MaterialTheme.typography.bodyMedium, color = c.fg2,
                         )
                     }
@@ -234,9 +258,9 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Send usage stats", style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.settings_usage_title), style = MaterialTheme.typography.titleSmall)
                         Text(
-                            "Which features get used, rounded to the hour. Never where you go or who you text.",
+                            stringResource(R.string.settings_usage_body),
                             style = MaterialTheme.typography.bodyMedium, color = c.fg2,
                         )
                     }
@@ -245,25 +269,25 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
             }
         }
 
-        SettingsSection("Permissions", "Tap Allow on anything that's missing.") {
+        SettingsSection(stringResource(R.string.settings_permissions), stringResource(R.string.settings_permissions_hint)) {
             PermissionList(live.granted, live.refresh)
         }
 
-        SettingsSection("Practice") {
+        SettingsSection(stringResource(R.string.settings_practice)) {
             FilledTonalButton(
                 onClick = { AlertManager.startPractice(5_000); practiceHint = true },
                 Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 shape = RoundedCornerShape(20.dp),
-            ) { Text("Practise a check-in", style = MaterialTheme.typography.titleMedium) }
+            ) { Text(stringResource(R.string.settings_practice_button), style = MaterialTheme.typography.titleMedium) }
             if (practiceHint) {
                 Text(
-                    "Lock your phone. Saathi rings in 5 seconds.",
+                    stringResource(R.string.settings_practice_hint),
                     style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
                 )
             }
         }
 
-        SettingsSection("App") { AppSection() }
+        SettingsSection(stringResource(R.string.settings_app)) { AppSection() }
 
         Spacer(Modifier.height(8.dp))
     }
@@ -280,7 +304,7 @@ private fun AppSection() {
     // null: not checked yet; true: up to date; false: the check didn't work.
     var upToDate by remember { mutableStateOf<Boolean?>(null) }
 
-    Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodyMedium, color = c.fg2)
     FilledTonalButton(
         onClick = {
             checking = true
@@ -294,14 +318,47 @@ private fun AppSection() {
         },
         enabled = !checking,
         modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
-    ) { Text(if (checking) "Checking…" else "Check for updates") }
+    ) { Text(stringResource(if (checking) R.string.settings_checking else R.string.settings_check_updates)) }
     when (upToDate) {
-        true -> Text("You're on the latest version.", style = MaterialTheme.typography.bodyMedium, color = c.fg2,
+        true -> Text(stringResource(R.string.settings_up_to_date), style = MaterialTheme.typography.bodyMedium, color = c.fg2,
             modifier = Modifier.padding(top = 8.dp))
-        false -> ProblemText("Couldn't check for updates. Try again later.", Modifier.padding(top = 4.dp))
+        false -> ProblemText(stringResource(R.string.settings_update_failed), Modifier.padding(top = 4.dp))
         null -> Unit
     }
     offered?.let { UpdateDialog(it, onDismiss = { offered = null }) }
+}
+
+/**
+ * The app's language. From Android 13 the system keeps a language for each app, so this opens that screen.
+ * Before that there is nothing to switch: Saathi follows the phone's language.
+ */
+@Composable
+private fun LanguageRow() {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    val current = stringResource(R.string.lang_name)
+    if (Build.VERSION.SDK_INT >= 33) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp))
+                .clickable(role = Role.Button) {
+                    val own = Uri.parse("package:${ctx.packageName}")
+                    runCatching { ctx.startActivity(Intent(android.provider.Settings.ACTION_APP_LOCALE_SETTINGS, own)) }
+                        .onFailure {
+                            runCatching { ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, own)) }
+                        }
+                },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(current, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = c.fg2)
+        }
+    } else {
+        Text(current, style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.settings_language_follow),
+            style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 4.dp),
+        )
+    }
 }
 
 /** A titled block: a heading, an optional one-liner in fg2, then the controls 12dp below. */

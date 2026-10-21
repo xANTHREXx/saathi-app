@@ -1,7 +1,9 @@
 package app.saathi.core
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ContactsTest {
@@ -68,14 +70,14 @@ class ContactsTest {
     }
 
     @Test
-    fun cityNoteAnywhere() {
-        assertEquals("Texted wherever you are", cityNote("anywhere"))
-        assertEquals("Texted wherever you are", cityNote(" Anywhere "))
+    fun isAnywhereMatchesTheTagLoosely() {
+        assertTrue(isAnywhere("anywhere"))
+        assertTrue(isAnywhere(" Anywhere "))
     }
 
     @Test
-    fun cityNoteNamedCity() {
-        assertEquals("Texted when you're in Bengaluru", cityNote(" Bengaluru "))
+    fun isAnywhereFalseForANamedCity() {
+        assertFalse(isAnywhere(" Bengaluru "))
     }
 
     @Test
@@ -86,7 +88,7 @@ class ContactsTest {
     @Test
     fun addPendingNameWithoutPhone() {
         assertEquals(
-            PendingResult.Problem(SetupProblem(SetupField.CONTACT_PHONE, "Add a phone number for Riya.")),
+            PendingResult.Problem(SetupProblem(SetupField.CONTACT_PHONE, ProblemKind.PHONE_MISSING, "Riya")),
             addPending(emptyList(), " Riya ", "  ", ""),
         )
     }
@@ -94,12 +96,7 @@ class ContactsTest {
     @Test
     fun addPendingIncompletePhone() {
         assertEquals(
-            PendingResult.Problem(
-                SetupProblem(
-                    SetupField.CONTACT_PHONE,
-                    "This number looks incomplete. Add the country code, like +91.",
-                ),
-            ),
+            PendingResult.Problem(SetupProblem(SetupField.CONTACT_PHONE, ProblemKind.PHONE_INCOMPLETE)),
             addPending(emptyList(), "Riya", "12345", ""),
         )
     }
@@ -107,7 +104,7 @@ class ContactsTest {
     @Test
     fun addPendingPhoneWithoutName() {
         assertEquals(
-            PendingResult.Problem(SetupProblem(SetupField.CONTACT_NAME, "Add a name for this number.")),
+            PendingResult.Problem(SetupProblem(SetupField.CONTACT_NAME, ProblemKind.NAME_MISSING)),
             addPending(emptyList(), " ", "9876543210", ""),
         )
     }
@@ -139,7 +136,7 @@ class ContactsTest {
     @Test
     fun setupProblemBlankName() {
         assertEquals(
-            SetupProblem(SetupField.YOUR_NAME, "Add your first name, so contacts know who the alert is from."),
+            SetupProblem(SetupField.YOUR_NAME, ProblemKind.YOUR_NAME_MISSING),
             setupProblem("  ", listOf(amma)),
         )
     }
@@ -147,7 +144,7 @@ class ContactsTest {
     @Test
     fun setupProblemNoContacts() {
         assertEquals(
-            SetupProblem(SetupField.CONTACTS, "Add at least one person to text."),
+            SetupProblem(SetupField.CONTACTS, ProblemKind.NO_CONTACTS),
             setupProblem("Asha", emptyList()),
         )
     }

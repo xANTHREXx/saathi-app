@@ -55,7 +55,7 @@ class Watcher(
         val stoppedS = fix.t - a.t
         if (stoppedS < stopAfterS || EventKind.LONG_STOP in fired) return null
         fired += EventKind.LONG_STOP
-        return TripEvent(EventKind.LONG_STOP, "stopped ${stoppedS / 60} min", fix.t)
+        return TripEvent(EventKind.LONG_STOP, "stopped ${stoppedS / 60} min", fix.t, (stoppedS / 60).toInt())
     }
 
     private fun offRoute(fix: Fix): TripEvent? {
@@ -69,7 +69,7 @@ class Watcher(
         if (fix.t - since < offRouteForS || EventKind.OFF_ROUTE in fired) return null
         fired += EventKind.OFF_ROUTE
         val rounded = (d / 50).roundToInt() * 50
-        return TripEvent(EventKind.OFF_ROUTE, "$rounded m off route", fix.t)
+        return TripEvent(EventKind.OFF_ROUTE, "$rounded m off route", fix.t, rounded)
     }
 
     private fun late(fix: Fix): TripEvent? {
@@ -78,6 +78,6 @@ class Watcher(
         val grace = max(600L, dur / 4)
         if (fix.t <= due + grace || EventKind.LATE in fired) return null
         fired += EventKind.LATE
-        return TripEvent(EventKind.LATE, "${(fix.t - due) / 60} min past arrival time", fix.t)
+        return TripEvent(EventKind.LATE, "${(fix.t - due) / 60} min past arrival time", fix.t, ((fix.t - due) / 60).toInt())
     }
 }

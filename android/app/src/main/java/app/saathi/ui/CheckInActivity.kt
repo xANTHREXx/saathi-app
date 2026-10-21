@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.saathi.R
 import androidx.compose.ui.unit.sp
@@ -76,6 +77,7 @@ private const val WINDOW_S = 10f
 private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
     val s by TripState.ui.collectAsState()
     val c = Saathi.colors
+    val ctx = LocalContext.current
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); delay(100) } }
     val ends = s.checkInEndsAtMs
@@ -88,26 +90,25 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
             s.practice && s.practiceOver && ends == null -> {
                 Spacer(Modifier.weight(1f))
                 Column(Modifier.padding(horizontal = 6.dp)) {
-                    Text("Practice over", style = MaterialTheme.typography.displaySmall)
-                    Text("On a real trip, your contacts would get a text now with where you are.",
+                    Text(stringResource(R.string.checkin_practice_over), style = MaterialTheme.typography.displaySmall)
+                    Text(stringResource(R.string.checkin_practice_over_body),
                         style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp))
-                    Text("Nothing was sent.", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp))
+                    Text(stringResource(R.string.checkin_nothing_sent), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 Button(onDone, Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(20.dp)) {
-                    Text("Done", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.action_done), style = MaterialTheme.typography.titleMedium)
                 }
             }
             ends != null -> {
                 val leftMs = (ends - now).coerceAtLeast(0)
                 val practice = s.practice
-                val reason = s.events.lastOrNull()?.detail?.replaceFirstChar { it.uppercase() }
+                val reason = s.events.lastOrNull()?.let { ctx.eventText(it).capitalised() }
                 Column(Modifier.padding(horizontal = 6.dp)) {
-                    if (practice) Pill(Icons.Rounded.School, "Practice", c.alum)
+                    if (practice) Pill(Icons.Rounded.School, stringResource(R.string.checkin_pill_practice), c.alum)
                     else reason?.let { Pill(Icons.Rounded.PauseCircle, it, c.alum) }
-                    Text("Are you okay?", style = MaterialTheme.typography.displayLarge, modifier = Modifier.padding(top = 18.dp))
-                    Text(if (practice) "This is a practice. Nothing will be sent."
-                        else "If you don't answer, Saathi will text your contacts with your location.",
+                    Text(stringResource(R.string.checkin_title), style = MaterialTheme.typography.displayLarge, modifier = Modifier.padding(top = 18.dp))
+                    Text(stringResource(if (practice) R.string.checkin_body_practice else R.string.checkin_body),
                         style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp))
                     StalledThread(Modifier.padding(top = 24.dp))
                 }
@@ -115,13 +116,14 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                 Spacer(Modifier.weight(1f))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Countdown(leftMs / 1000f / WINDOW_S, ((leftMs + 999) / 1000).toInt())
-                    Text(if (practice) "seconds left in the practice" else "seconds before your contacts get a text", style = MaterialTheme.typography.bodyLarge, color = c.fg2,
+                    Text(stringResource(if (practice) R.string.checkin_seconds_practice else R.string.checkin_seconds), style = MaterialTheme.typography.bodyLarge, color = c.fg2,
                         modifier = Modifier.padding(top = 14.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 OkayPlate(height = 108, onClick = onOk)
                 Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)) {
-                    Fact(Icons.Rounded.VolumeUp, "Alarm on"); Fact(Icons.Rounded.Vibration, "Vibrating"); Fact(Icons.Rounded.Lock, "Over lock screen")
+                    Fact(Icons.Rounded.VolumeUp, stringResource(R.string.checkin_fact_alarm)); Fact(Icons.Rounded.Vibration, stringResource(R.string.checkin_fact_vibrating))
+                    Fact(Icons.Rounded.Lock, stringResource(R.string.checkin_fact_lock))
                 }
             }
             s.alertActive -> {
@@ -129,27 +131,27 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                     Box(Modifier.size(56.dp).background(c.help, CircleShape), contentAlignment = Alignment.Center) {
                         Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(30.dp))
                     }
-                    Text(if (s.told.isEmpty()) "Telling your contacts…" else "Your contacts were told",
+                    Text(stringResource(if (s.told.isEmpty()) R.string.told_telling else R.string.raised_told),
                         style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(top = 20.dp))
                     if (s.told.isNotEmpty()) Text(s.told.joinToString(", "), style = MaterialTheme.typography.headlineSmall,
                         color = c.fg2, modifier = Modifier.padding(top = 6.dp))
                     Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Fact(Icons.Rounded.Check, "Live location link sent", big = true)
-                        if (s.recording) Fact(Icons.Rounded.Mic, "Recording on this phone", big = true)
-                        if (s.smsFailed.isNotEmpty()) Text("Couldn't send to ${s.smsFailed.joinToString()}. Retrying.",
+                        Fact(Icons.Rounded.Check, stringResource(R.string.told_link), big = true)
+                        if (s.recording) Fact(Icons.Rounded.Mic, stringResource(R.string.checkin_recording), big = true)
+                        if (s.smsFailed.isNotEmpty()) Text(stringResource(R.string.told_failed_retrying, ctx.namesText(s.smsFailed)),
                             style = MaterialTheme.typography.bodyMedium, color = c.onHelpContainer)
                         Text(stringResource(R.string.no_112_full), style = MaterialTheme.typography.labelMedium, color = c.alum)
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 OkayPlate(height = 96, onClick = onOk)
-                FilledTonalButton(onClose, Modifier.fillMaxWidth().padding(top = 10.dp).height(52.dp), shape = RoundedCornerShape(20.dp)) { Text("Close") }
+                FilledTonalButton(onClose, Modifier.fillMaxWidth().padding(top = 10.dp).height(52.dp), shape = RoundedCornerShape(20.dp)) { Text(stringResource(R.string.action_close)) }
             }
             else -> {
                 Spacer(Modifier.weight(1f))
-                Text("No check-in right now", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(horizontal = 6.dp))
+                Text(stringResource(R.string.checkin_none), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(horizontal = 6.dp))
                 Spacer(Modifier.weight(1f))
-                FilledTonalButton(onClose, Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(20.dp)) { Text("Close") }
+                FilledTonalButton(onClose, Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(20.dp)) { Text(stringResource(R.string.action_close)) }
             }
         }
     }
@@ -164,7 +166,7 @@ private fun StalledThread(modifier: Modifier = Modifier) {
             repeat(10) { Star(c.starOn, 12.dp) }
             Star(c.alum, 12.dp); Star(c.alum.copy(alpha = 0.55f), 12.dp); Star(c.alum.copy(alpha = 0.25f), 12.dp)
         }
-        Text("The thread has stopped moving.", style = MaterialTheme.typography.bodySmall, color = c.fg2, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.checkin_stalled), style = MaterialTheme.typography.bodySmall, color = c.fg2, modifier = Modifier.padding(top = 8.dp))
     }
 }
 

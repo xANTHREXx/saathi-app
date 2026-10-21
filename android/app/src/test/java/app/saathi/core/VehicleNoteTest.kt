@@ -7,18 +7,16 @@ import org.junit.Test
 
 class VehicleNoteTest {
     @Test fun countsRides() {
-        assertEquals("13 rides with Saathi users · none raised a concern", vehicleNote(13, 0, flagged = false, sample = false))
-        assertEquals("1 ride with Saathi users · none raised a concern", vehicleNote(1, 0, flagged = false, sample = false))
+        assertEquals(VehicleNote(13, noneRaised = true, sample = false), vehicleNote(13, 0, flagged = false, sample = false))
+        assertEquals(VehicleNote(1, noneRaised = true, sample = false), vehicleNote(1, 0, flagged = false, sample = false))
     }
 
-    @Test fun neverSaysSafe() {
-        for (n in listOf(1, 2, 13, 500)) for (s in listOf(true, false)) {
-            assertFalse(vehicleNote(n, 0, false, s)!!.contains("safe", ignoreCase = true))
-        }
+    @Test fun carriesTheSampleFlag() {
+        assertEquals(VehicleNote(4, noneRaised = true, sample = true), vehicleNote(4, 0, flagged = false, sample = true))
     }
 
-    @Test fun doesNotClaimNoneWhenSomeReported() {
-        assertEquals("13 rides with Saathi users", vehicleNote(13, 2, flagged = false, sample = false))
+    @Test fun neverClaimsNoneWhenSomeReported() {
+        assertFalse(vehicleNote(13, 2, flagged = false, sample = false)!!.noneRaised)
     }
 
     @Test fun silentWhenNothingOrFlagged() {

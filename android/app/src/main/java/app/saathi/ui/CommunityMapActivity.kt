@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.res.stringResource
+import app.saathi.R
 import app.saathi.core.Fix
 import app.saathi.core.Report
 import app.saathi.core.areaNote
@@ -67,19 +69,19 @@ class CommunityMapActivity : ComponentActivity() {
         Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).systemBarsPadding()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Community map", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D1222))
-                    if (data?.first == true) Text("Sample data", color = Color(0xFF0D1222), fontSize = 12.sp,
+                    Text(stringResource(R.string.map_title), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D1222))
+                    if (data?.first == true) Text(stringResource(R.string.map_sample), color = Color(0xFF0D1222), fontSize = 12.sp,
                         modifier = Modifier.background(Color(0xFF8FA2E8), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
                 }
-                Text("Where women reported something, even small things, in the last 90 days. Never names, never exact places.",
+                Text(stringResource(R.string.map_sub),
                     color = Color(0xFF4D5675), fontSize = 14.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(nightOnly, { nightOnly = true }, label = { Text("After 9 pm") })
-                    FilterChip(!nightOnly, { nightOnly = false }, label = { Text("All day") })
+                    FilterChip(nightOnly, { nightOnly = true }, label = { Text(stringResource(R.string.map_after_9)) })
+                    FilterChip(!nightOnly, { nightOnly = false }, label = { Text(stringResource(R.string.map_all_day)) })
                 }
                 when {
-                    failed -> Text("No connection. The map needs data.", color = Color(0xFFB42A23))
-                    note != null -> Text(note, fontWeight = FontWeight.Bold, color = Color(0xFFB42A23))
+                    failed -> Text(stringResource(R.string.map_offline), color = Color(0xFFB42A23))
+                    note != null -> Text(areaNoteText(note), fontWeight = FontWeight.Bold, color = Color(0xFFB42A23))
                 }
             }
             Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {

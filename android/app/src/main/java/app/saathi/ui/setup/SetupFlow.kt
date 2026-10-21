@@ -43,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.saathi.R
 import app.saathi.core.ANYWHERE
 import app.saathi.core.Contact
 import app.saathi.core.PendingResult
@@ -148,17 +150,17 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (step != Step.CONTACTS) {
-                IconButton(onClick = { back() }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") }
+                IconButton(onClick = { back() }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back)) }
             } else {
                 Spacer(Modifier.size(48.dp))
             }
             SaathiMark(24.dp)
             Spacer(Modifier.size(8.dp))
-            Text("Saathi", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.weight(1f))
             if (step != Step.PRACTICE) {
                 Text(
-                    "Step ${step.ordinal + 1} of 3", style = MaterialTheme.typography.labelMedium, color = c.fg2,
+                    stringResource(R.string.setup_step, step.ordinal + 1, 3), style = MaterialTheme.typography.labelMedium, color = c.fg2,
                     modifier = Modifier.padding(end = 8.dp),
                 )
             }
@@ -207,21 +209,21 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                 enabled = step != Step.PRACTICE || practice.phase == PracticePhase.IDLE || practice.phase == PracticePhase.DONE,
                 shape = RoundedCornerShape(20.dp),
             ) {
-                val label = when {
-                    step != Step.PRACTICE -> "Continue"
-                    practice.phase == PracticePhase.DONE -> "Finish"
-                    else -> "Start practice"
-                }
+                val label = stringResource(when {
+                    step != Step.PRACTICE -> R.string.setup_continue
+                    practice.phase == PracticePhase.DONE -> R.string.setup_finish
+                    else -> R.string.setup_start_practice
+                })
                 Text(label, style = MaterialTheme.typography.titleMedium)
             }
             if (step == Step.PLACES) {
-                TextButton(onClick = { goTo(Step.PRACTICE) }) { Text("Skip") }
+                TextButton(onClick = { goTo(Step.PRACTICE) }) { Text(stringResource(R.string.setup_skip)) }
             }
             if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
-                TextButton(onClick = { finish() }) { Text("Skip practice") }
+                TextButton(onClick = { finish() }) { Text(stringResource(R.string.setup_skip_practice)) }
             }
             if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
-                TextButton(onClick = { skipDialog = true }) { Text("Set up later") }
+                TextButton(onClick = { skipDialog = true }) { Text(stringResource(R.string.setup_later)) }
             }
         }
     }
@@ -229,10 +231,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
     if (skipDialog && step == Step.PERMISSIONS) {
         AlertDialog(
             onDismissRequest = { skipDialog = false },
-            title = { Text("Skip for now?") },
-            text = { Text("Without these, Saathi can't watch trips or send alerts. You can finish this in Settings.") },
-            confirmButton = { TextButton(onClick = { skipDialog = false }) { Text("Go back") } },
-            dismissButton = { TextButton(onClick = { skipDialog = false; goTo(Step.PLACES) }) { Text("Skip anyway") } },
+            title = { Text(stringResource(R.string.setup_skip_title)) },
+            text = { Text(stringResource(R.string.setup_skip_body)) },
+            confirmButton = { TextButton(onClick = { skipDialog = false }) { Text(stringResource(R.string.setup_go_back)) } },
+            dismissButton = { TextButton(onClick = { skipDialog = false; goTo(Step.PLACES) }) { Text(stringResource(R.string.setup_skip_anyway)) } },
         )
     }
 }

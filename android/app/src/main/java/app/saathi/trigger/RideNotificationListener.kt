@@ -7,6 +7,7 @@ import android.content.Intent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import app.saathi.R
 import app.saathi.core.RideStatus
 import app.saathi.core.readRide
 import app.saathi.trip.TripService
@@ -51,11 +52,11 @@ class RideNotificationListener : NotificationListenerService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = Notification.Builder(this, "alert")
             .setSmallIcon(android.R.drawable.ic_menu_camera)
-            .setContentTitle("Your ride is here. Check the plate")
-            .setContentText("Snap the number plate and Saathi will compare it with ${booked ?: "your booking"}.")
+            .setContentTitle(getString(R.string.plate_notif_title))
+            .setContentText(if (booked != null) getString(R.string.plate_notif_text, booked) else getString(R.string.plate_notif_text_booking))
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(Notification.Action.Builder(null, "Check the plate", open).build())
+            .addAction(Notification.Action.Builder(null, getString(R.string.plate_title), open).build())
             .build()
         getSystemService(NotificationManager::class.java).notify(PLATE_CHECK_ID, n)
     }

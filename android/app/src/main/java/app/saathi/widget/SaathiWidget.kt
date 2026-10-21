@@ -35,6 +35,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import app.saathi.R
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.ui.SpeakForMeActivity
@@ -63,17 +64,17 @@ class SaathiWidget : GlanceAppWidget() {
                         contentAlignment = Alignment.BottomStart,
                     ) {
                         Column {
-                            Text("Help", style = TextStyle(color = white, fontSize = 30.sp, fontWeight = FontWeight.Bold))
-                            Text(if (onTrip) "Watching your trip · one tap speaks for you and texts your contacts" else "One tap speaks for you and texts your contacts",
+                            Text(context.getString(R.string.widget_help), style = TextStyle(color = white, fontSize = 30.sp, fontWeight = FontWeight.Bold))
+                            Text(context.getString(if (onTrip) R.string.widget_sub_trip else R.string.widget_sub),
                                 style = TextStyle(color = madderMist, fontSize = 12.sp))
                         }
                     }
-                    Text("Slide for Walk, Bus, Train", modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)
+                    Text(context.getString(R.string.widget_slide), modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)
                         .clickable(actionRunCallback<Slide>()),
                         style = TextStyle(color = mist, fontSize = 13.sp, fontWeight = FontWeight.Medium))
                 } else {
                     Row(GlanceModifier.fillMaxWidth().defaultWeight()) {
-                        listOf("WALK" to "Walk", "BUS" to "Bus", "TRAIN" to "Train").forEachIndexed { i, (mode, label) ->
+                        listOf("WALK" to R.string.mode_walk, "BUS" to R.string.mode_bus, "TRAIN" to R.string.mode_train).forEachIndexed { i, (mode, labelRes) ->
                             if (i > 0) Spacer(GlanceModifier.width(8.dp))
                             Box(
                                 GlanceModifier.defaultWeight().fillMaxSize().background(tile).cornerRadius(20.dp)
@@ -81,10 +82,10 @@ class SaathiWidget : GlanceAppWidget() {
                                         Intent(context, TripService::class.java).setAction(TripService.ACTION_START_TRIP)
                                             .putExtra(TripService.EXTRA_MODE, mode), isForegroundService = true)),
                                 contentAlignment = Alignment.Center,
-                            ) { Text(label, style = TextStyle(color = white, fontSize = 15.sp, fontWeight = FontWeight.Bold)) }
+                            ) { Text(context.getString(labelRes), style = TextStyle(color = white, fontSize = 15.sp, fontWeight = FontWeight.Bold)) }
                         }
                     }
-                    Text("Back to SOS", modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)
+                    Text(context.getString(R.string.widget_back), modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)
                         .clickable(actionRunCallback<Slide>()),
                         style = TextStyle(color = mist, fontSize = 13.sp))
                 }

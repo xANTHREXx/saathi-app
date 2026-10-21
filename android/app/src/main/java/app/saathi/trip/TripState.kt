@@ -3,6 +3,7 @@ package app.saathi.trip
 import app.saathi.core.Fix
 import app.saathi.core.Mode
 import app.saathi.core.TripEvent
+import app.saathi.core.VehicleNote
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -41,7 +42,7 @@ data class UiState(
     /** True once a route was asked for and none came (offline, no key, bus or train). */
     val noRoute: Boolean = false,
     /** About this vehicle, from other Saathi users: shown only to her, as counts. */
-    val vehicleNote: String? = null,
+    val vehicleNote: VehicleNote? = null,
     /** A practice check-in is running or just ended. It never sends anything. */
     val practice: Boolean = false,
     /** The practice ran out without an answer. */

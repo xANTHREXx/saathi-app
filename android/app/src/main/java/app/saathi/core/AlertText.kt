@@ -49,14 +49,16 @@ fun alertText(
 
 fun okText(name: String) = "Saathi: false alarm, $name is fine."
 
+/** What other Saathi users' rides say about a vehicle: [rides] counted, [noneRaised] true only when no ride reported anything. */
+data class VehicleNote(val rides: Int, val noneRaised: Boolean, val sample: Boolean)
+
 /**
  * What other Saathi users' rides say about this vehicle, for her only. Counts, never names, and never "safe":
  * a ride where nothing was reported doesn't prove anything. Reports below the flag threshold aren't shown,
- * but then it doesn't claim "none" either.
+ * but then it doesn't claim "none" either. The screen words it in her language.
  * Null when there's nothing to say or the vehicle is flagged (the flag warning covers that).
  */
-fun vehicleNote(rides: Int, reports: Int, flagged: Boolean, sample: Boolean): String? {
+fun vehicleNote(rides: Int, reports: Int, flagged: Boolean, sample: Boolean): VehicleNote? {
     if (flagged || rides <= 0) return null
-    val n = if (rides == 1) "1 ride" else "$rides rides"
-    return "$n with Saathi users" + (if (reports == 0) " · none raised a concern" else "") + if (sample) " (Sample data)" else ""
+    return VehicleNote(rides, noneRaised = reports == 0, sample = sample)
 }

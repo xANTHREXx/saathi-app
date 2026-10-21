@@ -54,21 +54,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import app.saathi.R
 import app.saathi.core.ANYWHERE
 import app.saathi.core.Contact
 import app.saathi.core.PendingResult
 import app.saathi.core.SetupField
 import app.saathi.core.SetupProblem
 import app.saathi.core.addPending
-import app.saathi.core.cityNote
 import app.saathi.core.formatPhone
+import app.saathi.core.isAnywhere
 import app.saathi.core.normalisePhone
+import app.saathi.ui.problemText
 import app.saathi.trip.Geocode
 import app.saathi.trip.LocationOnce
 import app.saathi.ui.theme.Saathi
@@ -105,6 +108,7 @@ internal fun ContactsStep(
     onProblemChange: (SetupProblem?) -> Unit,
 ) {
     val c = Saathi.colors
+    val ctx = LocalContext.current
 
     val nameRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(problem, problemNonce) {
@@ -112,23 +116,23 @@ internal fun ContactsStep(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        Text("Who should we tell?", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.setup_contacts_title), style = MaterialTheme.typography.headlineMedium)
         Text(
-            "If you don't answer a check-in, Saathi texts these people from your own SIM.",
+            stringResource(R.string.contacts_hint),
             style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
         )
 
         OutlinedTextField(
             name, { onNameChange(it); if (problem?.field == SetupField.YOUR_NAME) onProblemChange(null) },
             Modifier.fillMaxWidth().padding(top = 24.dp).bringIntoViewRequester(nameRequester),
-            label = { Text("Your first name") },
+            label = { Text(stringResource(R.string.settings_name_label)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
             supportingText = {
                 Column {
-                    if (problem?.field == SetupField.YOUR_NAME) ProblemText(problem.message)
+                    if (problem?.field == SetupField.YOUR_NAME) ProblemText(ctx.problemText(problem))
                     Text(
-                        "Shown in alerts: \"${name.trim().ifBlank { "Priya" }} hasn't answered a check-in.\"",
+                        stringResource(R.string.setup_name_hint, name.trim().ifBlank { "Priya" }),
                         style = MaterialTheme.typography.bodySmall, color = c.fg2,
                     )
                 }
@@ -142,7 +146,7 @@ internal fun ContactsStep(
             formPhone = formPhone, onFormPhoneChange = onFormPhoneChange,
             problem = problem, problemNonce = problemNonce, onProblemChange = onProblemChange,
             modifier = Modifier.padding(top = 24.dp),
-            heading = "People to text",
+            heading = stringResource(R.string.contacts_heading),
         )
     }
 }
@@ -247,12 +251,12 @@ internal fun ContactsEditor(
                     ProblemText(emptyProblem)
                 } else {
                     Text(
-                        "No one yet. Pick at least one person you'd want to know.",
+                        stringResource(R.string.contacts_empty),
                         style = MaterialTheme.typography.bodyMedium, color = c.fg2,
                     )
                 }
             }
-            if (problem?.field == SetupField.CONTACTS) ProblemText(problem.message)
+            if (problem?.field == SetupField.CONTACTS) ProblemText(ctx.problemText(problem))
         }
 
         FilledTonalButton(
@@ -266,12 +270,12 @@ internal fun ContactsEditor(
         ) {
             Icon(Icons.Rounded.Contacts, null, Modifier.size(20.dp))
             Spacer(Modifier.size(8.dp))
-            Text("Choose from contacts", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.contacts_choose), style = MaterialTheme.typography.titleMedium)
         }
 
         if (!formOpen) {
             TextButton(onClick = { onFormOpenChange(true) }, Modifier.align(Alignment.CenterHorizontally)) {
-                Text("Type a number instead")
+                Text(stringResource(R.string.contacts_type))
             }
         } else {
             Column(
@@ -281,22 +285,23 @@ internal fun ContactsEditor(
                 OutlinedTextField(
                     formName, { onFormNameChange(it); clearIf(SetupField.CONTACT_NAME) },
                     Modifier.fillMaxWidth(),
-                    label = { Text("Name") }, singleLine = true,
+                    label = { Text(stringResource(R.string.contacts_name)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                     supportingText = if (problem?.field == SetupField.CONTACT_NAME) {
-                        { ProblemText(problem.message) }
+                        { ProblemText(ctx.problemText(problem)) }
                     } else null,
                 )
                 OutlinedTextField(
                     formPhone, { onFormPhoneChange(it); clearIf(SetupField.CONTACT_PHONE) },
                     Modifier.fillMaxWidth(),
-                    label = { Text("Phone number") }, singleLine = true,
+                    label = { Text(stringResource(R.string.contacts_phone)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
                     supportingText = {
                         Column {
-                            if (problem?.field == SetupField.CONTACT_PHONE) ProblemText(problem.message)
-                            Text(
-                                "With country code, like +91 98765 43210",
+                            // The problem replaces the hint: both under one field stack awkwardly.
+                            if (problem?.field == SetupField.CONTACT_PHONE) ProblemText(ctx.problemText(problem))
+                            else Text(
+                                stringResource(R.string.contacts_phone_hint),
                                 style = MaterialTheme.typography.bodySmall, color = c.fg2,
                             )
                         }
@@ -314,7 +319,7 @@ internal fun ContactsEditor(
                         }
                     },
                     Modifier.heightIn(min = 48.dp),
-                ) { Text("Add") }
+                ) { Text(stringResource(R.string.action_add)) }
             }
         }
     }
@@ -338,17 +343,21 @@ private fun ContactRow(contact: Contact, currentCity: String?, onCity: (String) 
             Column(Modifier.weight(1f)) {
                 Text(contact.name, style = MaterialTheme.typography.titleSmall)
                 Text(formatPhone(contact.phone), style = MaterialTheme.typography.bodySmall, color = c.fg2)
-                Text(cityNote(contact.city), style = MaterialTheme.typography.bodySmall, color = c.fg2)
+                Text(
+                    if (isAnywhere(contact.city)) stringResource(R.string.contacts_city_anywhere)
+                    else stringResource(R.string.contacts_city_in, contact.city.trim()),
+                    style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                )
             }
             CityChip(contact.city, currentCity, onCity)
-            IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, "Remove ${contact.name}") }
+            IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, stringResource(R.string.action_remove, contact.name)) }
         }
     }
 }
 
 @Composable
 private fun CityChip(city: String, currentCity: String?, onCity: (String) -> Unit) {
-    val anywhere = city.trim().equals(ANYWHERE, ignoreCase = true)
+    val anywhere = isAnywhere(city)
     var menu by remember { mutableStateOf(false) }
     var dialog by remember { mutableStateOf(false) }
     Box(Modifier.minimumInteractiveComponentSize()) {
@@ -368,7 +377,7 @@ private fun CityChip(city: String, currentCity: String?, onCity: (String) -> Uni
                 )
                 Spacer(Modifier.size(6.dp))
                 Text(
-                    if (anywhere) "Anywhere" else city.trim(),
+                    if (anywhere) stringResource(R.string.contacts_anywhere) else city.trim(),
                     Modifier.widthIn(max = 96.dp),
                     style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
@@ -376,21 +385,21 @@ private fun CityChip(city: String, currentCity: String?, onCity: (String) -> Uni
             }
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(text = { Text("Anywhere") }, onClick = { menu = false; onCity(ANYWHERE) })
+            DropdownMenuItem(text = { Text(stringResource(R.string.contacts_anywhere)) }, onClick = { menu = false; onCity(ANYWHERE) })
             if (currentCity != null) {
                 DropdownMenuItem(text = { Text(currentCity) }, onClick = { menu = false; onCity(currentCity) })
             }
-            DropdownMenuItem(text = { Text("Other city…") }, onClick = { menu = false; dialog = true })
+            DropdownMenuItem(text = { Text(stringResource(R.string.contacts_other_city)) }, onClick = { menu = false; dialog = true })
         }
     }
     if (dialog) {
         var typed by remember { mutableStateOf(if (anywhere) "" else city.trim()) }
         AlertDialog(
             onDismissRequest = { dialog = false },
-            title = { Text("Which city?") },
+            title = { Text(stringResource(R.string.contacts_which_city)) },
             text = {
                 OutlinedTextField(
-                    typed, { typed = it }, label = { Text("City") }, singleLine = true,
+                    typed, { typed = it }, label = { Text(stringResource(R.string.contacts_city)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                 )
             },
@@ -399,9 +408,9 @@ private fun CityChip(city: String, currentCity: String?, onCity: (String) -> Uni
                     val t = typed.trim()
                     dialog = false
                     if (t.isNotEmpty()) onCity(t)
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { dialog = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { dialog = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

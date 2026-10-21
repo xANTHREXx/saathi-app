@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,12 +21,26 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- So Saathi can see whether a phone maker's own battery screen exists (core/Oem.kt lists them). -->
+    <queries>
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oppo.safe" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.samsung.android.lool" />
+    </queries>
+
     <application
         android:name=".SaathiApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.NoActionBar">
@@ -76,7 +91,7 @@
         <service
             android:name=".trigger.RideNotificationListener"
             android:exported="true"
-            android:label="Saathi ride watcher"
+            android:label="@string/ride_watcher_label"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -86,7 +101,7 @@
         <service
             android:name=".trigger.HelpTileService"
             android:exported="true"
-            android:label="Saathi help"
+            android:label="@string/help_tile_label"
             android:icon="@drawable/ic_tile_help"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>

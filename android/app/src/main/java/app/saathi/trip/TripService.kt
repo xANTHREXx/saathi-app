@@ -11,6 +11,7 @@ import android.location.Geocoder
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
+import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
 import app.saathi.core.Destination
@@ -25,6 +26,7 @@ import app.saathi.core.vehicleNote
 import app.saathi.data.Api
 import app.saathi.data.Evidence
 import app.saathi.data.RouteCache
+import app.saathi.data.RunState
 import app.saathi.data.Store
 import app.saathi.data.TripRecord
 import kotlinx.serialization.Serializable
@@ -36,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -60,6 +63,8 @@ class TripService : Service() {
         const val EXTRA_DRIVER = "driver"
         const val EXTRA_REPLAY = "replay"
         const val EXTRA_SPEED = "speed"
+
+        private const val HEARTBEAT_MS = 60_000L
 
         fun intent(ctx: Context, action: String) = Intent(ctx, TripService::class.java).setAction(action)
     }
@@ -92,6 +97,13 @@ class TripService : Service() {
         registerReceiver(screen, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         })
+        // A pulse every minute, so a phone that kills Saathi mid-trip leaves a trace (see RunState).
+        scope.launch {
+            while (true) {
+                RunState.beat(this@TripService, TripState.now.onTrip)
+                delay(HEARTBEAT_MS)
+            }
+        }
         // Keep the notification and widget in step with the state.
         scope.launch {
             TripState.ui.map { listOf(it.onTrip, it.alertActive, it.told, it.destLabel, it.vehicleNote) }.distinctUntilChanged().collect {
@@ -138,6 +150,7 @@ class TripService : Service() {
                 startedAtMs = tripStartedAt * 1000, trail = emptyList(),
                 fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null)
         }
+        RunState.beat(this, onTrip = true) // don't wait for the next pulse to say a trip is running
         i.getStringExtra(EXTRA_PLATE)?.let { plate -> scope.launch(Dispatchers.IO) { checkVehicle(plate) } }
         app.saathi.data.TelemetryManager.track(this, "trip_started", mapOf(
             "mode" to mode.name,
@@ -156,12 +169,13 @@ class TripService : Service() {
         val f = Api.vehicle(this, plate) ?: return
         TripState.update { it.copy(vehicleNote = vehicleNote(f.rides, f.reports, f.flagged, f.sample)) }
         if (!f.flagged) return
-        val text = "This vehicle has ${f.reports} reports from other women in the last 90 days." + if (f.sample) " (Sample data)" else ""
+        val text = resources.getQuantityString(R.plurals.vehicle_flag_text, f.reports, f.reports) +
+            if (f.sample) " " + getString(R.string.vehicle_sample) else ""
         val n = android.app.Notification.Builder(this, "alert")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("Before you get in: $plate")
+            .setContentTitle(getString(R.string.vehicle_notif_title, plate))
             .setContentText(text)
-            .setStyle(android.app.Notification.BigTextStyle().bigText("$text You can continue, or cancel and rebook in your ride app."))
+            .setStyle(android.app.Notification.BigTextStyle().bigText("$text ${getString(R.string.vehicle_flag_more)}"))
             .build()
         getSystemService(NotificationManager::class.java).notify(50, n)
         Log.i("Saathi", "flagged $plate: ${f.reports}")
@@ -264,6 +278,7 @@ class TripService : Service() {
         watcher = null
         TripState.update { it.copy(onTrip = false, mode = null, plate = null, app = null, driver = null,
             fromLabel = null, destLabel = null, route = emptyList(), noRoute = false, vehicleNote = null) }
+        RunState.cleanStop(this) // ended on purpose: the quiet after this is not a kill
     }
 
     private fun saveRecord(ui: UiState) {
@@ -284,6 +299,7 @@ class TripService : Service() {
             caseId = caseId,
             createdAt = tripStartedAt, mode = ui.mode?.name ?: "WALK", app = ui.app, plate = ui.plate,
             events = ui.events.map { it.detail }, alerts = AlertManager.takeAlertLog(),
+            eventItems = ui.events, alertEntries = AlertManager.takeAlertEntries(),
             plateCheck = ui.plateCheck, evidence = evidence,
             lat = fixes.lastOrNull()?.lat, lng = fixes.lastOrNull()?.lng, endedAt = now,
             from = ui.fromLabel, to = ui.destLabel?.takeIf { it in saved },
@@ -293,6 +309,8 @@ class TripService : Service() {
     override fun onDestroy() {
         runCatching { unregisterReceiver(screen) }
         scope.cancel()
+        // Only a stop with no trip running is clean; if Android took the service down mid-trip, say so.
+        if (!TripState.now.onTrip) RunState.cleanStop(this)
         super.onDestroy()
     }
 

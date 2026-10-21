@@ -17,13 +17,13 @@ class AreaNoteTest {
     @Test
     fun nightNoteCountsOnlyNightBandsNearby() {
         val pts = listOf(near(0, 7), near(1, 0), near(2, 7), near(3, 4), far)
-        assertEquals("3 reports after 9 pm within 300 m of here in the last 90 days.", areaNote(pts, here, nightOnly = true))
+        assertEquals(AreaNote(3, nightOnly = true, radiusM = 300), areaNote(pts, here, nightOnly = true))
     }
 
     @Test
     fun allDayNote() {
         val pts = listOf(near(0, 7), near(1, 3), near(2, 4))
-        assertEquals("3 reports within 300 m of here in the last 90 days.", areaNote(pts, here, nightOnly = false))
+        assertEquals(AreaNote(3, nightOnly = false, radiusM = 300), areaNote(pts, here, nightOnly = false))
     }
 
     @Test

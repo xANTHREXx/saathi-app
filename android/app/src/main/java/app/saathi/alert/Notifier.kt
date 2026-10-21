@@ -7,11 +7,16 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import app.saathi.core.TripEvent
+import app.saathi.data.Store
 import app.saathi.trip.TripService
 import app.saathi.trip.UiState
 import app.saathi.ui.CheckInActivity
 import app.saathi.ui.MainActivity
 import app.saathi.ui.SpeakForMeActivity
+import app.saathi.ui.eventText
+import app.saathi.ui.quantity
+import app.saathi.ui.watchingText
 
 object Notifier {
     const val GUARD_ID = 1
@@ -23,13 +28,13 @@ object Notifier {
 
     fun channels(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(GUARD, "Saathi is ready", NotificationManager.IMPORTANCE_LOW).apply {
+        nm.createNotificationChannel(NotificationChannel(GUARD, ctx.getString(R.string.notif_channel_guard), NotificationManager.IMPORTANCE_LOW).apply {
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         })
-        nm.createNotificationChannel(NotificationChannel(CHECKIN, "Check-ins", NotificationManager.IMPORTANCE_HIGH).apply {
+        nm.createNotificationChannel(NotificationChannel(CHECKIN, ctx.getString(R.string.notif_channel_checkin), NotificationManager.IMPORTANCE_HIGH).apply {
             setSound(null, null); lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         })
-        nm.createNotificationChannel(NotificationChannel(ALERT, "Alerts sent", NotificationManager.IMPORTANCE_HIGH).apply {
+        nm.createNotificationChannel(NotificationChannel(ALERT, ctx.getString(R.string.notif_channel_alert), NotificationManager.IMPORTANCE_HIGH).apply {
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         })
         nm.createNotificationChannel(NotificationChannel("demo_ride", "Demo ride-app notifications", NotificationManager.IMPORTANCE_DEFAULT))
@@ -47,55 +52,59 @@ object Notifier {
     /** The persistent notification: usable from the lock screen. */
     fun guard(ctx: Context, s: UiState): Notification {
         val title = when {
-            s.alertActive -> "Alert sent to ${s.told.joinToString()}"
-            s.onTrip -> "Watching your ${s.app ?: s.mode?.name?.lowercase() ?: "trip"}" + (s.plate?.let { ", $it" } ?: "")
-            else -> "Saathi is ready"
+            s.alertActive -> ctx.getString(R.string.notif_guard_alert, s.told.joinToString(", "))
+            s.onTrip -> ctx.watchingText(s.mode, s.app) + (s.plate?.let { ", $it" } ?: "")
+            else -> ctx.getString(R.string.notif_guard_ready)
         }
+        // The power button is only promised when it is on.
+        val powerOn = !s.onTrip && Store.settings(ctx).powerPresses > 0
         val b = Notification.Builder(ctx, GUARD)
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
             .setContentTitle(title)
-            .setContentText(if (s.onTrip) "Help and Speak for me work from the lock screen" else "Press the power button to get help")
+            .setContentText(ctx.getString(if (powerOn) R.string.guard_text_power else R.string.guard_text_lock))
             .setOngoing(true)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, MainActivity::class.java, 10))
-            .addAction(action(ctx, "Help", service(ctx, TripService.ACTION_HELP, 11)))
-            .addAction(action(ctx, "Speak for me", activity(ctx, SpeakForMeActivity::class.java, 12)))
-        if (s.onTrip) b.addAction(action(ctx, "Stop watching", service(ctx, TripService.ACTION_STOP_TRIP, 13)))
+            .addAction(action(ctx, ctx.getString(R.string.action_help), service(ctx, TripService.ACTION_HELP, 11)))
+            .addAction(action(ctx, ctx.getString(R.string.tile_speak), activity(ctx, SpeakForMeActivity::class.java, 12)))
+        if (s.onTrip) b.addAction(action(ctx, ctx.getString(R.string.notif_action_stop), service(ctx, TripService.ACTION_STOP_TRIP, 13)))
         return b.build()
     }
 
-    fun showCheckIn(ctx: Context, detail: String, practice: Boolean = false) {
+    /** [event] is what the watcher noticed; null for a practice. */
+    fun showCheckIn(ctx: Context, event: TripEvent?, practice: Boolean = false) {
         val full = activity(ctx, CheckInActivity::class.java, 20)
         val n = Notification.Builder(ctx, CHECKIN)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle(if (practice) "Practice check-in" else "Are you okay?")
+            .setContentTitle(ctx.getString(if (practice) R.string.notif_checkin_practice_title else R.string.checkin_title))
             .setContentText(
-                if (practice) "This is a practice. Nothing will be sent. Tap I'm okay."
-                else "Your trip: $detail. Your contacts will be told in 10 seconds.",
+                if (practice) ctx.getString(R.string.notif_checkin_practice_text)
+                else ctx.quantity(R.plurals.notif_checkin_text, AlertManager.CHECKIN_S.toInt(),
+                    event?.let { ctx.eventText(it) }.orEmpty(), AlertManager.CHECKIN_S.toInt()),
             )
             .setCategory(Notification.CATEGORY_ALARM)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setFullScreenIntent(full, true)
             .setContentIntent(full)
-            .addAction(action(ctx, "I'm okay", service(ctx, TripService.ACTION_OK, 21)))
+            .addAction(action(ctx, ctx.getString(R.string.im_okay), service(ctx, TripService.ACTION_OK, 21)))
             .build()
         ctx.getSystemService(NotificationManager::class.java).notify(CHECKIN_ID, n)
     }
 
     fun showAlerted(ctx: Context, told: List<String>, failed: List<String>) {
-        val text = buildString {
-            append(if (told.isEmpty()) "No SMS went out." else "Told: ${told.joinToString()}.")
-            if (failed.isNotEmpty()) append(" Failed: ${failed.joinToString()}.")
-            append(" ${ctx.getString(R.string.no_112)}.")
-        }
+        val text = buildList {
+            add(if (told.isEmpty()) ctx.getString(R.string.notif_alert_none) else ctx.getString(R.string.notif_alert_told, told.joinToString(", ")))
+            if (failed.isNotEmpty()) add(ctx.getString(R.string.notif_alert_failed, failed.joinToString(", ")))
+            add(ctx.getString(R.string.notif_alert_no_112))
+        }.joinToString(" ")
         val n = Notification.Builder(ctx, ALERT)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle(if (told.isEmpty()) ctx.getString(R.string.alert_none_reached) else "Your contacts were told")
+            .setContentTitle(ctx.getString(if (told.isEmpty()) R.string.alert_none_reached else R.string.raised_told))
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, CheckInActivity::class.java, 30))
-            .addAction(action(ctx, "I'm okay", service(ctx, TripService.ACTION_OK, 31)))
+            .addAction(action(ctx, ctx.getString(R.string.im_okay), service(ctx, TripService.ACTION_OK, 31)))
             .build()
         ctx.getSystemService(NotificationManager::class.java).notify(ALERT_ID, n)
     }

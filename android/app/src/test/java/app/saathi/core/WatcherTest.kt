@@ -82,6 +82,13 @@ class WatcherTest {
     }
 
     @Test
+    fun longStopCarriesItsMinutes() {
+        val w = Watcher(Mode.AUTO, route, durationS = null, startedAt = 0)
+        val e = feed(w, stationary(0, 31)).single()
+        assertEquals(5, e.value)
+    }
+
+    @Test
     fun planMidTripTurnsOnRouteChecks() {
         val eastOffset = 400.0 / (111_320.0 * Math.cos(Math.toRadians(12.9)))
         val w = Watcher(Mode.CAB, emptyList(), durationS = null, startedAt = 0)

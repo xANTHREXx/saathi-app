@@ -28,9 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.trip.TripState
 import app.saathi.ui.CheckInActivity
@@ -117,15 +119,15 @@ internal fun rememberPractice(): PracticeState {
 internal fun PracticeStep(practice: PracticeState) {
     val c = Saathi.colors
     Column {
-        Text("One practice, so the real one isn't a surprise.", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
         Text(
-            "On a trip, if something looks wrong, Saathi rings loudly and asks if you're okay. Let's try it once. Nothing is sent.",
+            stringResource(R.string.practice_body),
             style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp),
         )
         Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            PracticeFact(Icons.Rounded.VolumeUp, "It rings, even on silent")
-            PracticeFact(Icons.Rounded.Lock, "It shows over your lock screen")
-            PracticeFact(Icons.Rounded.Check, "Tap I'm okay to stop it")
+            PracticeFact(Icons.Rounded.VolumeUp, stringResource(R.string.practice_fact_rings))
+            PracticeFact(Icons.Rounded.Lock, stringResource(R.string.practice_fact_lock))
+            PracticeFact(Icons.Rounded.Check, stringResource(R.string.practice_fact_tap))
         }
         when (practice.phase) {
             PracticePhase.IDLE -> Unit
@@ -134,21 +136,21 @@ internal fun PracticeStep(practice: PracticeState) {
             ) {
                 if (practice.phase == PracticePhase.COUNTDOWN) {
                     Text("${practice.secondsToStart}", style = MaterialTheme.typography.displayLarge)
-                    Text("Lock your phone now", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 8.dp))
-                    Text("Saathi will check in, like on a trip.", style = MaterialTheme.typography.bodyLarge, color = c.fg2,
+                    Text(stringResource(R.string.practice_lock_now), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.practice_will_check), style = MaterialTheme.typography.bodyLarge, color = c.fg2,
                         modifier = Modifier.padding(top = 6.dp))
                 } else {
-                    Text("Are you okay?", style = MaterialTheme.typography.headlineSmall)
-                    Text("Tap I'm okay on the check-in.", style = MaterialTheme.typography.bodyLarge, color = c.fg2,
+                    Text(stringResource(R.string.checkin_title), style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(R.string.practice_tap_okay), style = MaterialTheme.typography.bodyLarge, color = c.fg2,
                         modifier = Modifier.padding(top = 6.dp))
                 }
             }
             PracticePhase.DONE -> Column(Modifier.padding(top = 32.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Rounded.CheckCircle, null, tint = c.ok, modifier = Modifier.size(28.dp))
-                    Text("Practice done", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.practice_done), style = MaterialTheme.typography.titleMedium)
                 }
-                Text("That's what a check-in feels like. You can practise again from Settings.",
+                Text(stringResource(R.string.practice_done_body),
                     style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp))
             }
         }

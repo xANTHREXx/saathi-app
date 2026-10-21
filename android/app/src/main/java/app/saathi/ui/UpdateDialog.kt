@@ -26,9 +26,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import app.saathi.R
 import app.saathi.data.Api
 import app.saathi.data.AppUpdateManager
 import app.saathi.data.DownloadResult
@@ -105,7 +107,7 @@ private fun UpdateDialogContent(release: Api.Release, onDismiss: () -> Unit) {
             }
         } else {
             runCatching { ctx.startActivity(AppUpdateManager.createInstallIntent(ctx, apk)) }
-                .onFailure { error = "Couldn't open the installer. Try again later." }
+                .onFailure { error = ctx.getString(R.string.update_err_installer) }
         }
     }
 
@@ -113,14 +115,14 @@ private fun UpdateDialogContent(release: Api.Release, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (release.isMandatory) "Important update" else "Update available (v${release.versionName})",
+                text = if (release.isMandatory) stringResource(R.string.update_important) else stringResource(R.string.update_available, release.versionName),
                 style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 if (release.isMandatory) {
-                    Text("This fixes something important. Please update soon.", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.update_mandatory), style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(12.dp))
                 }
                 if (release.changelog.isNotBlank()) {
@@ -129,18 +131,18 @@ private fun UpdateDialogContent(release: Api.Release, onDismiss: () -> Unit) {
                 }
                 when (phase) {
                     Phase.DOWNLOADING -> {
-                        Text("Downloading… ${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.update_downloading, (progress * 100).toInt()), style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
                     }
                     Phase.OFFER -> if (metered) {
                         Text(
-                            "This is a large download (about 100 MB). Use Wi‑Fi if you can.",
+                            stringResource(R.string.update_metered),
                             style = MaterialTheme.typography.bodyMedium, color = Saathi.colors.fg2,
                         )
                     }
                     Phase.READY -> if (askedPermission && !canInstall) {
-                        ProblemText("Allow Saathi to install updates, then come back and tap Install.")
+                        ProblemText(stringResource(R.string.update_allow_install))
                     }
                 }
                 error?.let { ProblemText(it, Modifier.padding(top = 8.dp)) }
@@ -163,25 +165,25 @@ private fun UpdateDialogContent(release: Api.Release, onDismiss: () -> Unit) {
                                 }
                                 DownloadResult.Mismatch -> {
                                     phase = Phase.OFFER
-                                    error = "The download didn't check out, so it wasn't installed. Try again later."
+                                    error = ctx.getString(R.string.update_err_mismatch)
                                 }
                                 DownloadResult.Failed -> {
                                     phase = Phase.OFFER
-                                    error = "Couldn't download the update. Check your connection and try again."
+                                    error = ctx.getString(R.string.update_err_failed)
                                 }
                             }
                         }
                     },
                     modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text("Update") }
+                ) { Text(stringResource(R.string.update_button)) }
                 Phase.READY -> Button(
                     onClick = { error = null; file?.let { install(it) } },
                     modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text("Install") }
+                ) { Text(stringResource(R.string.update_install)) }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) { Text("Later") }
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.update_later)) }
         }
     )
 }

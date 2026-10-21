@@ -20,7 +20,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.saathi.R
 import app.saathi.data.Store
 import app.saathi.trip.TripService
 import app.saathi.trip.UiState
@@ -33,6 +35,7 @@ fun DestinationRow(s: UiState) {
     val c = Saathi.colors
     val places = remember { Store.settings(ctx).places }
     var open by remember { mutableStateOf(false) }
+    val dest = s.destLabel?.let { ctx.placeLabel(it) }
     if (places.isEmpty() && s.destLabel == null) return
     fun pick(label: String?) {
         open = false
@@ -42,20 +45,20 @@ fun DestinationRow(s: UiState) {
         Box(Modifier.size(8.dp).background(if (s.route.isNotEmpty()) c.ok else c.fg3, CircleShape))
         Text(
             when {
-                s.destLabel == null -> "Not sure where you're going: watching for long stops"
-                s.route.isEmpty() && s.noRoute -> "Going to ${s.destLabel} · no route found, watching for long stops"
-                s.route.isEmpty() -> "Going to ${s.destLabel} · finding the route"
-                else -> "Going to ${s.destLabel} · watching for detours"
+                dest == null -> stringResource(R.string.trip_dest_unsure)
+                s.route.isEmpty() && s.noRoute -> stringResource(R.string.trip_dest_no_route, dest)
+                s.route.isEmpty() -> stringResource(R.string.trip_dest_finding, dest)
+                else -> stringResource(R.string.trip_dest_watching, dest)
             },
             Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.fg2,
         )
         Box {
-            TextButton(onClick = { open = true }) { Text(if (s.destLabel == null) "Pick" else "Change") }
+            TextButton(onClick = { open = true }) { Text(stringResource(if (s.destLabel == null) R.string.trip_dest_pick else R.string.trip_dest_change)) }
             DropdownMenu(open, { open = false }) {
-                places.forEach { p -> DropdownMenuItem(text = { Text(p.label) }, onClick = { pick(p.label) }) }
-                DropdownMenuItem(text = { Text("Not sure") }, onClick = { pick(null) })
+                places.forEach { p -> DropdownMenuItem(text = { Text(ctx.placeLabel(p.label)) }, onClick = { pick(p.label) }) }
+                DropdownMenuItem(text = { Text(stringResource(R.string.trip_dest_not_sure)) }, onClick = { pick(null) })
             }
         }
     }
-    s.vehicleNote?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = c.fg2, modifier = Modifier.padding(start = 16.dp)) }
+    s.vehicleNote?.let { Text(ctx.vehicleNoteText(it), style = MaterialTheme.typography.bodySmall, color = c.fg2, modifier = Modifier.padding(start = 16.dp)) }
 }

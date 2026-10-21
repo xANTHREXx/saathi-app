@@ -56,13 +56,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.saathi.R
 import androidx.compose.ui.unit.sp
 import app.saathi.alert.AlertManager
 import app.saathi.core.Reason
 import app.saathi.core.languagesFor
-import app.saathi.core.namesSentence
 import app.saathi.core.recipients
 import app.saathi.core.secondsLeft
 import app.saathi.data.Store
@@ -95,7 +95,7 @@ class SpeakForMeActivity : ComponentActivity() {
         val lines = phrases(settings.phraseKey).let { all ->
             langs.map { it to (all[it] ?: all["hi-IN"] ?: "") }
         }
-        val who = namesSentence(recipients(settings.contacts, TripState.city()).map { it.name })
+        val who = namesText(recipients(settings.contacts, TripState.city()).map { it.name })
 
         setContent { SaathiTheme(dark = false) { Speak(lines, who, speaking.intValue, onAgain = { speak(lines) }, onClose = { finish() }) } }
 
@@ -152,7 +152,7 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
         when {
             s.alertActive -> ToldBanner(s.told)
             pendingEnds != null -> PendingBanner(who, pendingEnds, onDontText = { if (AlertManager.cancelPendingAlert()) notSent = true })
-            notSent -> Text("Not sent. Speak for me is still on screen.", style = MaterialTheme.typography.bodySmall, color = c.fg2,
+            notSent -> Text(stringResource(R.string.speak_not_sent), style = MaterialTheme.typography.bodySmall, color = c.fg2,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp))
             else -> ToldBanner(s.told) // the instant between the window closing and the alert starting
         }
@@ -167,7 +167,7 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.padding(bottom = 6.dp)) {
                         if (i == speaking) Icon(Icons.Rounded.VolumeUp, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                        Text(languageName(lang) + if (i == speaking) " · speaking" else "", style = MaterialTheme.typography.labelMedium,
+                        Text(if (i == speaking) stringResource(R.string.speak_speaking, languageName(lang)) else languageName(lang), style = MaterialTheme.typography.labelMedium,
                             color = if (i == speaking) MaterialTheme.colorScheme.primary else c.fg2)
                     }
                     Text(text, style = when (i) {
@@ -180,9 +180,9 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
         }
         Row(Modifier.padding(top = 12.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(onAgain, Modifier.weight(1f).height(56.dp), shape = RoundedCornerShape(20.dp)) {
-                Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Say it again")
+                Icon(Icons.Rounded.Replay, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.speak_again))
             }
-            FilledTonalButton(onClose, Modifier.weight(1f).height(56.dp), shape = RoundedCornerShape(20.dp)) { Text("Close") }
+            FilledTonalButton(onClose, Modifier.weight(1f).height(56.dp), shape = RoundedCornerShape(20.dp)) { Text(stringResource(R.string.action_close)) }
         }
     }
 }
@@ -191,6 +191,7 @@ private fun Speak(lines: List<Pair<String, String>>, who: String, speaking: Int,
 @Composable
 private fun ToldBanner(told: List<String>) {
     val c = Saathi.colors
+    val ctx = LocalContext.current
     Row(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.helpContainer).padding(14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -199,9 +200,9 @@ private fun ToldBanner(told: List<String>) {
             Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Column {
-            Text(if (told.isEmpty()) "Telling your contacts…" else "${told.joinToString(" and ")} ${if (told.size == 1) "was" else "were"} told",
+            Text(if (told.isEmpty()) stringResource(R.string.told_telling) else ctx.toldText(told),
                 style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
-            Text("Live location sent · recording on this phone · ${stringResource(R.string.no_112)}",
+            Text(stringResource(R.string.speak_told_sub, stringResource(R.string.no_112)),
                 style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
         }
     }
@@ -231,11 +232,11 @@ private fun PendingBanner(who: String, endsAtMs: Long, onDontText: () -> Unit) {
             Text("$left", style = MaterialTheme.typography.titleSmall, color = c.alum)
         }
         Column {
-            Text("Texting $who in $left…", style = MaterialTheme.typography.titleSmall)
-            Text("Tap Don't text if you opened this by mistake.", style = MaterialTheme.typography.bodySmall, color = c.fg2,
+            Text(stringResource(R.string.speak_texting, who, left), style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.speak_hint), style = MaterialTheme.typography.bodySmall, color = c.fg2,
                 modifier = Modifier.padding(top = 2.dp))
             FilledTonalButton(onDontText, Modifier.padding(top = 10.dp).heightIn(min = 48.dp), shape = RoundedCornerShape(20.dp)) {
-                Text("Don't text")
+                Text(stringResource(R.string.speak_dont_text))
             }
         }
     }

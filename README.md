@@ -5,7 +5,7 @@ A trip companion for women commuting in India. It works when she does nothing:
 - It notices Uber, Ola and Rapido rides on its own.
 - It watches for long stops, detours and late arrival, and checks in loudly when something is off.
 - If she doesn't answer, it texts the right people from her own SIM, even with no mobile data.
-- It takes help from the power button, the lock screen and a home-screen widget.
+- It takes help from the lock screen, a home-screen widget and, if she turns it on, the power button.
 - It speaks for her when she can't, and talks her through an uneasy moment.
 - Afterwards it leaves a fingerprinted record and a draft complaint she can file herself.
 
@@ -27,7 +27,7 @@ The safety loop runs entirely on the phone, with no AI and no network:
 | Ride pickup from Uber, Ola, Rapido notifications | Expected route for detour and late-arrival checks (cached per commute after the first trip) |
 | Long-stop check, loud check-in over the lock screen | Live-location page for contacts |
 | Alert SMS from her SIM to contacts in her current city | Vehicle history: "13 rides with Saathi users" and flags |
-| Power button, lock-screen notification, widget, hold for help | Companion replies from a model |
+| Power button (off until she turns it on), lock-screen notification, widget, hold for help | Companion replies from a model |
 | Speak for me in the local language, Hindi, English | Community heatmap |
 | Plate check from a photo (ML Kit on the phone) | |
 | Reporting guide and a draft complaint built from her record | |

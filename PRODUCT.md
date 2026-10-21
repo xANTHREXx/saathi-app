@@ -66,7 +66,7 @@ moves cities, and her small unreported incidents become shared evidence other wo
 ## Operating Context
 
 - Used one-handed, in transit, at night, often with the phone in a bag or pocket and the screen off.
-- The critical moments happen on the lock screen: the persistent notification, power-button presses,
+- The critical moments happen on the lock screen: the persistent notification, optional power-button presses (off until she turns them on),
   the full-screen check-in, the home-screen widget.
 - Network is unreliable; SMS over her SIM is the guaranteed channel.
 - The trip arc: ride notification or one-tap start → plate check on arrival → watched trip →

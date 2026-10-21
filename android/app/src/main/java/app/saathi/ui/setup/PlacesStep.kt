@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
@@ -58,8 +59,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import app.saathi.R
 import app.saathi.core.Fix
 import app.saathi.core.SavedPlace
+import app.saathi.ui.placeLabel
 import app.saathi.data.Api
 import app.saathi.trip.Geocode
 import app.saathi.trip.LocationOnce
@@ -96,9 +99,9 @@ internal fun PlacesStep(
 ) {
     val c = Saathi.colors
     Column(Modifier.fillMaxWidth()) {
-        Text("Places you go often", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.places_title), style = MaterialTheme.typography.headlineMedium)
         Text(
-            "With two places, Saathi knows where a trip from one is going and notices detours. You can skip this.",
+            stringResource(R.string.places_hint_setup),
             style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
         )
         PlacesEditor(places, onChange, Modifier.padding(top = 24.dp))
@@ -164,11 +167,11 @@ internal fun PlacesEditor(
     fun labelToSave(): String? {
         if (selected != OTHER) return selected
         val name = otherName.trim()
-        if (name.isEmpty()) { nameProblem = "Give this place a name first."; return null }
+        if (name.isEmpty()) { nameProblem = ctx.getString(R.string.places_name_problem); return null }
         return name
     }
 
-    fun save(label: String, lat: Double, lng: Double, address: String, fromLocation: Boolean) {
+    fun save(label: String, lat: Double, lng: Double, address: String?, fromLocation: Boolean) {
         val kept = latestPlaces.filterNot { it.label.equals(label, ignoreCase = true) }
         val next = kept + SavedPlace(label, lat, lng, address, fromLocation)
         latestOnChange(next)
@@ -185,14 +188,14 @@ internal fun PlacesEditor(
             val fix = runCatching { LocationOnce.get(ctx) }.getOrNull()
             if (fix == null) {
                 locating = false
-                problem = "Couldn't find where you are. Try again outside, or search instead."
+                problem = ctx.getString(R.string.places_locate_failed)
                 return@launch
             }
             val line = withContext(Dispatchers.IO) {
                 runCatching { Geocode.lookup(ctx, fix.lat, fix.lng)?.let { Geocode.placeLine(it) } }.getOrNull()
             }
             locating = false
-            save(label, fix.lat, fix.lng, line ?: "Near your current location", fromLocation = true)
+            save(label, fix.lat, fix.lng, line, fromLocation = true)
         }
     }
 
@@ -203,7 +206,7 @@ internal fun PlacesEditor(
             locationAllowed = true
             locateAfterGrant = true
         } else {
-            problem = "Allow location to use where you are, or search instead."
+            problem = ctx.getString(R.string.places_allow_location)
         }
     }
     LaunchedEffect(locateAfterGrant) {
@@ -232,7 +235,7 @@ internal fun PlacesEditor(
         }
 
         Text(
-            "Add a place", style = MaterialTheme.typography.titleMedium,
+            stringResource(R.string.places_add), style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = if (places.isNotEmpty()) 24.dp else 0.dp),
         )
 
@@ -244,7 +247,7 @@ internal fun PlacesEditor(
                 FilterChip(
                     selected = selected == l,
                     onClick = { picked = l; nameProblem = null },
-                    label = { Text(l) },
+                    label = { Text(ctx.placeLabel(l)) },
                     leadingIcon = { Icon(labelIcon(l), null, Modifier.size(18.dp)) },
                 )
             }
@@ -254,8 +257,8 @@ internal fun PlacesEditor(
             OutlinedTextField(
                 otherName, { otherName = it; nameProblem = null },
                 Modifier.fillMaxWidth().padding(top = 8.dp),
-                label = { Text("Name this place") },
-                placeholder = { Text("Gym") },
+                label = { Text(stringResource(R.string.places_name_label)) },
+                placeholder = { Text(stringResource(R.string.places_name_placeholder)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                 supportingText = nameProblem?.let { msg -> { ProblemText(msg) } },
@@ -265,17 +268,17 @@ internal fun PlacesEditor(
         OutlinedTextField(
             query, { query = it; problem = null },
             Modifier.fillMaxWidth().padding(top = 12.dp),
-            placeholder = { Text("Search an address or place") },
+            placeholder = { Text(stringResource(R.string.places_search)) },
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
             trailingIcon = if (query.isNotEmpty()) {
-                { IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, "Clear") } }
+                { IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, stringResource(R.string.places_clear)) } }
             } else null,
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
             supportingText = {
                 Text(
-                    "Addresses you type are looked up with OpenRouteService.",
+                    stringResource(R.string.places_search_note),
                     style = MaterialTheme.typography.bodySmall, color = c.fg2,
                 )
             },
@@ -291,7 +294,7 @@ internal fun PlacesEditor(
                     }
                 }
                 Spacer(Modifier.size(12.dp))
-                Text("Use my current location", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.places_use_current), style = MaterialTheme.typography.bodyLarge)
             }
 
             if (query.trim().length >= 3) {
@@ -314,7 +317,7 @@ internal fun PlacesEditor(
                 }
                 if (hits.isEmpty()) {
                     Text(
-                        if (searching) "Searching…" else "No matches. Try a landmark or area name.",
+                        stringResource(if (searching) R.string.places_searching else R.string.places_no_matches),
                         style = MaterialTheme.typography.bodySmall, color = c.fg2,
                         modifier = Modifier.padding(start = 4.dp, top = 12.dp),
                     )
@@ -342,6 +345,8 @@ private fun SuggestionRow(onClick: () -> Unit, content: @Composable androidx.com
 @Composable
 private fun PlaceRow(place: SavedPlace, onRemove: () -> Unit) {
     val c = Saathi.colors
+    val ctx = LocalContext.current
+    val label = ctx.placeLabel(place.label)
     Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.heightIn(min = 72.dp).padding(start = 14.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
@@ -350,9 +355,9 @@ private fun PlaceRow(place: SavedPlace, onRemove: () -> Unit) {
             Icon(labelIcon(place.label), null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.size(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(place.label, style = MaterialTheme.typography.titleSmall)
+                Text(label, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    place.address ?: "Saved place",
+                    place.address ?: stringResource(if (place.fromLocation) R.string.places_near_here else R.string.places_saved),
                     style = MaterialTheme.typography.bodySmall, color = c.fg2,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
@@ -360,11 +365,11 @@ private fun PlaceRow(place: SavedPlace, onRemove: () -> Unit) {
                     Row(Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Rounded.MyLocation, null, Modifier.size(14.dp), tint = c.fg2)
                         Spacer(Modifier.size(4.dp))
-                        Text("From your location", style = MaterialTheme.typography.labelSmall, color = c.fg2)
+                        Text(stringResource(R.string.places_from_location), style = MaterialTheme.typography.labelSmall, color = c.fg2)
                     }
                 }
             }
-            IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, "Remove ${place.label}") }
+            IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, stringResource(R.string.action_remove, label)) }
         }
     }
 }

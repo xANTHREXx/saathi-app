@@ -8,6 +8,7 @@ import app.saathi.core.alertText
 import app.saathi.core.okText
 import app.saathi.core.recipients
 import app.saathi.core.retryTargets
+import app.saathi.data.AlertLogEntry
 import app.saathi.data.Store
 import app.saathi.data.TelemetryManager
 import app.saathi.trip.LocationOnce
@@ -38,6 +39,7 @@ object AlertManager {
     private lateinit var alarm: Alarm
     private lateinit var recorder: Recorder
     private val alertLog = mutableListOf<String>()
+    private val alertEntries = mutableListOf<AlertLogEntry>()
     /** The text the current alert went out with, kept so a manual retry sends the same message. */
     @Volatile private var lastAlertText: String? = null
 
@@ -57,7 +59,7 @@ object AlertManager {
         val ends = System.currentTimeMillis() + CHECKIN_S * 1000
         TripState.update { it.copy(checkInEndsAtMs = ends) }
         alarm.start()
-        Notifier.showCheckIn(app, event.detail)
+        Notifier.showCheckIn(app, event)
         checkInJob = scope.launch {
             delay(CHECKIN_S * 1000)
             if (isActive && TripState.now.checkInEndsAtMs != null) {
@@ -129,6 +131,7 @@ object AlertManager {
             lastAlertText = text
             val r = SmsSender.send(app, to, text)
             alertLog += "${reason.name} at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
+            alertEntries += AlertLogEntry(System.currentTimeMillis() / 1000, r.sent)
             Log.i("Saathi", "alert ${reason.name}: $text")
             TripState.update { it.copy(told = r.sent, smsFailed = r.failed, recording = recording) }
             Notifier.showAlerted(app, r.sent, r.failed)
@@ -153,6 +156,7 @@ object AlertManager {
             val to = retryTargets(Store.settings(app).contacts, TripState.city(), ui.smsFailed)
             val r = SmsSender.send(app, to, text)
             alertLog += "RETRY at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
+            alertEntries += AlertLogEntry(System.currentTimeMillis() / 1000, r.sent, retry = true)
             TripState.update { it.copy(told = (it.told + r.sent).distinct(), smsFailed = r.failed) }
             Notifier.showAlerted(app, TripState.now.told, r.failed)
         }
@@ -189,7 +193,7 @@ object AlertManager {
                 val ends = System.currentTimeMillis() + CHECKIN_S * 1000
                 TripState.update { it.copy(practice = true, practiceOver = false, checkInEndsAtMs = ends) }
                 alarm.start()
-                Notifier.showCheckIn(app, "", practice = true)
+                Notifier.showCheckIn(app, null, practice = true)
             }
             delay(CHECKIN_S * 1000)
             synchronized(practiceLock) {
@@ -213,6 +217,7 @@ object AlertManager {
     }
 
     fun takeAlertLog(): List<String> = alertLog.toList().also { alertLog.clear() }
+    fun takeAlertEntries(): List<AlertLogEntry> = alertEntries.toList().also { alertEntries.clear() }
     fun recordingFile() = recorder.file
 
     private fun endCheckIn() {

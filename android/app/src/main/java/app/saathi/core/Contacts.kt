@@ -31,14 +31,15 @@ fun formatPhone(e164: String): String {
     return "+91 ${m.groupValues[1]} ${m.groupValues[2]}"
 }
 
-/** One-line note on when a contact is texted. */
-fun cityNote(city: String): String =
-    if (city.trim().equals(ANYWHERE, ignoreCase = true)) "Texted wherever you are"
-    else "Texted when you're in ${city.trim()}"
+/** Whether this contact is texted wherever she is, rather than only in one city. */
+fun isAnywhere(city: String): Boolean = city.trim().equals(ANYWHERE, ignoreCase = true)
 
 enum class SetupField { YOUR_NAME, CONTACT_NAME, CONTACT_PHONE, CONTACTS }
 
-data class SetupProblem(val field: SetupField, val message: String)
+/** What is wrong, as data: the screen words it in her language. [name] fills in for [ProblemKind.PHONE_MISSING]. */
+enum class ProblemKind { PHONE_MISSING, PHONE_INCOMPLETE, NAME_MISSING, YOUR_NAME_MISSING, NO_CONTACTS }
+
+data class SetupProblem(val field: SetupField, val kind: ProblemKind, val name: String = "")
 
 sealed interface PendingResult {
     data class Ok(val contacts: List<Contact>) : PendingResult
@@ -51,19 +52,16 @@ fun addPending(contacts: List<Contact>, name: String, phone: String, city: Strin
     if (n.isEmpty() && phone.isBlank()) return PendingResult.Ok(contacts)
     if (phone.isBlank()) {
         return PendingResult.Problem(
-            SetupProblem(SetupField.CONTACT_PHONE, "Add a phone number for $n."),
+            SetupProblem(SetupField.CONTACT_PHONE, ProblemKind.PHONE_MISSING, n),
         )
     }
     val normalised = normalisePhone(phone)
         ?: return PendingResult.Problem(
-            SetupProblem(
-                SetupField.CONTACT_PHONE,
-                "This number looks incomplete. Add the country code, like +91.",
-            ),
+            SetupProblem(SetupField.CONTACT_PHONE, ProblemKind.PHONE_INCOMPLETE),
         )
     if (n.isEmpty()) {
         return PendingResult.Problem(
-            SetupProblem(SetupField.CONTACT_NAME, "Add a name for this number."),
+            SetupProblem(SetupField.CONTACT_NAME, ProblemKind.NAME_MISSING),
         )
     }
     if (contacts.any { it.phone == normalised }) return PendingResult.Ok(contacts)
@@ -73,8 +71,8 @@ fun addPending(contacts: List<Contact>, name: String, phone: String, city: Strin
 /** What stops setup from finishing, or null if it is ready. */
 fun setupProblem(yourName: String, contacts: List<Contact>): SetupProblem? = when {
     yourName.isBlank() ->
-        SetupProblem(SetupField.YOUR_NAME, "Add your first name, so contacts know who the alert is from.")
+        SetupProblem(SetupField.YOUR_NAME, ProblemKind.YOUR_NAME_MISSING)
     contacts.isEmpty() ->
-        SetupProblem(SetupField.CONTACTS, "Add at least one person to text.")
+        SetupProblem(SetupField.CONTACTS, ProblemKind.NO_CONTACTS)
     else -> null
 }

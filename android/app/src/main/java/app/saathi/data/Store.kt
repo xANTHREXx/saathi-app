@@ -3,6 +3,7 @@ package app.saathi.data
 import android.content.Context
 import app.saathi.core.Contact
 import app.saathi.core.SavedPlace
+import app.saathi.core.TripEvent
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -14,7 +15,8 @@ data class Settings(
     val contacts: List<Contact> = emptyList(),
     val places: List<SavedPlace> = emptyList(),
     val phraseKey: String = "touched",
-    val powerPresses: Int = 3,
+    /** Power-button presses that raise help; 0 is off. Off at first, since many phones use quick presses themselves. */
+    val powerPresses: Int = 0,
     val communityConsent: Boolean = false,
     /** Whether she has been asked about community sharing. */
     val consentAsked: Boolean = false,
@@ -25,10 +27,20 @@ data class Settings(
     val usageStats: Boolean = false,
     /** A test phone's data is kept out of real numbers. Null until set: debug builds count as test phones, release builds don't. */
     val testDevice: Boolean? = null,
+    /** Home's "Two more things" card: she opened a message to her contacts about Saathi. We can't know it was sent. */
+    val contactsToldAsked: Boolean = false,
+    /** ...and the help tile was added to Quick Settings, or she said it is done. */
+    val tileAsked: Boolean = false,
+    /** She chose "Not now" on that card. */
+    val readyCardDismissed: Boolean = false,
 )
 
 @Serializable
 data class Evidence(val name: String, val sha256: String, val receivedAt: Long)
+
+/** One alert in a trip's history: when it went out, who was told, and whether it was her manual "Try again". */
+@Serializable
+data class AlertLogEntry(val at: Long, val told: List<String>, val retry: Boolean = false)
 
 @Serializable
 data class TripRecord(
@@ -39,6 +51,9 @@ data class TripRecord(
     val plate: String? = null,
     val events: List<String> = emptyList(),
     val alerts: List<String> = emptyList(),
+    /** The same events and alerts as data, so the trips list can word them in her language. Empty on older records. */
+    val eventItems: List<TripEvent> = emptyList(),
+    val alertEntries: List<AlertLogEntry> = emptyList(),
     val plateCheck: String? = null,
     val evidence: List<Evidence> = emptyList(),
     val seal: String? = null,

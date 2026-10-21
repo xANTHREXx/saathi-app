@@ -5,21 +5,15 @@ import org.junit.Test
 
 class NamesTextTest {
     @Test
-    fun oneName() = assertEquals("Chinu", namesSentence(listOf("Chinu")))
+    fun keepsNamesInOrder() = assertEquals(listOf("Amma", "Riya"), cleanNames(listOf("Amma", "Riya")))
 
     @Test
-    fun twoNames() = assertEquals("Amma and Riya", namesSentence(listOf("Amma", "Riya")))
+    fun noNamesIsEmpty() = assertEquals(emptyList<String>(), cleanNames(emptyList()))
 
     @Test
-    fun threeNames() = assertEquals("Amma, Riya and Chinu", namesSentence(listOf("Amma", "Riya", "Chinu")))
-
-    @Test
-    fun noNamesSaysYourContacts() = assertEquals("your contacts", namesSentence(emptyList()))
-
-    @Test
-    fun blankNamesAreSkipped() {
-        assertEquals("your contacts", namesSentence(listOf(" ", "")))
-        assertEquals("Amma and Riya", namesSentence(listOf("Amma", " ", "Riya")))
+    fun blankNamesAreSkippedAndOthersTrimmed() {
+        assertEquals(emptyList<String>(), cleanNames(listOf(" ", "")))
+        assertEquals(listOf("Amma", "Riya"), cleanNames(listOf("Amma", " ", " Riya ")))
     }
 
     @Test

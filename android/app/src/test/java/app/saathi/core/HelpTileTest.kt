@@ -18,27 +18,33 @@ class HelpTileTest {
 
     @Test
     fun idleNamesTheOnlyContact() {
-        assertEquals(HelpTileLook(false, "Tap to text Mum"), helpTileLook(true, listOf(mum), pending = false, alertActive = false))
+        assertEquals(HelpTileLook(false, TileSubtitle.TAP_TO_TEXT_NAME, "Mum"), helpTileLook(true, listOf(mum), pending = false, alertActive = false))
     }
 
     @Test
     fun idleWithSeveralContactsSaysYourContacts() {
-        assertEquals("Tap to text your contacts", helpTileLook(true, listOf(mum, dad), false, false).subtitle)
+        assertEquals(HelpTileLook(false, TileSubtitle.TAP_TO_TEXT_CONTACTS), helpTileLook(true, listOf(mum, dad), false, false))
+    }
+
+    @Test
+    fun idleWithABlankNameSaysYourContacts() {
+        val nameless = Contact(" ", "+919800000003", "Pune")
+        assertEquals(TileSubtitle.TAP_TO_TEXT_CONTACTS, helpTileLook(true, listOf(nameless), false, false).subtitle)
     }
 
     @Test
     fun pendingIsActiveAndTapStops() {
-        assertEquals(HelpTileLook(true, "Texting in 5 s · tap to stop"), helpTileLook(true, listOf(mum), pending = true, alertActive = false))
+        assertEquals(HelpTileLook(true, TileSubtitle.TEXTING_SOON), helpTileLook(true, listOf(mum), pending = true, alertActive = false))
     }
 
     @Test
     fun alertActiveIsActiveAndWinsOverPending() {
-        assertEquals(HelpTileLook(true, "Contacts told"), helpTileLook(true, listOf(mum), pending = true, alertActive = true))
+        assertEquals(HelpTileLook(true, TileSubtitle.CONTACTS_TOLD), helpTileLook(true, listOf(mum), pending = true, alertActive = true))
     }
 
     @Test
     fun notSetUpAsksToFinish() {
-        assertEquals(HelpTileLook(false, "Finish setup first"), helpTileLook(false, emptyList(), false, false))
+        assertEquals(HelpTileLook(false, TileSubtitle.FINISH_SETUP), helpTileLook(false, emptyList(), false, false))
     }
 
     @Test

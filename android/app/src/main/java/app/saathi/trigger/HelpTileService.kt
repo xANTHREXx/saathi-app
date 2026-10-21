@@ -6,6 +6,7 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
+import app.saathi.R
 import app.saathi.alert.Alarm
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
@@ -18,6 +19,7 @@ import app.saathi.data.Store
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
 import app.saathi.ui.MainActivity
+import app.saathi.ui.tileSubtitle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -79,8 +81,8 @@ class HelpTileService : TileService() {
         val s = Store.settings(this)
         val ui = TripState.now
         val look = helpTileLook(isSetUp(s.onboarded, s.contacts), s.contacts, ui.pendingAlertEndsAtMs != null, ui.alertActive)
-        tile.label = "Saathi help"
-        tile.subtitle = look.subtitle
+        tile.label = getString(R.string.help_tile_label)
+        tile.subtitle = tileSubtitle(look.subtitle, look.name)
         tile.state = if (look.active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.updateTile()
     }
