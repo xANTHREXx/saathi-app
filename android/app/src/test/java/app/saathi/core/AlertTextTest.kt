@@ -54,6 +54,41 @@ class AlertTextTest {
     }
 
     @Test
+    fun batteryTextHasLevelAndMap() {
+        val s = batteryText("Priya", 5, fix, fixAgeS = 30, zone = ist)
+        assertTrue(s, s.startsWith("Saathi: Priya's phone battery is at 5% during a trip."))
+        assertTrue(s, s.contains("https://maps.google.com/?q=12.9"))
+        assertTrue(s.length <= 320)
+        assertFalse(s.lowercase().contains("safe"))
+    }
+
+    @Test
+    fun offTextSaysWhichKindOfOff() {
+        val off = offText("Priya", batteryDied = false, fix, 30, ist)
+        val dead = offText("Priya", batteryDied = true, fix, 30, ist)
+        assertTrue(off, off.startsWith("Saathi: Priya's phone was switched off during a trip."))
+        assertTrue(dead, dead.startsWith("Saathi: Priya's phone ran out of battery during a trip."))
+        listOf(off, dead).forEach {
+            assertTrue(it, it.contains("https://maps.google.com/?q="))
+            assertTrue(it.length <= 320)
+            assertFalse(it.lowercase().contains("safe"))
+        }
+    }
+
+    @Test
+    fun offTextWithoutAFixStillSends() {
+        assertEquals("Saathi: Priya's phone was switched off during a trip.", offText("Priya", false, null, 0, ist))
+    }
+
+    @Test
+    fun arrivedTextNamesThePlaceAndTime() {
+        assertEquals("Saathi: Priya reached home at 9:02 PM.", arrivedText("Priya", "Home", fix.t, ist))
+        assertEquals("Saathi: Priya reached Mausi's flat at 9:02 PM.", arrivedText("Priya", "Mausi's flat", fix.t, ist))
+        assertEquals("Saathi: Priya reached a saved place at 9:02 PM.", arrivedText("Priya", "Other", fix.t, ist))
+        assertFalse(arrivedText("Priya", "Home", fix.t, ist).lowercase().contains("safe"))
+    }
+
+    @Test
     fun okTextExact() {
         assertEquals("Saathi: false alarm, Priya is fine.", okText("Priya"))
     }

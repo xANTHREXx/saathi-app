@@ -56,6 +56,7 @@ import app.saathi.BuildConfig
 import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.core.SetupProblem
+import app.saathi.core.toIntroduce
 import app.saathi.data.Api.Release
 import app.saathi.data.AppUpdateManager
 import app.saathi.data.Settings
@@ -143,14 +144,12 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                 onProblemChange = { p -> problem = p; if (p != null) problemNonce++ },
                 emptyProblem = stringResource(R.string.contacts_empty_problem),
             )
-            if (settings.contacts.isNotEmpty()) TextButton(
-                onClick = {
-                    if (writeAboutSaathi(ctx, settings.contacts) && !settings.contactsToldAsked) {
-                        onChange(settings.copy(contactsToldAsked = true))
-                    }
-                },
-                Modifier.heightIn(min = 48.dp),
-            ) { Text(stringResource(R.string.settings_write_contacts)) }
+            // Anyone added since the last "I've added you" text gets offered one; the rest aren't texted twice.
+            val pending = toIntroduce(settings.contacts, settings.introduced)
+            if (pending.isNotEmpty()) IntroduceButton(
+                { latest }, onChange, stringResource(R.string.settings_intro_contacts, toldWho(pending)),
+                Modifier.padding(top = 8.dp),
+            )
         }
 
         SettingsSection(stringResource(R.string.places_title), stringResource(R.string.settings_places_hint)) {
@@ -207,6 +206,11 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
             Text(
                 stringResource(R.string.settings_power_hint),
                 style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
+            )
+
+            SettingSwitch(
+                stringResource(R.string.settings_dying_title), stringResource(R.string.settings_dying_body),
+                settings.dyingPhoneText, { onChange(settings.copy(dyingPhoneText = it)) }, Modifier.padding(top = 20.dp),
             )
         }
 
@@ -358,6 +362,22 @@ private fun LanguageRow() {
             stringResource(R.string.settings_language_follow),
             style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 4.dp),
         )
+    }
+}
+
+/** One on/off choice: title and body on the left, the switch on the right; the whole row toggles. */
+@Composable
+private fun SettingSwitch(title: String, body: String, checked: Boolean, onChecked: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChecked),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = Saathi.colors.fg2)
+        }
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

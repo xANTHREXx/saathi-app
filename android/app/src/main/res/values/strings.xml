@@ -57,9 +57,11 @@
         <item quantity="other">%1$s and %2$d others</item>
     </plurals>
     <string name="ready_told_names_none">your contacts</string>
-    <string name="ready_told_sub">So a text from Saathi doesn\'t surprise them.</string>
-    <string name="ready_told_write">Write message</string>
-    <string name="ready_told_message">Hi, I\'ve added you as a contact in Saathi, my travel safety app. If a message from my number ever says I need help, it\'s real. Please call me and open the location link.</string>
+    <string name="ready_told_sub">One text from your SIM, so a Saathi alert doesn\'t surprise them.</string>
+    <string name="ready_told_send">Text them</string>
+    <string name="ready_told_message">Hi, I\'ve added you as a contact in Saathi, my travel safety app. If you ever get a text from my number starting \"Saathi alert\", it\'s real. Please call me straight away and open the location link.</string>
+    <string name="intro_sent">Sent to %1$s</string>
+    <string name="intro_failed">Couldn\'t send to %1$s. Try again.</string>
     <string name="ready_tile_title">Add the help tile</string>
     <string name="ready_tile_sub">Pull down from the top, even when locked, and tap Saathi help.</string>
     <string name="ready_tile_add">Add</string>
@@ -157,7 +159,8 @@
     <string name="told_recording">recording on this phone</string>
     <string name="told_failed_retrying">Couldn\'t send to %1$s. Retrying.</string>
     <string name="no_112">Saathi doesn\'t call 112</string>
-    <string name="no_112_full">Saathi doesn\'t call 112. Call it yourself if you need to.</string>
+    <string name="no_112_full">Saathi doesn\'t call 112 for you. Tap Call 112 to dial it.</string>
+    <string name="call_112">Call 112</string>
     <string name="alert_none_reached">No one was reached</string>
 
     <!-- Home: after a trip -->
@@ -199,7 +202,7 @@
     <string name="settings_people">People to text</string>
     <string name="contacts_hint">If you don\'t answer a check-in, Saathi texts these people from your own SIM.</string>
     <string name="contacts_empty_problem">Add at least one person, or alerts can\'t go anywhere.</string>
-    <string name="settings_write_contacts">Write them a message about Saathi</string>
+    <string name="settings_intro_contacts">Text %1$s that you added them</string>
     <string name="settings_places_hint">Home and work, say. Saathi uses them to notice a detour or a late arrival.</string>
     <string name="settings_help_options">Help options</string>
     <string name="settings_speak_says">Speak for me says</string>
@@ -217,6 +220,8 @@
     </plurals>
     <string name="settings_off">Off</string>
     <string name="settings_power_hint">Off at first, because many phones already use quick presses for the camera or Emergency SOS. If yours doesn\'t, pick a number and try it. If presses open your camera, set it back to Off and use the Quick Settings tile.</string>
+    <string name="settings_dying_title">Low battery and switched-off texts</string>
+    <string name="settings_dying_body">During a trip, text your contacts your last location if the battery reaches 5% or the phone is switched off. Some phones switch off too fast for the text to go.</string>
     <string name="settings_community">Community sharing</string>
     <string name="settings_community_body">Share anonymously: count my rides by vehicle plate and add my reports to the community map. Never my name or number.</string>
     <string name="settings_improve">Help improve Saathi</string>

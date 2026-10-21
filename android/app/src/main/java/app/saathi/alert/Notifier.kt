@@ -105,9 +105,14 @@ object Notifier {
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, CheckInActivity::class.java, 30))
             .addAction(action(ctx, ctx.getString(R.string.im_okay), service(ctx, TripService.ACTION_OK, 31)))
+            .addAction(action(ctx, ctx.getString(R.string.call_112), PendingIntent.getActivity(ctx, 32, dial112(),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)))
             .build()
         ctx.getSystemService(NotificationManager::class.java).notify(ALERT_ID, n)
     }
+
+    /** Opens the dialer with 112 filled in; she presses call. Apps can't place emergency calls themselves. */
+    fun dial112(): Intent = Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:112")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     fun cancel(ctx: Context, id: Int) = ctx.getSystemService(NotificationManager::class.java).cancel(id)
 

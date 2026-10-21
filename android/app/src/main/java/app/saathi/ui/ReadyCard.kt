@@ -39,13 +39,95 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.saathi.R
+import app.saathi.alert.SmsSender
 import app.saathi.core.Contact
+import app.saathi.core.introKey
 import app.saathi.core.smsRecipients
+import app.saathi.core.toIntroduce
 import app.saathi.core.toldNames
 import app.saathi.data.Settings
 import app.saathi.trigger.HelpTileService
+import app.saathi.ui.setup.Perm
+import app.saathi.ui.setup.ProblemText
+import app.saathi.ui.setup.granted
 import app.saathi.ui.theme.Saathi
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.graphics.drawable.Icon as AndroidIcon
+
+/** What one tap on "Text them" did. [opened] means her SMS app opened instead, so we can't know who got it. */
+internal data class IntroOutcome(val sentKeys: List<String>, val sent: List<String>, val failed: List<String>, val opened: Boolean)
+
+/**
+ * The "I've added you to Saathi" text, from her SIM, to everyone not told yet: one tap, nothing to type.
+ * One contact at a time, so each number is marked told only if its own text went. Without the SMS
+ * permission it falls back to opening her SMS app with the note ready.
+ */
+internal suspend fun introduce(ctx: Context, settings: Settings): IntroOutcome {
+    val to = toIntroduce(settings.contacts, settings.introduced)
+    if (to.isEmpty()) return IntroOutcome(emptyList(), emptyList(), emptyList(), opened = false)
+    if (!granted(ctx, Perm.SMS)) return IntroOutcome(emptyList(), emptyList(), emptyList(), opened = writeAboutSaathi(ctx, to))
+    val body = ctx.getString(R.string.ready_told_message)
+    return withContext(Dispatchers.IO) {
+        val results = to.map { c -> c to SmsSender.send(ctx, listOf(c), body).sent.isNotEmpty() }
+        IntroOutcome(
+            sentKeys = results.filter { it.second }.map { introKey(it.first) },
+            sent = results.filter { it.second }.map { it.first.name },
+            failed = results.filterNot { it.second }.map { it.first.name },
+            opened = false,
+        )
+    }
+}
+
+/** "Amma" / "Amma and Riya" / "Amma and 2 others"; "your contacts" when nobody has a name. */
+@Composable
+internal fun toldWho(contacts: List<Contact>): String {
+    val names = toldNames(contacts)
+    return when {
+        names == null -> stringResource(R.string.ready_told_names_none)
+        names.second == null -> names.first
+        names.others == 0 -> stringResource(R.string.ready_told_names_two, names.first, names.second)
+        else -> pluralStringResource(R.plurals.ready_told_names_more, names.others, names.first, names.others)
+    }
+}
+
+/**
+ * One tap texts the contacts not told yet, then says who it reached. Saves onto [latest] (not a captured copy):
+ * the send can finish after a recomposition.
+ */
+@Composable
+internal fun IntroduceButton(latest: () -> Settings, onChange: (Settings) -> Unit, label: String, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    val scope = rememberCoroutineScope()
+    var sending by remember { mutableStateOf(false) }
+    var outcome by remember { mutableStateOf<IntroOutcome?>(null) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        FilledTonalButton(
+            onClick = {
+                sending = true
+                scope.launch {
+                    val o = introduce(ctx, latest())
+                    sending = false
+                    outcome = o
+                    val s = latest()
+                    if (o.sentKeys.isNotEmpty() || o.opened) {
+                        onChange(s.copy(introduced = (s.introduced + o.sentKeys).distinct(), contactsToldAsked = true))
+                    }
+                }
+            },
+            enabled = !sending,
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) { Text(label) }
+        outcome?.let { o ->
+            if (o.sent.isNotEmpty()) Text(stringResource(R.string.intro_sent, ctx.namesText(o.sent)),
+                style = MaterialTheme.typography.bodySmall, color = c.ok)
+            if (o.failed.isNotEmpty()) ProblemText(stringResource(R.string.intro_failed, ctx.namesText(o.failed)))
+        }
+    }
+}
 
 /**
  * Opens her own SMS app with a note to her contacts, ready to send. Saathi sends nothing here: she does.
@@ -84,13 +166,8 @@ internal fun ReadyCard(settings: Settings, onChange: (Settings) -> Unit) {
     // A system dialog can outlast a recomposition; save onto what is current, not what was captured.
     val latest by rememberUpdatedState(settings)
 
-    val names = toldNames(settings.contacts)
-    val who = when {
-        names == null -> stringResource(R.string.ready_told_names_none)
-        names.second == null -> names.first
-        names.others == 0 -> stringResource(R.string.ready_told_names_two, names.first, names.second)
-        else -> pluralStringResource(R.plurals.ready_told_names_more, names.others, names.first, names.others)
-    }
+    val pending = toIntroduce(settings.contacts, settings.introduced)
+    val who = toldWho(pending.ifEmpty { settings.contacts })
 
     Column(
         Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(MaterialTheme.shapes.large)
@@ -107,12 +184,9 @@ internal fun ReadyCard(settings: Settings, onChange: (Settings) -> Unit) {
         Column(Modifier.padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ReadyRow(
                 title = stringResource(R.string.ready_told_title, who), sub = stringResource(R.string.ready_told_sub),
-                done = settings.contactsToldAsked,
+                done = settings.contactsToldAsked || pending.isEmpty(),
             ) {
-                FilledTonalButton(
-                    onClick = { if (writeAboutSaathi(ctx, settings.contacts)) onChange(latest.copy(contactsToldAsked = true)) },
-                    Modifier.heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.ready_told_write)) }
+                IntroduceButton({ latest }, onChange, stringResource(R.string.ready_told_send))
             }
 
             var how by rememberSaveable { mutableStateOf(false) }

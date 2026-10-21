@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Mic
@@ -53,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import app.saathi.R
 import androidx.compose.ui.unit.sp
 import app.saathi.alert.AlertManager
+import app.saathi.alert.Notifier
 import app.saathi.trip.TripState
 import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiTheme
@@ -145,7 +147,18 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                 }
                 Spacer(Modifier.weight(1f))
                 OkayPlate(height = 96, onClick = onOk)
-                FilledTonalButton(onClose, Modifier.fillMaxWidth().padding(top = 10.dp).height(52.dp), shape = RoundedCornerShape(20.dp)) { Text(stringResource(R.string.action_close)) }
+                // Tonal, beside Close: the okay plate stays the one reversed plate on this screen.
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FilledTonalButton(
+                        onClick = { runCatching { ctx.startActivity(Notifier.dial112()) } },
+                        Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Icon(Icons.Rounded.Call, null, Modifier.size(20.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.call_112))
+                    }
+                    FilledTonalButton(onClose, Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(20.dp)) { Text(stringResource(R.string.action_close)) }
+                }
             }
             else -> {
                 Spacer(Modifier.weight(1f))

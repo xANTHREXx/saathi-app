@@ -8,12 +8,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.location.Geocoder
+import android.os.BatteryManager
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
 import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
+import app.saathi.alert.SmsSender
+import app.saathi.core.BATTERY_DEAD_PCT
+import app.saathi.core.BatteryWatch
 import app.saathi.core.Destination
 import app.saathi.core.Fingerprint
 import app.saathi.core.Fix
@@ -22,6 +26,9 @@ import app.saathi.core.PowerPress
 import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
 import app.saathi.core.Watcher
+import app.saathi.core.batteryText
+import app.saathi.core.offText
+import app.saathi.core.recipients
 import app.saathi.core.vehicleNote
 import app.saathi.data.Api
 import app.saathi.data.Evidence
@@ -89,6 +96,50 @@ class TripService : Service() {
         }
     }
 
+    private val lowBattery = BatteryWatch()
+    @Volatile private var batteryPct = -1
+
+    /** Sticky, so it also arrives once at registration with the current level. */
+    private val batteryLevel = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+            if (level < 0 || scale <= 0) return
+            batteryPct = level * 100 / scale
+            val charging = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
+            if (!watching() || !Store.settings(c).dyingPhoneText) return
+            if (lowBattery.onLevel(batteryPct, charging)) {
+                val pct = batteryPct
+                scope.launch(Dispatchers.IO) { textContacts("battery $pct%") { name, fix, age -> batteryText(name, pct, fix, age) } }
+            }
+        }
+    }
+
+    /** The phone is going down mid-trip: a few seconds to say so, so the text is sent right here. */
+    private val shuttingDown = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            if (!watching() || !Store.settings(c).dyingPhoneText) return
+            val died = batteryPct in 0..BATTERY_DEAD_PCT
+            textContacts(if (died) "battery died" else "switched off") { name, fix, age -> offText(name, died, fix, age) }
+        }
+    }
+
+    /** Whether a silence from this phone would mean something to her contacts. */
+    private fun watching() = TripState.now.onTrip
+
+    /**
+     * A plain text to her contacts for the city she is in, with her last location. Not an alert: no alarm,
+     * no live page, nothing for her to undo.
+     */
+    private fun textContacts(what: String, build: (name: String, fix: Fix?, fixAgeS: Long) -> String) {
+        val s = Store.settings(this)
+        val ui = TripState.now
+        val fixAge = if (ui.lastFixAtMs == 0L) 0 else (System.currentTimeMillis() - ui.lastFixAtMs) / 1000
+        val text = build(s.name.ifBlank { "She" }, ui.lastFix?.copy(t = ui.lastFixAtMs / 1000), fixAge)
+        val r = SmsSender.send(this, recipients(s.contacts, TripState.city()), text)
+        Log.i("Saathi", "$what: told ${r.sent.joinToString()}")
+    }
+
     override fun onCreate() {
         super.onCreate()
         Notifier.channels(this)
@@ -97,6 +148,8 @@ class TripService : Service() {
         registerReceiver(screen, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         })
+        registerReceiver(batteryLevel, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        registerReceiver(shuttingDown, IntentFilter(Intent.ACTION_SHUTDOWN))
         // A pulse every minute, so a phone that kills Saathi mid-trip leaves a trace (see RunState).
         scope.launch {
             while (true) {
@@ -142,6 +195,7 @@ class TripService : Service() {
         val mode = runCatching { Mode.valueOf(i.getStringExtra(EXTRA_MODE) ?: "WALK") }.getOrDefault(Mode.WALK)
         tripStartedAt = System.currentTimeMillis() / 1000
         fixes.clear()
+        lowBattery.reset()
         planJob?.cancel()
         watcher = Watcher(mode, emptyList(), durationS = null, startedAt = tripStartedAt)
         TripState.update {
@@ -308,6 +362,8 @@ class TripService : Service() {
 
     override fun onDestroy() {
         runCatching { unregisterReceiver(screen) }
+        runCatching { unregisterReceiver(batteryLevel) }
+        runCatching { unregisterReceiver(shuttingDown) }
         scope.cancel()
         // Only a stop with no trip running is clean; if Android took the service down mid-trip, say so.
         if (!TripState.now.onTrip) RunState.cleanStop(this)

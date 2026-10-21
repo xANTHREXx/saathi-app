@@ -35,19 +35,47 @@ fun alertText(
         plate?.let { append(" Vehicle $it.") }
         val what = listOfNotNull(event?.detail, place?.takeIf { withPlace }?.let { "near $it" })
         if (what.isNotEmpty()) append(" Trip: ${what.joinToString(" ")}.")
-        fix?.let {
-            val time = clock.format(Instant.ofEpochSecond(it.t).atZone(zone))
-            val stale = if (fixAgeS > 120) " (last known)" else ""
-            append(" Location at $time$stale: https://maps.google.com/?q=")
-            append(String.format(Locale.US, "%.5f,%.5f", it.lat, it.lng))
-        }
+        fix?.let { append(locationPart(it, fixAgeS, zone)) }
         liveUrl?.let { append(" Live: $it") }
     }
     val full = build(withPlace = true)
     return if (full.length <= SMS_MAX) full else build(withPlace = false).take(SMS_MAX)
 }
 
+/** " Location at 9:41 PM: <map link>", marked "(last known)" when the fix is over 2 minutes old. */
+private fun locationPart(fix: Fix, fixAgeS: Long, zone: ZoneId): String {
+    val time = clock.format(Instant.ofEpochSecond(fix.t).atZone(zone))
+    val stale = if (fixAgeS > 120) " (last known)" else ""
+    return " Location at $time$stale: https://maps.google.com/?q=" + String.format(Locale.US, "%.5f,%.5f", fix.lat, fix.lng)
+}
+
 fun okText(name: String) = "Saathi: false alarm, $name is fine."
+
+/** Low battery during a trip. Not an alert: it explains a silence that may follow. */
+fun batteryText(name: String, percent: Int, fix: Fix?, fixAgeS: Long, zone: ZoneId = ZoneId.systemDefault()): String =
+    buildString {
+        append("Saathi: $name's phone battery is at $percent% during a trip.")
+        fix?.let { append(locationPart(it, fixAgeS, zone)) }
+        append(" If her phone goes quiet, this may be why.")
+    }.take(SMS_MAX)
+
+/** Her phone is shutting down during a trip: the last thing it can say. */
+fun offText(name: String, batteryDied: Boolean, fix: Fix?, fixAgeS: Long, zone: ZoneId = ZoneId.systemDefault()): String =
+    buildString {
+        append(if (batteryDied) "Saathi: $name's phone ran out of battery during a trip."
+               else "Saathi: $name's phone was switched off during a trip.")
+        fix?.let { append(locationPart(it, fixAgeS, zone)) }
+    }.take(SMS_MAX)
+
+/** She reached a saved place. Says where and when, nothing more: arriving is not a promise about anything else. */
+fun arrivedText(name: String, place: String, atS: Long, zone: ZoneId = ZoneId.systemDefault()): String {
+    val where = when (val p = place.trim()) {
+        "", "Other", "other" -> "a saved place"
+        "Home", "Work", "College" -> p.lowercase() // "reached home", "reached work"
+        else -> p
+    }
+    return "Saathi: $name reached $where at ${clock.format(Instant.ofEpochSecond(atS).atZone(zone))}.".take(SMS_MAX)
+}
 
 /** What other Saathi users' rides say about a vehicle: [rides] counted, [noneRaised] true only when no ride reported anything. */
 data class VehicleNote(val rides: Int, val noneRaised: Boolean, val sample: Boolean)

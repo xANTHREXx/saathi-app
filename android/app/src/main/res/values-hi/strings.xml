@@ -56,9 +56,11 @@
         <item quantity="other">%1$s और %2$d अन्य</item>
     </plurals>
     <string name="ready_told_names_none">आपके कॉन्टैक्ट</string>
-    <string name="ready_told_sub">ताकि Saathi का मैसेज आने पर वे चौंकें नहीं।</string>
-    <string name="ready_told_write">मैसेज लिखें</string>
-    <string name="ready_told_message">नमस्ते, मैंने आपको Saathi में कॉन्टैक्ट के तौर पर जोड़ा है। यह मेरा सफ़र की सुरक्षा वाला ऐप है। अगर कभी मेरे नंबर से ऐसा मैसेज आए कि मुझे मदद चाहिए, तो वह सच है। कृपया मुझे कॉल करें और लोकेशन का लिंक खोलें।</string>
+    <string name="ready_told_sub">आपकी SIM से एक मैसेज, ताकि Saathi का अलर्ट आने पर वे चौंकें नहीं।</string>
+    <string name="ready_told_send">उन्हें मैसेज भेजें</string>
+    <string name="ready_told_message">नमस्ते, मैंने आपको Saathi में कॉन्टैक्ट के तौर पर जोड़ा है। यह मेरा सफ़र की सुरक्षा वाला ऐप है। अगर कभी मेरे नंबर से \"Saathi alert\" से शुरू होने वाला मैसेज आए, तो वह सच है। कृपया तुरंत मुझे कॉल करें और लोकेशन का लिंक खोलें।</string>
+    <string name="intro_sent">%1$s को भेज दिया</string>
+    <string name="intro_failed">%1$s को नहीं भेज पाए। फिर से कोशिश करें।</string>
     <string name="ready_tile_title">मदद वाली टाइल जोड़ें</string>
     <string name="ready_tile_sub">ऊपर से नीचे खींचें, लॉक होने पर भी, और Saathi मदद पर टैप करें।</string>
     <string name="ready_tile_add">जोड़ें</string>
@@ -156,7 +158,8 @@
     <string name="told_recording">इस फ़ोन पर रिकॉर्डिंग चल रही है</string>
     <string name="told_failed_retrying">%1$s को नहीं भेज पाए। फिर कोशिश कर रहे हैं।</string>
     <string name="no_112">Saathi 112 पर कॉल नहीं करता</string>
-    <string name="no_112_full">Saathi 112 पर कॉल नहीं करता। ज़रूरत हो तो खुद कॉल करें।</string>
+    <string name="no_112_full">Saathi आपके लिए 112 पर कॉल नहीं करता। डायल करने के लिए \"112 पर कॉल करें\" दबाएँ।</string>
+    <string name="call_112">112 पर कॉल करें</string>
     <string name="alert_none_reached">किसी तक मैसेज नहीं पहुँचा</string>
 
     <!-- Home: after a trip -->
@@ -198,7 +201,7 @@
     <string name="settings_people">जिन्हें मैसेज जाए</string>
     <string name="contacts_hint">अगर आप चेक-इन का जवाब नहीं देतीं, तो Saathi इन लोगों को आपके अपने SIM से मैसेज करता है।</string>
     <string name="contacts_empty_problem">कम से कम एक व्यक्ति जोड़ें, वरना अलर्ट किसी तक नहीं पहुँचेगा।</string>
-    <string name="settings_write_contacts">उन्हें Saathi के बारे में मैसेज लिखें</string>
+    <string name="settings_intro_contacts">%1$s को मैसेज भेजें कि आपने उन्हें जोड़ा है</string>
     <string name="settings_places_hint">जैसे घर और ऑफ़िस। Saathi इनसे रास्ता बदलने या देर से पहुँचने का पता लगाता है।</string>
     <string name="settings_help_options">मदद के विकल्प</string>
     <string name="settings_speak_says">\"मेरी तरफ़ से बोलें\" यह कहता है</string>
@@ -216,6 +219,8 @@
     </plurals>
     <string name="settings_off">बंद</string>
     <string name="settings_power_hint">शुरू में यह बंद रहता है, क्योंकि कई फ़ोन तेज़ प्रेस पर कैमरा या Emergency SOS खोल देते हैं। आपके फ़ोन में ऐसा नहीं होता, तो कोई संख्या चुनकर आज़माएँ। प्रेस करने पर कैमरा खुले, तो इसे फिर बंद कर दें और क्विक सेटिंग्स टाइल इस्तेमाल करें।</string>
+    <string name="settings_dying_title">बैटरी कम होने और फ़ोन बंद होने पर मैसेज</string>
+    <string name="settings_dying_body">सफ़र के दौरान बैटरी 5% पर पहुँचे या फ़ोन बंद हो, तो आपके कॉन्टैक्ट को आपकी आख़िरी लोकेशन मैसेज की जाएगी। कुछ फ़ोन इतनी जल्दी बंद होते हैं कि मैसेज नहीं जा पाता।</string>
     <string name="settings_community">कम्युनिटी शेयरिंग</string>
     <string name="settings_community_body">बिना नाम के शेयर करें: मेरी राइड को गाड़ी की प्लेट से गिनें और मेरी रिपोर्ट कम्युनिटी मैप में जोड़ें। मेरा नाम या नंबर कभी नहीं।</string>
     <string name="settings_improve">Saathi को बेहतर बनाने में मदद करें</string>

@@ -33,6 +33,10 @@ data class Settings(
     val tileAsked: Boolean = false,
     /** She chose "Not now" on that card. */
     val readyCardDismissed: Boolean = false,
+    /** Contacts already sent the "I've added you to Saathi" text from her SIM, by [app.saathi.core.introKey]. */
+    val introduced: List<String> = emptyList(),
+    /** During a trip, text her contacts when the battery reaches 5% or the phone is switched off. */
+    val dyingPhoneText: Boolean = true,
 )
 
 @Serializable
