@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +70,7 @@ class CheckInActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         AlertManager.init(this)
-        setContent { SaathiTheme(dark = true) { CheckIn(onOk = { AlertManager.imOkay(); finish() }, onClose = { finish() }, onDone = { AlertManager.endPractice(); finish() }) } }
+        setContent { SaathiTheme(dark = true) { CheckIn(onOk = { confirmOkay { finish() } }, onClose = { finish() }, onDone = { AlertManager.endPractice(); finish() }) } }
     }
 }
 
@@ -140,13 +141,19 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                     Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Fact(Icons.Rounded.Check, stringResource(R.string.told_link), big = true)
                         if (s.recording) Fact(Icons.Rounded.Mic, stringResource(R.string.checkin_recording), big = true)
-                        if (s.smsFailed.isNotEmpty()) Text(stringResource(R.string.told_failed_retrying, ctx.namesText(s.smsFailed)),
-                            style = MaterialTheme.typography.bodyMedium, color = c.onHelpContainer)
+                        // Nothing retries on its own, so say only what failed and hand her the retry.
+                        if (s.smsFailed.isNotEmpty()) {
+                            Text(stringResource(R.string.raised_failed, ctx.namesText(s.smsFailed)),
+                                style = MaterialTheme.typography.bodyMedium, color = c.onHelpContainer)
+                            Button(onClick = { AlertManager.resend() }, Modifier.heightIn(min = 48.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = c.help, contentColor = Color.White)) { Text(stringResource(R.string.raised_retry)) }
+                        }
                         Text(stringResource(R.string.no_112_full), style = MaterialTheme.typography.labelMedium, color = c.alum)
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 OkayPlate(height = 96, onClick = onOk)
+                UnlockFirstNote()
                 // Tonal, beside Close: the okay plate stays the one reversed plate on this screen.
                 Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     FilledTonalButton(

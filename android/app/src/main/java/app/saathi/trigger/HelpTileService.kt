@@ -18,6 +18,7 @@ import app.saathi.core.isSetUp
 import app.saathi.data.Store
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
+import app.saathi.ui.CheckInActivity
 import app.saathi.ui.MainActivity
 import app.saathi.ui.tileSubtitle
 import kotlinx.coroutines.CoroutineScope
@@ -31,7 +32,8 @@ import kotlinx.coroutines.launch
 /**
  * "Saathi help" in Quick Settings: another way to ask for help, for phones where the power button
  * opens the camera. Works from the lock screen, so it never calls unlockAndRun. A tap starts the
- * same 5-second "Don't text" window as Speak for me; tapping again inside it stops it.
+ * same 5-second "Don't text" window as Speak for me; tapping again inside it stops it. Once contacts were told, a
+ * tap opens the told screen, where I'm okay asks her to unlock first.
  */
 class HelpTileService : TileService() {
     private var scope: CoroutineScope? = null
@@ -60,9 +62,9 @@ class HelpTileService : TileService() {
         val setUp = isSetUp(s.onboarded, s.contacts)
         val ui = TripState.now
         when (helpTileAction(setUp, ui.pendingAlertEndsAtMs != null, ui.alertActive)) {
-            HelpTileAction.OPEN_APP -> openApp()
+            HelpTileAction.OPEN_APP -> open(MainActivity::class.java)
             HelpTileAction.CANCEL_PENDING -> AlertManager.cancelPendingAlert()
-            HelpTileAction.REFRESH_ONLY -> Unit // a sent alert is taken back with I'm okay in the app, never from here
+            HelpTileAction.OPEN_ALERT -> open(CheckInActivity::class.java) // a sent alert is taken back with I'm okay there, after an unlock
             HelpTileAction.RAISE -> {
                 // The alert path can run with only this process alive, except two things TripService normally
                 // sets up: the notification channels, and a reason for the process to stay put during the 5 s.
@@ -87,8 +89,8 @@ class HelpTileService : TileService() {
         tile.updateTile()
     }
 
-    private fun openApp() {
-        val intent = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    private fun open(screen: Class<*>) {
+        val intent = Intent(this, screen).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (Build.VERSION.SDK_INT >= 34) {
             startActivityAndCollapse(PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
         } else {

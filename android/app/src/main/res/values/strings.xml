@@ -43,7 +43,8 @@
     <string name="mode_auto">Auto</string>
     <string name="mode_cab">Cab</string>
     <string name="mode_bike">Bike</string>
-    <string name="ready_plate_label">Auto plate, if you can see it</string>
+    <string name="ready_plate_photo">Photograph the plate</string>
+    <string name="ready_plate_label">Or type it</string>
     <string name="ready_start">Start</string>
 
     <!-- Home: Two more things -->
@@ -99,6 +100,7 @@
     <string name="trip_dest_change">Change</string>
     <string name="trip_dest_not_sure">Not sure</string>
     <string name="check_plate">Check plate</string>
+    <string name="add_plate">Add plate</string>
     <string name="end_trip">End trip</string>
     <string name="end_trip_armed">Tap again to end</string>
     <plurals name="thread_earlier">
@@ -168,7 +170,6 @@
     <string name="help_dialog_text_none">Saathi will start recording and sound the alarm. You have no contacts yet.</string>
     <string name="help_dialog_send">Send help</string>
     <string name="help_dialog_cancel">Cancel</string>
-    <string name="raised_title">Help already raised</string>
     <string name="raised_told">Your contacts were told</string>
     <string name="raised_failed">Couldn\'t reach %1$s</string>
     <string name="raised_retry">Try again</string>
@@ -179,7 +180,6 @@
     </plurals>
     <string name="told_link">Live location link sent</string>
     <string name="told_recording">recording on this phone</string>
-    <string name="told_failed_retrying">Couldn\'t send to %1$s. Retrying.</string>
     <string name="no_112">Saathi doesn\'t call 112</string>
     <string name="no_112_full">Saathi doesn\'t call 112 for you. Tap Call 112 to dial it.</string>
     <string name="call_112">Call 112</string>
@@ -443,6 +443,12 @@
     <string name="plate_dont_get_in">Don\'t get in</string>
     <string name="plate_tell_contacts">Tell my contacts</string>
     <string name="plate_its_fine">It\'s fine</string>
+    <string name="plate_record_title">Photograph the plate</string>
+    <string name="plate_record_body">Point at the number plate. Saathi reads it on this phone; the photo isn\'t kept.</string>
+    <string name="plate_record_title_read">Is this the plate?</string>
+    <string name="plate_record_body_read">Saathi adds it to this trip and to any alert.</string>
+    <string name="plate_use">Use this plate</string>
+    <string name="plate_retake">Retake</string>
     <string name="plate_notif_title">Your ride is here. Check the plate</string>
     <string name="plate_notif_text">Snap the number plate and Saathi will compare it with %1$s.</string>
     <string name="plate_notif_text_booking">Snap the number plate and Saathi will compare it with your booking.</string>
@@ -534,9 +540,10 @@
     <string name="widget_sub_trip">Watching your trip · one tap speaks for you and texts your contacts</string>
     <string name="widget_slide">Slide for Walk, Bus, Train</string>
     <string name="widget_back">Back to SOS</string>
-    <string name="tile_contacts_told">Contacts told</string>
+    <string name="tile_contacts_told">Contacts told · tap to open</string>
     <string name="tile_texting_soon">Texting in 5 s · tap to stop</string>
     <string name="tile_finish_setup">Finish setup first</string>
     <string name="tile_tap_text_name">Tap to text %1$s</string>
     <string name="tile_tap_text_contacts">Tap to text your contacts</string>
+    <string name="okay_unlock_first">You\'ll be asked to unlock first.</string>
 </resources>

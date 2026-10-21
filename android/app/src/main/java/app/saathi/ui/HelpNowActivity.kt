@@ -103,7 +103,10 @@ private fun HelpNow(who: String, onClose: () -> Unit) {
             else -> HelpToldBanner(s.told) // the instant between the window closing and the alert starting
         }
         Spacer(Modifier.weight(1f))
-        if (s.alertActive) OkayPlate(height = 96) { AlertManager.imOkay(); onClose() }
+        if (s.alertActive) {
+            OkayPlate(height = 96, onClick = rememberConfirmOkay(onSent = onClose))
+            UnlockFirstNote()
+        }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (s.alertActive) FilledTonalButton(
                 onClick = { runCatching { ctx.startActivity(Notifier.dial112()) } },

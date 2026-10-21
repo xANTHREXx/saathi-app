@@ -64,8 +64,8 @@ class HelpTileTest {
     }
 
     @Test
-    fun clickNeverUndoesASentAlert() {
-        assertEquals(HelpTileAction.REFRESH_ONLY, helpTileAction(setUp = true, pending = false, alertActive = true))
-        assertEquals(HelpTileAction.REFRESH_ONLY, helpTileAction(setUp = true, pending = true, alertActive = true))
+    fun clickDuringASentAlertOpensTheToldScreen() {
+        assertEquals(HelpTileAction.OPEN_ALERT, helpTileAction(setUp = true, pending = false, alertActive = true))
+        assertEquals(HelpTileAction.OPEN_ALERT, helpTileAction(setUp = true, pending = true, alertActive = true))
     }
 }

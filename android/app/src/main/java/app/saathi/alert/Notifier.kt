@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import app.saathi.core.TripEvent
 import app.saathi.data.Store
 import app.saathi.trip.TripService
@@ -116,7 +117,7 @@ object Notifier {
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, CheckInActivity::class.java, 30))
-            .addAction(action(ctx, ctx.getString(R.string.im_okay), service(ctx, TripService.ACTION_OK, 31)))
+            .addAction(alertedOkayAction(ctx))
             .addAction(action(ctx, ctx.getString(R.string.call_112), PendingIntent.getActivity(ctx, 32, dial112(),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)))
             .build()
@@ -144,6 +145,14 @@ object Notifier {
     fun dial112(): Intent = Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:112")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     fun cancel(ctx: Context, id: Int) = ctx.getSystemService(NotificationManager::class.java).cancel(id)
+
+    /**
+     * I'm okay on the alerted notification takes back a text that already went out, so it needs the phone unlocked.
+     * It opens the told screen, whose I'm okay asks her to unlock, on every Android version: one path to test, and
+     * no reliance on Android honouring setAuthenticationRequired for a service, or letting a service open a screen.
+     */
+    private fun alertedOkayAction(ctx: Context): Notification.Action =
+        action(ctx, ctx.getString(R.string.im_okay), activity(ctx, CheckInActivity::class.java, 34))
 
     private fun action(ctx: Context, title: String, pi: PendingIntent) =
         Notification.Action.Builder(null, title, pi).build()

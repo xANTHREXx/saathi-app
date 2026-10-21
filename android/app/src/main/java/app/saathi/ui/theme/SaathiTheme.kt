@@ -112,13 +112,22 @@ val Figtree = FontFamily(figtree(400), figtree(500), figtree(600), figtree(700))
 private fun t(size: Int, line: Int, w: Int, track: Double = 0.0) =
     TextStyle(fontFamily = Figtree, fontSize = size.sp, lineHeight = line.sp, fontWeight = FontWeight(w), letterSpacing = track.em)
 
-private val type = Typography(
-    displayLarge = t(46, 48, 600, -0.03), displayMedium = t(40, 44, 600, -0.03), displaySmall = t(34, 38, 600, -0.025),
-    headlineLarge = t(30, 34, 600, -0.02), headlineMedium = t(28, 32, 600, -0.02), headlineSmall = t(24, 28, 600, -0.015),
-    titleLarge = t(22, 28, 600, -0.015), titleMedium = t(17, 22, 600, -0.005), titleSmall = t(15, 20, 600),
-    bodyLarge = t(16, 23, 400), bodyMedium = t(15, 21, 400), bodySmall = t(13, 18, 400),
-    labelLarge = t(15, 20, 600), labelMedium = t(13, 18, 500), labelSmall = t(12, 16, 500),
-)
+/**
+ * Tight tracking is tuned for Figtree. On Devanagari and Kannada (drawn by the Noto fallback) negative tracking
+ * breaks line measurement, so titles wrap mid-word ("सेटिंग् / स"); those scripts get normal tracking.
+ */
+private fun typography(tight: Boolean): Typography {
+    fun k(track: Double) = if (tight) track else 0.0
+    return Typography(
+        displayLarge = t(46, 48, 600, k(-0.03)), displayMedium = t(40, 44, 600, k(-0.03)), displaySmall = t(34, 38, 600, k(-0.025)),
+        headlineLarge = t(30, 34, 600, k(-0.02)), headlineMedium = t(28, 32, 600, k(-0.02)), headlineSmall = t(24, 28, 600, k(-0.015)),
+        titleLarge = t(22, 28, 600, k(-0.015)), titleMedium = t(17, 22, 600, k(-0.005)), titleSmall = t(15, 20, 600),
+        bodyLarge = t(16, 23, 400), bodyMedium = t(15, 21, 400), bodySmall = t(13, 18, 400),
+        labelLarge = t(15, 20, 600), labelMedium = t(13, 18, 500), labelSmall = t(12, 16, 500),
+    )
+}
+private val type = typography(tight = true)
+private val typeOtherScripts = typography(tight = false)
 
 private val shapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(20.dp),
@@ -132,7 +141,8 @@ fun SaathiTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -
     else SaathiColors(Day.help, Color.White, Day.helpC, Day.onHelpC, Day.alum, Day.ok, Day.hair,
         Day.brand, Color(0x262E3F86), Day.fg2, Day.fg3, false)
     CompositionLocalProvider(LocalSaathi provides extra) {
-        MaterialTheme(colorScheme = if (dark) darkScheme else lightScheme, typography = type, shapes = shapes) {
+        val latin = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "en"
+        MaterialTheme(colorScheme = if (dark) darkScheme else lightScheme, typography = if (latin) type else typeOtherScripts, shapes = shapes) {
             // Screens that draw their own ground (no Surface) still get readable text.
             CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.onBackground, content = content)
         }

@@ -1,10 +1,13 @@
 package app.saathi.ui
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -88,6 +91,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -101,6 +105,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.material3.AlertDialog
 import app.saathi.core.Mode
+import app.saathi.core.PlateButton
+import app.saathi.core.plateButton
 import app.saathi.core.parsePlateCheck
 import app.saathi.core.readyCardVisible
 import app.saathi.core.recipients
@@ -270,6 +276,9 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
         // Keep the clock readable when the sheet scrolls up under it.
         Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars)
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.92f)))
+        // The sheet runs on under the pinned help row; a short fade says "there's more" instead of slicing a line.
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(24.dp)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.background))))
     }
     // Help never scrolls away: always one hold from her thumb.
     Box(Modifier.fillMaxWidth().height(1.dp).background(Saathi.colors.hair))
@@ -291,7 +300,6 @@ private fun MapChip(modifier: Modifier = Modifier, content: @Composable () -> Un
 private fun ToldBanner(s: UiState) {
     val c = Saathi.colors
     val ctx = LocalContext.current
-    val no112 = stringResource(R.string.no_112)
     val linkSent = stringResource(R.string.told_link)
     val recording = stringResource(R.string.told_recording)
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -303,16 +311,22 @@ private fun ToldBanner(s: UiState) {
             Column {
                 Text(if (s.told.isEmpty()) stringResource(R.string.told_telling) else ctx.toldText(s.told),
                     style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
+                // Call 112 sits on the plate below, so the banner no longer needs to say Saathi doesn't call.
                 Text(buildString {
                     append(linkSent)
                     if (s.recording) append(" · $recording")
-                    append(" · $no112")
                 }, style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer.copy(alpha = 0.8f))
-                if (s.smsFailed.isNotEmpty()) Text(stringResource(R.string.told_failed_retrying, ctx.namesText(s.smsFailed)),
-                    style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer)
+                // Nothing retries on its own, so say only what failed and hand her the retry right here.
+                if (s.smsFailed.isNotEmpty()) {
+                    Text(stringResource(R.string.raised_failed, ctx.namesText(s.smsFailed)),
+                        style = MaterialTheme.typography.bodySmall, color = c.onHelpContainer, modifier = Modifier.padding(top = 4.dp))
+                    Button(onClick = { AlertManager.resend() }, Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = c.help, contentColor = Color.White)) { Text(stringResource(R.string.raised_retry)) }
+                }
             }
         }
-        OkayPlate { AlertManager.imOkay() }
+        OkayPlate(onClick = rememberConfirmOkay())
+        UnlockFirstNote()
     }
 }
 
@@ -345,6 +359,9 @@ private fun OnTrip(s: UiState) {
     val minutes = remember(s.trail.size, s.startedAtMs, tick) { watchedMinutes(s) }
     var endArmed by remember { mutableStateOf(false) }
     LaunchedEffect(endArmed) { if (endArmed) { delay(4_000); endArmed = false } }
+    val recordPlate = rememberPlateRecorder { plate ->
+        ctx.startForegroundService(TripService.intent(ctx, TripService.ACTION_SET_PLATE).putExtra(TripService.EXTRA_PLATE, plate))
+    }
 
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.Top) {
@@ -363,13 +380,22 @@ private fun OnTrip(s: UiState) {
                 Text(stringResource(R.string.trip_watched), style = MaterialTheme.typography.labelSmall, color = c.fg2)
             }
         }
-        DestinationRow(s)
+        // Where she's going, and changing it, aren't questions during a check-in or alert; its green dot
+        // would also say "all fine" right under the alert colour.
+        if (s.checkInEndsAtMs == null && !s.alertActive) DestinationRow(s)
         // Her two actions come before the thread, so they are on screen without scrolling. Never during a
         // check-in or alert, when ending the trip is the wrong thing to offer.
         if (s.checkInEndsAtMs == null && !s.alertActive) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (s.plate != null) FilledTonalButton(onClick = {
-                ctx.startActivity(Intent(ctx, PlateCheckActivity::class.java).putExtra(PlateCheckActivity.EXTRA_BOOKED, s.plate))
-            }, Modifier.weight(1f)) { Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.check_plate)) }
+            // A ride app booked a plate to compare with; a hailed auto has none, so she can record it instead.
+            when (plateButton(s.mode, s.plate, s.app)) {
+                PlateButton.COMPARE -> FilledTonalButton(onClick = {
+                    ctx.startActivity(Intent(ctx, PlateCheckActivity::class.java).putExtra(PlateCheckActivity.EXTRA_BOOKED, s.plate))
+                }, Modifier.weight(1f)) { Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.check_plate)) }
+                PlateButton.RECORD -> FilledTonalButton(onClick = recordPlate, Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.add_plate))
+                }
+                PlateButton.NONE -> {}
+            }
             // The first tap only arms it, and it disarms itself, so one stray tap can't stop the watching.
             if (endArmed) Button(onClick = { ctx.startForegroundService(TripService.intent(ctx, TripService.ACTION_STOP_TRIP)) }, Modifier.weight(1f)) {
                 Icon(Icons.Rounded.StopCircle, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.end_trip_armed))
@@ -462,6 +488,16 @@ private fun Station(ring: Color, title: String, sub: String?, dim: Boolean, fill
     }
 }
 
+/** Opens the camera to read a plate (no booking to compare with) and hands back the plate she accepts. */
+@Composable
+private fun rememberPlateRecorder(onPlate: (String) -> Unit): () -> Unit {
+    val ctx = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        if (r.resultCode == Activity.RESULT_OK) r.data?.getStringExtra(PlateCheckActivity.EXTRA_PLATE_RESULT)?.let(onPlate)
+    }
+    return { launcher.launch(Intent(ctx, PlateCheckActivity::class.java).putExtra(PlateCheckActivity.EXTRA_RECORD, true)) }
+}
+
 @Composable
 private fun Ready() {
     val ctx = LocalContext.current
@@ -472,6 +508,7 @@ private fun Ready() {
     // Back from system settings, she should see the fix land.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { perms = readAllPerms(ctx) }
     val ridesOn = perms[Perm.RIDES] == true
+    val photographPlate = rememberPlateRecorder { plate = it }
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // The promise is only made when it is true: with ride access off, she is asked to start trips herself.
         Text(stringResource(if (ridesOn) R.string.ready_title_rides else R.string.ready_title_manual), style = MaterialTheme.typography.titleLarge)
@@ -488,9 +525,16 @@ private fun Ready() {
             ModeChip(Icons.Rounded.LocalTaxi, stringResource(R.string.mode_cab), Modifier.weight(1f)) { startTrip(ctx, "CAB") }
             ModeChip(Icons.Rounded.TwoWheeler, stringResource(R.string.mode_bike), Modifier.weight(1f)) { startTrip(ctx, "BIKE") }
         }
-        if (autoOpen) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(plate, { plate = it.uppercase() }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.ready_plate_label)) })
-            Button(onClick = { startTrip(ctx, "AUTO", plate.ifBlank { null }); autoOpen = false }, Modifier.height(56.dp)) { Text(stringResource(R.string.ready_start)) }
+        if (autoOpen) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // The quickest, safest way to get a hailed auto's plate is a photo while she gets in.
+            FilledTonalButton(onClick = photographPlate, Modifier.fillMaxWidth().height(56.dp)) {
+                Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.ready_plate_photo), style = MaterialTheme.typography.titleSmall)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(plate, { plate = it.uppercase() }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.ready_plate_label)) })
+                Button(onClick = { startTrip(ctx, "AUTO", plate.ifBlank { null }); autoOpen = false }, Modifier.height(56.dp)) { Text(stringResource(R.string.ready_start)) }
+            }
         }
     }
 }
@@ -590,8 +634,8 @@ private fun Tile(icon: ImageVector, label: String, modifier: Modifier, onClick: 
 @Composable
 // quiet: help was already raised, so I'm okay owns the screen and this steps back to a tonal plate.
 private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean = false) {
-    // Once help is raised, holding again does nothing, so the plate stops pretending to be a control.
-    if (quiet) { HelpRaised(modifier); return }
+    // Once help is raised, holding again does nothing, so the plate becomes the next real step: Call 112.
+    if (quiet) { Call112Plate(modifier); return }
     val c = Saathi.colors
     val scope = rememberCoroutineScope()
     val fill = remember { Animatable(0f) }
@@ -649,30 +693,23 @@ private fun HoldForHelp(settings: Settings, modifier: Modifier, quiet: Boolean =
 }
 
 /**
- * Help is already raised: a status, not a control. It says so, and if a text did not go out it offers
- * the one thing she can still do, which is try those contacts again.
+ * Help is already raised, so the plate in her thumb's reach becomes the next real step: Call 112, as on
+ * check-in and the Help screen. It opens the dialer with 112 filled in; she presses call (apps can't place
+ * emergency calls). Madder container, not madder, so I'm okay stays the one reversed plate.
  */
 @Composable
-private fun HelpRaised(modifier: Modifier) {
+private fun Call112Plate(modifier: Modifier) {
     val c = Saathi.colors
-    val s by TripState.ui.collectAsState()
     val ctx = LocalContext.current
-    val failed = s.smsFailed
-    val raised = stringResource(R.string.raised_title)
     Column(
-        modifier.clip(RoundedCornerShape(32.dp)).background(c.helpContainer).padding(18.dp)
-            .semantics(mergeDescendants = true) { stateDescription = raised },
+        modifier.clip(RoundedCornerShape(32.dp)).background(c.helpContainer)
+            .clickable(role = Role.Button) { runCatching { ctx.startActivity(Notifier.dial112()) } }
+            .padding(18.dp),
         verticalArrangement = Arrangement.Bottom,
     ) {
-        Text(raised, style = MaterialTheme.typography.titleLarge, color = c.onHelpContainer)
-        if (failed.isEmpty()) Text(stringResource(R.string.raised_told), style = MaterialTheme.typography.bodySmall,
-            color = c.onHelpContainer.copy(alpha = 0.8f), modifier = Modifier.padding(top = 4.dp))
-        else {
-            Text(stringResource(R.string.raised_failed, ctx.namesText(failed)), style = MaterialTheme.typography.bodySmall,
-                color = c.onHelpContainer, modifier = Modifier.padding(top = 4.dp))
-            Button(onClick = { AlertManager.resend() }, Modifier.padding(top = 8.dp).heightIn(min = 48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = c.help, contentColor = Color.White)) { Text(stringResource(R.string.raised_retry)) }
-        }
+        Icon(Icons.Rounded.Call, null, tint = c.onHelpContainer, modifier = Modifier.size(28.dp))
+        Text(stringResource(R.string.call_112), style = MaterialTheme.typography.headlineMedium, color = c.onHelpContainer,
+            modifier = Modifier.padding(top = 8.dp))
     }
 }
 
@@ -798,14 +835,14 @@ private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit, onDel
     val mode = runCatching { Mode.valueOf(r.mode) }.getOrNull()
     // Older records kept only English lines; newer ones keep the facts, so they can be worded in her language.
     val eventLines = if (r.eventItems.isNotEmpty()) r.eventItems.map { ctx.eventText(it) } else r.events
-    val alertLines = if (r.alertEntries.isNotEmpty()) r.alertEntries.map { a ->
+    val alertLines = r.alertEntries.ifEmpty { r.alerts.mapNotNull { app.saathi.data.legacyAlertEntry(it) } }.map { a ->
         val at = ctx.clockTime(a.at * 1000)
         when {
             a.told.isEmpty() -> ctx.getString(R.string.trips_alert_none, at)
             a.retry -> ctx.getString(R.string.trips_alert_retry, at, ctx.namesText(a.told))
             else -> ctx.getString(R.string.trips_alert_sent, at, ctx.namesText(a.told))
         }
-    } else r.alerts
+    }.ifEmpty { r.alerts } // a line we can't read is still shown as stored, never dropped
     Column(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerLow)
             .border(1.dp, c.hair, MaterialTheme.shapes.large).padding(18.dp),

@@ -42,7 +42,8 @@
     <string name="mode_auto">ऑटो</string>
     <string name="mode_cab">कैब</string>
     <string name="mode_bike">बाइक</string>
-    <string name="ready_plate_label">ऑटो की प्लेट, अगर दिख रही हो</string>
+    <string name="ready_plate_photo">प्लेट की फ़ोटो लें</string>
+    <string name="ready_plate_label">या नंबर लिखें</string>
     <string name="ready_start">शुरू करें</string>
 
     <!-- Home: Two more things -->
@@ -98,6 +99,7 @@
     <string name="trip_dest_change">बदलें</string>
     <string name="trip_dest_not_sure">पक्का नहीं</string>
     <string name="check_plate">प्लेट जाँचें</string>
+    <string name="add_plate">प्लेट जोड़ें</string>
     <string name="end_trip">सफ़र खत्म करें</string>
     <string name="end_trip_armed">खत्म करने के लिए फिर टैप करें</string>
     <plurals name="thread_earlier">
@@ -167,7 +169,6 @@
     <string name="help_dialog_text_none">Saathi रिकॉर्डिंग शुरू करेगा और अलार्म बजाएगा। अभी आपका कोई कॉन्टैक्ट नहीं है।</string>
     <string name="help_dialog_send">मदद भेजें</string>
     <string name="help_dialog_cancel">रद्द करें</string>
-    <string name="raised_title">मदद पहले ही माँगी जा चुकी है</string>
     <string name="raised_told">आपके कॉन्टैक्ट को बता दिया गया</string>
     <string name="raised_failed">%1$s तक नहीं पहुँच पाए</string>
     <string name="raised_retry">फिर कोशिश करें</string>
@@ -178,7 +179,6 @@
     </plurals>
     <string name="told_link">लाइव लोकेशन का लिंक भेज दिया गया</string>
     <string name="told_recording">इस फ़ोन पर रिकॉर्डिंग चल रही है</string>
-    <string name="told_failed_retrying">%1$s को नहीं भेज पाए। फिर कोशिश कर रहे हैं।</string>
     <string name="no_112">Saathi 112 पर कॉल नहीं करता</string>
     <string name="no_112_full">Saathi आपके लिए 112 पर कॉल नहीं करता। डायल करने के लिए \"112 पर कॉल करें\" दबाएँ।</string>
     <string name="call_112">112 पर कॉल करें</string>
@@ -442,6 +442,12 @@
     <string name="plate_dont_get_in">गाड़ी में न बैठें</string>
     <string name="plate_tell_contacts">मेरे कॉन्टैक्ट को बताएँ</string>
     <string name="plate_its_fine">सब ठीक है</string>
+    <string name="plate_record_title">प्लेट की फ़ोटो लें</string>
+    <string name="plate_record_body">कैमरा नंबर प्लेट की तरफ़ रखें। Saathi उसे इसी फ़ोन पर पढ़ता है, फ़ोटो रखी नहीं जाती।</string>
+    <string name="plate_record_title_read">क्या यही प्लेट है?</string>
+    <string name="plate_record_body_read">Saathi इसे इस सफ़र और किसी भी अलर्ट में जोड़ देगा।</string>
+    <string name="plate_use">यही प्लेट रखें</string>
+    <string name="plate_retake">दोबारा फ़ोटो लें</string>
     <string name="plate_notif_title">आपकी राइड आ गई है। प्लेट जाँचें</string>
     <string name="plate_notif_text">नंबर प्लेट की फ़ोटो लें, Saathi उसे %1$s से मिलाएगा।</string>
     <string name="plate_notif_text_booking">नंबर प्लेट की फ़ोटो लें, Saathi उसे आपकी बुकिंग से मिलाएगा।</string>
@@ -533,9 +539,10 @@
     <string name="widget_sub_trip">आपके सफ़र पर नज़र है · एक टैप में आपकी तरफ़ से बोलता है और कॉन्टैक्ट को मैसेज भेजता है</string>
     <string name="widget_slide">पैदल, बस, ट्रेन के लिए स्लाइड करें</string>
     <string name="widget_back">SOS पर वापस</string>
-    <string name="tile_contacts_told">कॉन्टैक्ट को बता दिया गया</string>
+    <string name="tile_contacts_told">कॉन्टैक्ट को बता दिया गया · खोलने के लिए टैप करें</string>
     <string name="tile_texting_soon">5 सेकंड में मैसेज · रोकने के लिए टैप करें</string>
     <string name="tile_finish_setup">पहले सेटअप पूरा करें</string>
     <string name="tile_tap_text_name">%1$s को मैसेज करने के लिए टैप करें</string>
     <string name="tile_tap_text_contacts">अपने कॉन्टैक्ट को मैसेज करने के लिए टैप करें</string>
+    <string name="okay_unlock_first">पहले फ़ोन अनलॉक करना होगा।</string>
 </resources>
