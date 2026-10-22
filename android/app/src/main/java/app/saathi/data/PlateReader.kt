@@ -1,68 +1,68 @@
 package app.saathi.data
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.ExifInterface
 import android.util.Log
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import app.saathi.BuildConfig
 import app.saathi.core.Plate
+import app.saathi.core.PlateGuide
+import app.saathi.core.Region
+import app.saathi.core.TextLine
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import java.io.File
-import kotlin.coroutines.resume
 
-/** Reads a number plate from a photo on the phone (ML Kit, bundled model): no network, the photo never leaves. */
-object PlateReader {
-    // Enough pixels for a plate a few metres away, without holding a full 50 MP frame in memory.
-    private const val MAX_SIDE = 2000
+/**
+ * Reads number plates from the live camera, one frame at a time (ML Kit, bundled model): no network, and no frame is
+ * kept. Only text inside the guide frame counts (see [PlateGuide]), so another vehicle's plate in view is ignored.
+ * [onRead] gets each frame's plate, or null when there was none, on the main thread. The camera holds back the
+ * next frame until the one being read is closed, so only one read runs at a time. Call [close] when scanning ends.
+ */
+class PlateReader(private val onRead: (String?) -> Unit) : ImageAnalysis.Analyzer {
+    private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    @Volatile private var closed = false
+    @Volatile private var viewWidth = 0
+    @Volatile private var viewHeight = 0
 
-    /** Reads the plate in the photo at [photo], then deletes it whatever happens: the photo is never kept. */
-    suspend fun read(photo: File): String? = withContext(Dispatchers.IO) {
+    /** The size in pixels of the view the camera is drawn in, which is what places the guide frame in the picture. */
+    fun setView(width: Int, height: Int) {
+        viewWidth = width
+        viewHeight = height
+    }
+
+    @OptIn(ExperimentalGetImage::class)
+    override fun analyze(frame: ImageProxy) {
+        val image = frame.image
+        if (closed || image == null) { frame.close(); return }
         try {
-            val (bmp, rotation) = decode(photo) ?: return@withContext null
-            read(bmp, rotation)
-        } finally {
-            photo.delete()
+            val rotation = frame.imageInfo.rotationDegrees
+            val (upW, upH) = PlateGuide.uprightSize(image.width, image.height, rotation)
+            // Until the view has a size the guide has no place in the picture, so nothing is read.
+            val region = PlateGuide.readRegion(viewWidth.toFloat(), viewHeight.toFloat(), upW.toFloat(), upH.toFloat())
+            if (region == null) { frame.close(); return }
+            recognizer.process(InputImage.fromMediaImage(image, rotation))
+                .addOnSuccessListener { r ->
+                    val lines = r.textBlocks.flatMap { it.lines }.map { line ->
+                        TextLine(line.text, line.boundingBox?.let { Region(it.left.toFloat(), it.top.toFloat(), it.right.toFloat(), it.bottom.toFloat()) })
+                    }
+                    // Plate.find copes with the plate running over two lines: "KA 05 / AB 1234".
+                    val text = PlateGuide.textInside(lines, region)
+                    val plate = Plate.find(text)
+                    if (BuildConfig.DEBUG && plate != null) Log.d("Saathi", "plate OCR: ${text.length} chars in the guide -> $plate")
+                    if (!closed) onRead(plate)
+                }
+                .addOnFailureListener { if (!closed) onRead(null) }
+                // Last, so the frame stays open for the whole read and the camera sends no other meanwhile.
+                .addOnCompleteListener { frame.close() }
+        } catch (e: Exception) {
+            frame.close()
         }
     }
 
-    suspend fun read(bmp: Bitmap, rotationDegrees: Int): String? = suspendCancellableCoroutine { cont ->
-        val rec = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        rec.process(InputImage.fromBitmap(bmp, rotationDegrees))
-            .addOnSuccessListener { r ->
-                // Plate.find copes with the plate running over two lines: "KA 05 / AB 1234".
-                val plate = Plate.find(r.text)
-                if (BuildConfig.DEBUG) Log.d("Saathi", "plate OCR: ${r.text.length} chars -> $plate")
-                cont.resume(plate)
-                rec.close()
-            }
-            .addOnFailureListener { cont.resume(null); rec.close() }
+    fun close() {
+        closed = true
+        recognizer.close()
     }
-
-    /** The photo downsampled to about [MAX_SIDE] on its long side, with the rotation its EXIF asks for. */
-    private fun decode(photo: File): Pair<Bitmap, Int>? = runCatching {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(photo.path, bounds)
-        val long = maxOf(bounds.outWidth, bounds.outHeight)
-        if (long <= 0) return@runCatching null
-        var sample = 1
-        while (long / (sample * 2) >= MAX_SIDE) sample *= 2
-        var bmp = BitmapFactory.decodeFile(photo.path, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return@runCatching null
-        val side = maxOf(bmp.width, bmp.height)
-        if (side > MAX_SIDE) {
-            val scale = MAX_SIDE.toFloat() / side
-            bmp = Bitmap.createScaledBitmap(bmp, (bmp.width * scale).toInt(), (bmp.height * scale).toInt(), true)
-        }
-        val rotation = when (ExifInterface(photo.path).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> 90
-            ExifInterface.ORIENTATION_ROTATE_180 -> 180
-            ExifInterface.ORIENTATION_ROTATE_270 -> 270
-            else -> 0
-        }
-        bmp to rotation
-    }.getOrNull()
 }

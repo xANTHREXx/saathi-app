@@ -29,7 +29,7 @@ The safety loop runs entirely on the phone, with no AI and no network:
 | Alert SMS from her SIM to contacts in her current city | Vehicle history: "13 rides with Saathi users" and flags |
 | Power button (off until she turns it on), lock-screen notification, widget, hold for help | Companion replies from a model |
 | Speak for me in the local language, Hindi, English | Community heatmap |
-| Plate check from a photo (ML Kit on the phone) | |
+| Plate check by live camera scan (ML Kit on the phone, nothing saved) | |
 | Reporting guide and a draft complaint built from her record | |
 | Companion raises the alert on words like "help" or "bachao" | |
 
@@ -154,7 +154,7 @@ the companion raising the alert on "help".
 
 - The power-button trigger. The emulator merges quick presses; test on a real phone.
 - The widget on a home screen.
-- Plate reading from a real photo.
+- Plate reading at night and in rain.
 - SMS delivery to a real phone.
 - A real OpenRouteService route.
 - Anything on a deployed Supabase project.

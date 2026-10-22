@@ -42,7 +42,7 @@
     <string name="mode_auto">ऑटो</string>
     <string name="mode_cab">कैब</string>
     <string name="mode_bike">बाइक</string>
-    <string name="ready_plate_photo">प्लेट की फ़ोटो लें</string>
+    <string name="ready_plate_photo">प्लेट स्कैन करें</string>
     <string name="ready_plate_label">या नंबर लिखें</string>
     <string name="ready_start">शुरू करें</string>
 
@@ -428,29 +428,33 @@
     <string name="plate_title">प्लेट जाँचें</string>
     <string name="plate_title_match">यह आपकी बुकिंग से मेल खाती है</string>
     <string name="plate_title_mismatch">यह वह प्लेट नहीं है जो आपने बुक की थी</string>
-    <string name="plate_body">अपने सामने खड़ी गाड़ी की नंबर प्लेट की फ़ोटो लें। Saathi उसे आपकी बुकिंग से मिलाएगा।</string>
+    <string name="plate_body">Saathi आपके सामने की प्लेट को आपकी बुकिंग से मिलाएगा। कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है।</string>
     <string name="plate_body_match">आपके सामने की प्लेट वही है जो आपके राइड ऐप ने बुक की थी।</string>
     <string name="plate_body_mismatch">आपके सामने की गाड़ी का नंबर आपकी बुकिंग से अलग है।</string>
     <string name="plate_in_front">आपके सामने</string>
     <string name="plate_booked">बुक की हुई</string>
     <string name="plate_none_shown">प्लेट नहीं दिख रही</string>
-    <string name="plate_unreadable">प्लेट पढ़ नहीं पाए। नीचे लिखें।</string>
+    <string name="plate_scan_hint">प्लेट को फ़्रेम के अंदर रखें। प्लेट पढ़ी जाने तक फ़ोन को थोड़ा झुकाते रहें।</string>
+    <string name="plate_torch">टॉर्च</string>
+    <string name="plate_camera_off">प्लेट पढ़ने के लिए Saathi को कैमरा चाहिए। आप प्लेट नीचे लिख भी सकते हैं।</string>
+    <string name="plate_camera_blocked">Saathi के लिए कैमरा बंद है। सेटिंग्स खोलकर कैमरा चालू करें, या प्लेट नीचे लिखें।</string>
+    <string name="plate_camera_allow">कैमरे की अनुमति दें</string>
+    <string name="plate_camera_settings">सेटिंग्स खोलें</string>
+    <string name="plate_camera_failed">कैमरा चालू नहीं हो पाया। प्लेट नीचे लिखें।</string>
     <string name="plate_type_label">या जो प्लेट दिख रही है, वह लिखें</string>
     <string name="plate_compare">मिलाएँ</string>
-    <string name="plate_reading">प्लेट पढ़ रहे हैं…</string>
-    <string name="plate_snap">प्लेट की फ़ोटो लें</string>
     <string name="plate_dont_get_in">गाड़ी में न बैठें</string>
     <string name="plate_tell_contacts">मेरे कॉन्टैक्ट को बताएँ</string>
     <string name="plate_its_fine">सब ठीक है</string>
-    <string name="plate_record_title">प्लेट की फ़ोटो लें</string>
-    <string name="plate_record_body">कैमरा नंबर प्लेट की तरफ़ रखें। Saathi उसे इसी फ़ोन पर पढ़ता है, फ़ोटो रखी नहीं जाती।</string>
+    <string name="plate_record_title">प्लेट स्कैन करें</string>
+    <string name="plate_record_body">कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है।</string>
     <string name="plate_record_title_read">क्या यही प्लेट है?</string>
     <string name="plate_record_body_read">Saathi इसे इस सफ़र और किसी भी अलर्ट में जोड़ देगा।</string>
     <string name="plate_use">यही प्लेट रखें</string>
-    <string name="plate_retake">दोबारा फ़ोटो लें</string>
+    <string name="plate_retake">दोबारा स्कैन करें</string>
     <string name="plate_notif_title">आपकी राइड आ गई है। प्लेट जाँचें</string>
-    <string name="plate_notif_text">नंबर प्लेट की फ़ोटो लें, Saathi उसे %1$s से मिलाएगा।</string>
-    <string name="plate_notif_text_booking">नंबर प्लेट की फ़ोटो लें, Saathi उसे आपकी बुकिंग से मिलाएगा।</string>
+    <string name="plate_notif_text">नंबर प्लेट स्कैन करें, Saathi उसे %1$s से मिलाएगा।</string>
+    <string name="plate_notif_text_booking">नंबर प्लेट स्कैन करें, Saathi उसे आपकी बुकिंग से मिलाएगा।</string>
 
     <!-- Companion call -->
     <string name="companion_title">Saathi कॉल पर है</string>

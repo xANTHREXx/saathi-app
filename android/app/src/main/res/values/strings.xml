@@ -43,7 +43,7 @@
     <string name="mode_auto">Auto</string>
     <string name="mode_cab">Cab</string>
     <string name="mode_bike">Bike</string>
-    <string name="ready_plate_photo">Photograph the plate</string>
+    <string name="ready_plate_photo">Scan the plate</string>
     <string name="ready_plate_label">Or type it</string>
     <string name="ready_start">Start</string>
 
@@ -429,29 +429,33 @@
     <string name="plate_title">Check the plate</string>
     <string name="plate_title_match">It matches your booking</string>
     <string name="plate_title_mismatch">This isn\'t the plate you booked</string>
-    <string name="plate_body">Snap the number plate of the vehicle in front of you. Saathi compares it with your booking.</string>
+    <string name="plate_body">Saathi compares the plate in front of you with your booking. Nothing is saved; Saathi reads the plate on this phone.</string>
     <string name="plate_body_match">The plate in front of you is the one your ride app booked.</string>
     <string name="plate_body_mismatch">The vehicle in front of you has a different number from your booking.</string>
     <string name="plate_in_front">In front of you</string>
     <string name="plate_booked">Booked</string>
     <string name="plate_none_shown">No plate shown</string>
-    <string name="plate_unreadable">Couldn\'t read the plate. Type it below.</string>
+    <string name="plate_scan_hint">Fit the plate inside the frame. Tilt the phone until it reads.</string>
+    <string name="plate_torch">Torch</string>
+    <string name="plate_camera_off">Saathi needs the camera to read the plate. You can also type it below.</string>
+    <string name="plate_camera_blocked">The camera is off for Saathi. Open Settings and turn Camera on, or type the plate below.</string>
+    <string name="plate_camera_allow">Allow camera</string>
+    <string name="plate_camera_settings">Open Settings</string>
+    <string name="plate_camera_failed">The camera didn\'t start. Type the plate below.</string>
     <string name="plate_type_label">Or type the plate you see</string>
     <string name="plate_compare">Compare</string>
-    <string name="plate_reading">Reading the plate…</string>
-    <string name="plate_snap">Snap the plate</string>
     <string name="plate_dont_get_in">Don\'t get in</string>
     <string name="plate_tell_contacts">Tell my contacts</string>
     <string name="plate_its_fine">It\'s fine</string>
-    <string name="plate_record_title">Photograph the plate</string>
-    <string name="plate_record_body">Point at the number plate. Saathi reads it on this phone; the photo isn\'t kept.</string>
+    <string name="plate_record_title">Scan the plate</string>
+    <string name="plate_record_body">Nothing is saved; Saathi reads the plate on this phone.</string>
     <string name="plate_record_title_read">Is this the plate?</string>
     <string name="plate_record_body_read">Saathi adds it to this trip and to any alert.</string>
     <string name="plate_use">Use this plate</string>
-    <string name="plate_retake">Retake</string>
+    <string name="plate_retake">Scan again</string>
     <string name="plate_notif_title">Your ride is here. Check the plate</string>
-    <string name="plate_notif_text">Snap the number plate and Saathi will compare it with %1$s.</string>
-    <string name="plate_notif_text_booking">Snap the number plate and Saathi will compare it with your booking.</string>
+    <string name="plate_notif_text">Scan the number plate and Saathi will compare it with %1$s.</string>
+    <string name="plate_notif_text_booking">Scan the number plate and Saathi will compare it with your booking.</string>
 
     <!-- Companion call -->
     <string name="companion_title">Saathi is on the call</string>

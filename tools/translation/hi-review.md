@@ -85,7 +85,7 @@ Counts: 421 entries (14 are plurals with a "one" and an "other" form, so some en
 | `mode_auto` | Auto | ऑटो |  |
 | `mode_cab` | Cab | कैब |  |
 | `mode_bike` | Bike | बाइक |  |
-| `ready_plate_photo` | Photograph the plate | प्लेट की फ़ोटो लें | Button above the plate field when Auto is open; same Hindi as `plate_snap`. |
+| `ready_plate_photo` | Scan the plate | प्लेट स्कैन करें | Button above the plate field when Auto is open; same Hindi as `plate_record_title`. "स्कैन" is the word people use for a camera that reads something live. |
 | `ready_plate_label` | Or type it | या नंबर लिखें | Label of the plate field, which now sits below the photo button. |
 | `ready_start` | Start | शुरू करें |  |
 
@@ -457,29 +457,33 @@ Counts: 421 entries (14 are plurals with a "one" and an "other" form, so some en
 | `plate_title` | Check the plate | प्लेट जाँचें |  |
 | `plate_title_match` | It matches your booking | यह आपकी बुकिंग से मेल खाती है |  |
 | `plate_title_mismatch` | This isn't the plate you booked | यह वह प्लेट नहीं है जो आपने बुक की थी |  |
-| `plate_body` | Snap the number plate of the vehicle in front of you. Saathi compares it with your booking. | अपने सामने खड़ी गाड़ी की नंबर प्लेट की फ़ोटो लें। Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
+| `plate_body` | Saathi compares the plate in front of you with your booking. Nothing is saved; Saathi reads the plate on this phone. | Saathi आपके सामने की प्लेट को आपकी बुकिंग से मिलाएगा। कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है। | Shown above the live camera. The plate check no longer takes a photo, so "फ़ोटो" is gone from this screen. |
 | `plate_body_match` | The plate in front of you is the one your ride app booked. | आपके सामने की प्लेट वही है जो आपके राइड ऐप ने बुक की थी। |  |
 | `plate_body_mismatch` | The vehicle in front of you has a different number from your booking. | आपके सामने की गाड़ी का नंबर आपकी बुकिंग से अलग है। |  |
 | `plate_in_front` | In front of you | आपके सामने |  |
 | `plate_booked` | Booked | बुक की हुई |  |
 | `plate_none_shown` | No plate shown | प्लेट नहीं दिख रही |  |
-| `plate_unreadable` | Couldn't read the plate. Type it below. | प्लेट पढ़ नहीं पाए। नीचे लिखें। |  |
+| `plate_scan_hint` | Fit the plate inside the frame. Tilt the phone until it reads. | प्लेट को फ़्रेम के अंदर रखें। प्लेट पढ़ी जाने तक फ़ोन को थोड़ा झुकाते रहें। | Over the live camera. "झुकाते रहें" means keep angling the phone a little; a plate seen from the side is the one that is hardest to read. |
+| `plate_torch` | Torch | टॉर्च | Spoken label of the torch button on the camera (TalkBack). "Torch" is the Indian-English word for a flashlight. |
+| `plate_camera_off` | Saathi needs the camera to read the plate. You can also type it below. | प्लेट पढ़ने के लिए Saathi को कैमरा चाहिए। आप प्लेट नीचे लिख भी सकते हैं। | Shown when camera permission is not given. Calm on purpose: nothing is wrong. |
+| `plate_camera_blocked` | The camera is off for Saathi. Open Settings and turn Camera on, or type the plate below. | Saathi के लिए कैमरा बंद है। सेटिंग्स खोलकर कैमरा चालू करें, या प्लेट नीचे लिखें। | Shown when she has refused so firmly that Android will not ask again. |
+| `plate_camera_allow` | Allow camera | कैमरे की अनुमति दें | Button that asks for the camera permission. |
+| `plate_camera_settings` | Open Settings | सेटिंग्स खोलें | The same button once only Settings can turn the camera on. |
+| `plate_camera_failed` | The camera didn't start. Type the plate below. | कैमरा चालू नहीं हो पाया। प्लेट नीचे लिखें। | Shown if the camera permission is given but the camera will not open. |
 | `plate_type_label` | Or type the plate you see | या जो प्लेट दिख रही है, वह लिखें |  |
 | `plate_compare` | Compare | मिलाएँ |  |
-| `plate_reading` | Reading the plate… | प्लेट पढ़ रहे हैं… |  |
-| `plate_snap` | Snap the plate | प्लेट की फ़ोटो लें |  |
 | `plate_dont_get_in` | Don't get in | गाड़ी में न बैठें |  |
 | `plate_tell_contacts` | Tell my contacts | मेरे कॉन्टैक्ट को बताएँ |  |
 | `plate_its_fine` | It's fine | सब ठीक है |  |
-| `plate_record_title` | Photograph the plate | प्लेट की फ़ोटो लें | Record mode: a hailed auto, nothing booked to compare with. |
-| `plate_record_body` | Point at the number plate. Saathi reads it on this phone; the photo isn't kept. | कैमरा नंबर प्लेट की तरफ़ रखें। Saathi उसे इसी फ़ोन पर पढ़ता है, फ़ोटो रखी नहीं जाती। |  |
+| `plate_record_title` | Scan the plate | प्लेट स्कैन करें | Record mode: a hailed auto, nothing booked to compare with. |
+| `plate_record_body` | Nothing is saved; Saathi reads the plate on this phone. | कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है। | Replaces "the photo isn't kept": there is no photo now, the camera is read live. |
 | `plate_record_title_read` | Is this the plate? | क्या यही प्लेट है? | Shown after the plate is read or typed. |
 | `plate_record_body_read` | Saathi adds it to this trip and to any alert. | Saathi इसे इस सफ़र और किसी भी अलर्ट में जोड़ देगा। |  |
 | `plate_use` | Use this plate | यही प्लेट रखें | |
-| `plate_retake` | Retake | दोबारा फ़ोटो लें | |
+| `plate_retake` | Scan again | दोबारा स्कैन करें | Goes back to the live camera. Was "Retake" / "दोबारा फ़ोटो लें" when it took a photo. |
 | `plate_notif_title` | Your ride is here. Check the plate | आपकी राइड आ गई है। प्लेट जाँचें |  |
-| `plate_notif_text` | Snap the number plate and Saathi will compare it with %1$s. | नंबर प्लेट की फ़ोटो लें, Saathi उसे %1$s से मिलाएगा। |  |
-| `plate_notif_text_booking` | Snap the number plate and Saathi will compare it with your booking. | नंबर प्लेट की फ़ोटो लें, Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
+| `plate_notif_text` | Scan the number plate and Saathi will compare it with %1$s. | नंबर प्लेट स्कैन करें, Saathi उसे %1$s से मिलाएगा। |  |
+| `plate_notif_text_booking` | Scan the number plate and Saathi will compare it with your booking. | नंबर प्लेट स्कैन करें, Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
 
 ## Companion call
 
