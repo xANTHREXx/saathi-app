@@ -54,6 +54,15 @@ data class Evidence(val name: String, val sha256: String, val receivedAt: Long)
 @Serializable
 data class AlertLogEntry(val at: Long, val told: List<String>, val retry: Boolean = false)
 
+private val LEGACY_ALERT = Regex("""^([A-Z_]+) at (\d+): told ?(.*)$""")
+
+/** Records from before 0.3 kept raw log lines ("NO_RESPONSE at 1792604360: told Chinu"); read them back as entries. */
+fun legacyAlertEntry(line: String): AlertLogEntry? {
+    val m = LEGACY_ALERT.matchEntire(line.trim()) ?: return null
+    val told = m.groupValues[3].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    return AlertLogEntry(m.groupValues[2].toLong(), told, retry = m.groupValues[1] == "RETRY")
+}
+
 @Serializable
 data class TripRecord(
     val caseId: String,

@@ -10,7 +10,7 @@ enum class TileSubtitle { CONTACTS_TOLD, TEXTING_SOON, FINISH_SETUP, TAP_TO_TEXT
 data class HelpTileLook(val active: Boolean, val subtitle: TileSubtitle, val name: String? = null)
 
 /** What one tap on the tile does. */
-enum class HelpTileAction { OPEN_APP, CANCEL_PENDING, REFRESH_ONLY, RAISE }
+enum class HelpTileAction { OPEN_APP, CANCEL_PENDING, OPEN_ALERT, RAISE }
 
 /** Set up means she finished setup and has someone to text. */
 fun isSetUp(onboarded: Boolean, contacts: List<Contact>) = onboarded && contacts.isNotEmpty()
@@ -30,9 +30,12 @@ fun helpTileLook(setUp: Boolean, contacts: List<Contact>, pending: Boolean, aler
     }
 }
 
-/** Tapping never takes back a sent alert (that is I'm okay, in the app) and always lets her cancel a pending one. */
+/**
+ * Tapping never takes back a sent alert itself: during one it opens the told screen, where I'm okay asks her to unlock
+ * first. It always lets her cancel a pending one with a tap.
+ */
 fun helpTileAction(setUp: Boolean, pending: Boolean, alertActive: Boolean): HelpTileAction = when {
-    alertActive -> HelpTileAction.REFRESH_ONLY
+    alertActive -> HelpTileAction.OPEN_ALERT
     pending -> HelpTileAction.CANCEL_PENDING
     !setUp -> HelpTileAction.OPEN_APP
     else -> HelpTileAction.RAISE

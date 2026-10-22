@@ -2,7 +2,7 @@
 
 For a native Hindi speaker to check quickly. Every string the app shows is in the tables below, grouped by screen. Rows marked ⚠ are the ones I am least sure of; the reason is in the Notes column. The Hindi file is `android/app/src/main/res/values-hi/strings.xml`; the English is `res/values/strings.xml`. Fix a string there and it is live in the app.
 
-Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
+Counts: 450 entries (15 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
 
 ## Not translated, on purpose
 
@@ -85,7 +85,8 @@ Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some en
 | `mode_auto` | Auto | ऑटो |  |
 | `mode_cab` | Cab | कैब |  |
 | `mode_bike` | Bike | बाइक |  |
-| `ready_plate_label` | Auto plate, if you can see it | ऑटो की प्लेट, अगर दिख रही हो |  |
+| `ready_plate_photo` | Scan the plate | प्लेट स्कैन करें | Button above the plate field when Auto is open; same Hindi as `plate_record_title`. "स्कैन" is the word people use for a camera that reads something live. |
+| `ready_plate_label` | Or type it | या नंबर लिखें | Label of the plate field, which now sits below the photo button. |
 | `ready_start` | Start | शुरू करें |  |
 
 ## Home: Two more things
@@ -139,6 +140,7 @@ Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some en
 | `trip_dest_change` | Change | बदलें |  |
 | `trip_dest_not_sure` | Not sure | पक्का नहीं |  |
 | `check_plate` | Check plate | प्लेट जाँचें |  |
+| `add_plate` | Add plate | प्लेट जोड़ें | On a hailed auto or cab trip with no plate yet; opens the camera. |
 | `end_trip` | End trip | सफ़र खत्म करें |  |
 | `end_trip_armed` | Tap again to end | खत्म करने के लिए फिर टैप करें |  |
 | `thread_earlier` | one: %1$d min earlier<br>other: %1$d min earlier | one: %1$d मिनट पहले<br>other: %1$d मिनट पहले | Was a plain string; now a plural. |
@@ -174,7 +176,6 @@ Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some en
 | `help_dialog_text_none` | Saathi will start recording and sound the alarm. You have no contacts yet. | Saathi रिकॉर्डिंग शुरू करेगा और अलार्म बजाएगा। अभी आपका कोई कॉन्टैक्ट नहीं है। |  |
 | `help_dialog_send` | Send help | मदद भेजें |  |
 | `help_dialog_cancel` | Cancel | रद्द करें |  |
-| `raised_title` | Help already raised | मदद पहले ही माँगी जा चुकी है |  |
 | `raised_told` | Your contacts were told | आपके कॉन्टैक्ट को बता दिया गया |  |
 | `raised_failed` | Couldn't reach %1$s | %1$s तक नहीं पहुँच पाए |  |
 | `raised_retry` | Try again | फिर कोशिश करें |  |
@@ -182,7 +183,6 @@ Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some en
 | `told_names` | one: %1$s was told<br>other: %1$s were told | one: %1$s को बता दिया गया<br>other: %1$s को बता दिया गया |  |
 | `told_link` | Live location link sent | लाइव लोकेशन का लिंक भेज दिया गया |  |
 | `told_recording` | recording on this phone | इस फ़ोन पर रिकॉर्डिंग चल रही है |  |
-| `told_failed_retrying` | Couldn't send to %1$s. Retrying. | %1$s को नहीं भेज पाए। फिर कोशिश कर रहे हैं। |  |
 | `no_112` | Saathi doesn't call 112 | Saathi 112 पर कॉल नहीं करता |  |
 | `no_112_full` | Saathi doesn't call 112. Call it yourself if you need to. | Saathi 112 पर कॉल नहीं करता। ज़रूरत हो तो खुद कॉल करें। |  |
 | `alert_none_reached` | No one was reached | किसी तक मैसेज नहीं पहुँचा |  |
@@ -493,23 +493,33 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `plate_title` | Check the plate | प्लेट जाँचें |  |
 | `plate_title_match` | It matches your booking | यह आपकी बुकिंग से मेल खाती है |  |
 | `plate_title_mismatch` | This isn't the plate you booked | यह वह प्लेट नहीं है जो आपने बुक की थी |  |
-| `plate_body` | Snap the number plate of the vehicle in front of you. Saathi compares it with your booking. | अपने सामने खड़ी गाड़ी की नंबर प्लेट की फ़ोटो लें। Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
+| `plate_body` | Saathi compares the plate in front of you with your booking. Nothing is saved; Saathi reads the plate on this phone. | Saathi आपके सामने की प्लेट को आपकी बुकिंग से मिलाएगा। कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है। | Shown above the live camera. The plate check no longer takes a photo, so "फ़ोटो" is gone from this screen. |
 | `plate_body_match` | The plate in front of you is the one your ride app booked. | आपके सामने की प्लेट वही है जो आपके राइड ऐप ने बुक की थी। |  |
 | `plate_body_mismatch` | The vehicle in front of you has a different number from your booking. | आपके सामने की गाड़ी का नंबर आपकी बुकिंग से अलग है। |  |
 | `plate_in_front` | In front of you | आपके सामने |  |
 | `plate_booked` | Booked | बुक की हुई |  |
 | `plate_none_shown` | No plate shown | प्लेट नहीं दिख रही |  |
-| `plate_unreadable` | Couldn't read the plate. Type it below. | प्लेट पढ़ नहीं पाए। नीचे लिखें। |  |
+| `plate_scan_hint` | Fit the plate inside the frame. Tilt the phone until it reads. | प्लेट को फ़्रेम के अंदर रखें। प्लेट पढ़ी जाने तक फ़ोन को थोड़ा झुकाते रहें। | Over the live camera. "झुकाते रहें" means keep angling the phone a little; a plate seen from the side is the one that is hardest to read. |
+| `plate_torch` | Torch | टॉर्च | Spoken label of the torch button on the camera (TalkBack). "Torch" is the Indian-English word for a flashlight. |
+| `plate_camera_off` | Saathi needs the camera to read the plate. You can also type it below. | प्लेट पढ़ने के लिए Saathi को कैमरा चाहिए। आप प्लेट नीचे लिख भी सकते हैं। | Shown when camera permission is not given. Calm on purpose: nothing is wrong. |
+| `plate_camera_blocked` | The camera is off for Saathi. Open Settings and turn Camera on, or type the plate below. | Saathi के लिए कैमरा बंद है। सेटिंग्स खोलकर कैमरा चालू करें, या प्लेट नीचे लिखें। | Shown when she has refused so firmly that Android will not ask again. |
+| `plate_camera_allow` | Allow camera | कैमरे की अनुमति दें | Button that asks for the camera permission. |
+| `plate_camera_settings` | Open Settings | सेटिंग्स खोलें | The same button once only Settings can turn the camera on. |
+| `plate_camera_failed` | The camera didn't start. Type the plate below. | कैमरा चालू नहीं हो पाया। प्लेट नीचे लिखें। | Shown if the camera permission is given but the camera will not open. |
 | `plate_type_label` | Or type the plate you see | या जो प्लेट दिख रही है, वह लिखें |  |
 | `plate_compare` | Compare | मिलाएँ |  |
-| `plate_reading` | Reading the plate… | प्लेट पढ़ रहे हैं… |  |
-| `plate_snap` | Snap the plate | प्लेट की फ़ोटो लें |  |
 | `plate_dont_get_in` | Don't get in | गाड़ी में न बैठें |  |
 | `plate_tell_contacts` | Tell my contacts | मेरे कॉन्टैक्ट को बताएँ |  |
 | `plate_its_fine` | It's fine | सब ठीक है |  |
+| `plate_record_title` | Scan the plate | प्लेट स्कैन करें | Record mode: a hailed auto, nothing booked to compare with. |
+| `plate_record_body` | Nothing is saved; Saathi reads the plate on this phone. | कुछ सेव नहीं होता; Saathi प्लेट इसी फ़ोन पर पढ़ता है। | Replaces "the photo isn't kept": there is no photo now, the camera is read live. |
+| `plate_record_title_read` | Is this the plate? | क्या यही प्लेट है? | Shown after the plate is read or typed. |
+| `plate_record_body_read` | Saathi adds it to this trip and to any alert. | Saathi इसे इस सफ़र और किसी भी अलर्ट में जोड़ देगा। |  |
+| `plate_use` | Use this plate | यही प्लेट रखें | |
+| `plate_retake` | Scan again | दोबारा स्कैन करें | Goes back to the live camera. Was "Retake" / "दोबारा फ़ोटो लें" when it took a photo. |
 | `plate_notif_title` | Your ride is here. Check the plate | आपकी राइड आ गई है। प्लेट जाँचें |  |
-| `plate_notif_text` | Snap the number plate and Saathi will compare it with %1$s. | नंबर प्लेट की फ़ोटो लें, Saathi उसे %1$s से मिलाएगा। |  |
-| `plate_notif_text_booking` | Snap the number plate and Saathi will compare it with your booking. | नंबर प्लेट की फ़ोटो लें, Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
+| `plate_notif_text` | Scan the number plate and Saathi will compare it with %1$s. | नंबर प्लेट स्कैन करें, Saathi उसे %1$s से मिलाएगा। |  |
+| `plate_notif_text_booking` | Scan the number plate and Saathi will compare it with your booking. | नंबर प्लेट स्कैन करें, Saathi उसे आपकी बुकिंग से मिलाएगा। |  |
 
 ## Companion call
 
@@ -601,7 +611,7 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `widget_sub_trip` | Watching your trip · one tap speaks for you and texts your contacts | आपके सफ़र पर नज़र है · एक टैप में आपकी तरफ़ से बोलता है और कॉन्टैक्ट को मैसेज भेजता है |  |
 | `widget_slide` | Slide for Walk, Bus, Train | पैदल, बस, ट्रेन के लिए स्लाइड करें |  |
 | `widget_back` | Back to SOS | SOS पर वापस |  |
-| `tile_contacts_told` | Contacts told | कॉन्टैक्ट को बता दिया गया |  |
+| `tile_contacts_told` | Contacts told · tap to open | कॉन्टैक्ट को बता दिया गया · खोलने के लिए टैप करें | Tapping the tile opens the told screen. |
 | `tile_texting_soon` | Texting in 5 s · tap to stop | 5 सेकंड में मैसेज · रोकने के लिए टैप करें |  |
 | `tile_finish_setup` | Finish setup first | पहले सेटअप पूरा करें |  |
 | `tile_tap_text_name` | Tap to text %1$s | %1$s को मैसेज करने के लिए टैप करें |  |
@@ -647,3 +657,4 @@ Added with the "Check on me" timer, arrival, back-tap, earphone button, shake, C
 | `settings_shake_body` | On a trip, shake the phone hard 3 times and Saathi asks "Are you okay?". Bumpy rides may set it off. | सफ़र के दौरान फ़ोन को ज़ोर से 3 बार हिलाएँ, तो Saathi पूछेगा "क्या आप ठीक हैं?"। ऊबड़-खाबड़ रास्ते पर यह अपने-आप भी हो सकता है। |  |
 | `settings_backtap_title` | Back-tap for help | पीछे टैप करके मदद |  |
 | `settings_backtap_body` | Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi's icon for the same Get help shortcut. | कुछ फ़ोन में पीछे दो बार टैप करने पर कोई ऐप खुलता है। उसमें Saathi मदद चुनें। Pixel: सेटिंग्स › सिस्टम › जेस्चर › क्विक टैप। Samsung: Good Lock › RegiStar। रद्द करने के लिए 5 सेकंड मिलेंगे। Saathi के आइकन को दबाकर रखने पर भी "मदद लें" मिलता है। | ⚠ The menu paths are the phone makers' own; on a Hindi phone their labels may differ. |
+| `okay_unlock_first` | You'll be asked to unlock first. | पहले फ़ोन अनलॉक करना होगा। | Under I'm okay on the alert screen, only when the phone is locked. |

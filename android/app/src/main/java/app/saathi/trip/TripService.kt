@@ -35,6 +35,8 @@ import app.saathi.core.EventKind
 import app.saathi.core.Fingerprint
 import app.saathi.core.Fix
 import app.saathi.core.Mode
+import app.saathi.core.OkayPath
+import app.saathi.core.Plate
 import app.saathi.core.PowerPress
 import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
@@ -52,6 +54,8 @@ import app.saathi.data.RouteCache
 import app.saathi.data.RunState
 import app.saathi.data.Store
 import app.saathi.data.TripRecord
+import app.saathi.ui.CheckInActivity
+import app.saathi.ui.currentOkayPath
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import app.saathi.widget.SaathiWidget
@@ -79,6 +83,7 @@ class TripService : Service() {
         const val ACTION_HELP = "app.saathi.HELP"
         const val ACTION_OK = "app.saathi.OK"
         const val ACTION_SET_DEST = "app.saathi.SET_DEST"
+        const val ACTION_SET_PLATE = "app.saathi.SET_PLATE"
         const val ACTION_CHECK_START = "app.saathi.CHECK_START"
         const val ACTION_CHECK_ADD = "app.saathi.CHECK_ADD"
         const val ACTION_CHECK_CANCEL = "app.saathi.CHECK_CANCEL"
@@ -326,14 +331,25 @@ class TripService : Service() {
             ACTION_START_TRIP -> startTrip(intent)
             ACTION_STOP_TRIP -> stopTrip()
             ACTION_HELP -> AlertManager.raise(Reason.NOTIFICATION)
-            ACTION_OK -> AlertManager.imOkay()
+            ACTION_OK -> okayFromNotification()
             ACTION_SET_DEST -> setDestination(intent.getStringExtra(EXTRA_DEST))
+            ACTION_SET_PLATE -> setPlate(intent.getStringExtra(EXTRA_PLATE))
             ACTION_CHECK_START -> startCheck(intent.getIntExtra(EXTRA_MINUTES, 0))
             ACTION_CHECK_ADD -> addToCheck()
             ACTION_CHECK_CANCEL -> cancelCheck()
             ACTION_CANCEL_PENDING -> { AlertManager.cancelPendingAlert(); Notifier.cancel(this, Notifier.PENDING_ID) }
         }
         return START_STICKY
+    }
+
+    /**
+     * Defence in depth: the alerted notification asks Android for an unlock before this runs, but if the phone is
+     * still locked here with an alert out, nothing is sent and the told screen opens, where she unlocks first.
+     */
+    private fun okayFromNotification() {
+        if (currentOkayPath() == OkayPath.DIRECT) { AlertManager.imOkay(); return }
+        runCatching { startActivity(Intent(this, CheckInActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            .onFailure { Log.w("Saathi", "okay: told screen not opened: ${it.message}") }
     }
 
     private fun goForeground() {
@@ -374,6 +390,14 @@ class TripService : Service() {
         tripJob = scope.launch {
             source.fixes().collect { fix -> onFix(fix) }
         }
+    }
+
+    /** A plate she recorded mid-trip (a hailed auto): it goes into any alert, and the vehicle gets the same check as at start. */
+    private fun setPlate(raw: String?) {
+        val plate = raw?.let { Plate.normalise(it) }?.takeIf { it.isNotEmpty() } ?: return
+        if (!TripState.now.onTrip) return
+        TripState.update { it.copy(plate = plate, vehicleNote = null) }
+        scope.launch(Dispatchers.IO) { checkVehicle(plate) }
     }
 
     /** ST-6: counts only, shown only to her, never a driver's name. */

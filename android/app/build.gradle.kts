@@ -82,7 +82,12 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
-    // On-phone text recognition for plate photos; the bundled model works offline.
+    // On-phone text recognition for the plate check; the bundled model works offline.
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // The live camera for the plate check: preview plus frame analysis. Frames go to ML Kit and are never stored.
+    val cameraX = "1.5.3"
+    implementation("androidx.camera:camera-camera2:$cameraX")
+    implementation("androidx.camera:camera-lifecycle:$cameraX")
+    implementation("androidx.camera:camera-view:$cameraX")
     testImplementation("junit:junit:4.13.2")
 }
