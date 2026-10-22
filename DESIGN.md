@@ -202,6 +202,39 @@ components:
     backgroundColor: "{colors.night-indigo-container}"
     textColor: "#FFFFFF"
     size: "24dp"
+  readiness-plate:
+    backgroundColor: "{colors.night-surface-1}"
+    textColor: "{colors.night-ink}"
+    typography: "{typography.headline-medium}"
+    rounded: "{rounded.large}"
+    padding: "18dp 18dp 10dp"
+  protection-row:
+    textColor: "{colors.night-ink}"
+    typography: "{typography.title-medium}"
+    padding: "10dp 4dp"
+    height: "64dp min"
+  protection-mark:
+    textColor: "{colors.night-indigo-brand}"
+    size: "22dp"
+  protection-mark-missing:
+    textColor: "{colors.night-alum}"
+    size: "22dp"
+  protection-mark-unset:
+    textColor: "{colors.night-ink-3}"
+    size: "22dp"
+  protection-mark-unset-day:
+    textColor: "{colors.day-ink-2}"
+    size: "22dp"
+  also-row:
+    textColor: "{colors.night-ink}"
+    typography: "{typography.title-medium}"
+    padding: "8dp 4dp"
+    height: "60dp min"
+  sub-page-header:
+    textColor: "{colors.night-ink}"
+    typography: "{typography.headline-small}"
+    padding: "0 4dp"
+    height: "64dp min"
 ---
 
 # Design System: Saathi
@@ -256,6 +289,8 @@ The palette is three dyes on two grounds: indigo, madder and alum on night indig
 
 **The Ink-3-Is-Not-Text Rule.** fg3 colours marks and never text. Secondary text uses fg2.
 
+**The Required-Versus-Optional Rule.** Alum marks only a required protection that is missing (people to text, her name, the permissions Saathi runs on). An optional one she has not set, or an Off she chose, gets a quiet ring and a fg2 summary: never alum, never a "Fix", never madder. Leaving an optional protection off is her choice, not a fault.
+
 ## Typography
 
 **Display Font:** Figtree, a variable font with weights 400, 500, 600 and 700 instantiated through `FontVariation`. It falls back to Android's system Noto for Kannada, Devanagari and other Indic scripts.
@@ -289,6 +324,8 @@ Full-screen surfaces (check-in, speak for me, plate check) use 14 to 16dp gutter
 
 Check-in always renders in night. Speak for me always renders in day, so it is a bright sheet a stranger can read. Every other surface follows the system theme.
 
+Settings is a single scrolling list above the navigation bar, with 16dp gutters and 16dp top and bottom padding. It holds the displaySmall title (inset 4dp, 8dp from the top), then the readiness plate 20dp below. The seven numbered protection rows sit 8dp below the plate, and the Practise a check-in button (tonal, at least 56dp, 20dp corners, titleMedium) sits 28dp below the rows. The quiet Also group comes 28dp after that. Each row opens a sub-page with its own scroll. Sub-pages use 20dp gutters, stack their sections 28dp apart, and pad 24dp at the bottom. The list keeps its scroll position while she visits a page. On Settings, an opaque ground-coloured box covers the status-bar inset, so nothing shows under the clock. The trip tab's 92% scrim is for the map, and text lists use the opaque version.
+
 ### Named Rules
 **The Pinned Help Rule.** Help never scrolls away. The help row lives outside the scroll container, under a hair rule, on every trip state.
 
@@ -303,7 +340,7 @@ Saathi is flat. There are no shadows or elevation tints anywhere. Depth comes fr
 
 ## Shapes
 
-Corners are generously round and come from the M3 shape scale: extra-small 8dp, small 12dp, medium 20dp, large 28dp, extra-large 32dp. Chips are fully rounded at 18dp. Tiles, mode chips, banners and full-screen secondary buttons use 20dp. Cards and the sheet top use 28dp. Reversed plates use 32dp. Stations are circles with a 3dp ring, 14dp across, or 18dp for her own station. The ajrakh star is drawn as two squares with half-side equal to 0.72 of its radius, and placed stars get a small fixed tilt (-4 to +4 degrees) so a row looks hand-stamped. The in-app mark is a rounded indigo tile with a corner of 0.3 of its size, holding a white star at 0.6 of its size. Icons are Material Rounded.
+Corners are generously round and come from the M3 shape scale: extra-small 8dp, small 12dp, medium 20dp, large 28dp, extra-large 32dp. Chips are fully rounded at 18dp. Tiles, mode chips, banners and full-screen secondary buttons use 20dp. Cards and the sheet top use 28dp. Reversed plates use 32dp. Stations are circles with a 3dp ring, 14dp across, or 18dp for her own station. The ajrakh star is drawn as two squares with half-side equal to 0.72 of its radius, and placed stars get a small fixed tilt (-4 to +4 degrees) so a row looks hand-stamped. The outline star ring (the place a star will go) draws the same two squares as a 2dp stroke with half-side 0.62 of its radius, so the stroke stays inside the filled star's footprint. The in-app mark is a rounded indigo tile with a corner of 0.3 of its size, holding a white star at 0.6 of its size. Icons are Material Rounded.
 
 ## Components
 
@@ -353,6 +390,41 @@ A 200dp ring with a 12dp stroke on surface 3, draining clockwise in alum from 12
 ### Plate Text
 A real-plate imitation: plate-white field, 1.5dp plate-black border, 6dp corners, bold spaced capitals formatted "KA 05 AB 1234". Big plates reserve a 2.5dp ring slot so plates compared in a column line up. A mismatch fills that ring with madder.
 
+### Readiness Plate (signature)
+The head of Settings gives one answer: how ready Saathi is to reach her people. It is a surface, not a reversed plate, and it never competes with one.
+- **Container:** surface 1 with a 1dp hair border and 28dp (`large`) corners. Padding is 18dp on the top and sides and 10dp at the bottom, so the 48dp note line sits on the lower edge.
+- **Count:** two tones in one headlineMedium line. "6 of 7" (or "All 7") is ink. The word "ready" follows 8dp later in fg2 at weight 500, so hierarchy comes from weight and tone, not a second face. When the count changes, it turns over vertically like a departures board. The new value slides in from the direction of change over 220ms on the stamp curve and fades in over 160ms. The old value slides out over 160ms and fades out over 120ms. Under Remove animations it simply swaps.
+- **Stars:** one 22dp mark per protection (see Protection Marks), 10dp apart and 14dp below the count. Each star turns by a fixed tilt from the table -3, 2, -1, 4, -4, 1, 3 degrees, so the row reads hand-stamped and never drifts between renders. Only a protection that became ready since the list was last shown stamps its star. The first showing stamps nothing.
+- **Note line:** at least 48dp tall, with an 8dp dot and bodyMedium text 10dp apart. The line is one of three states:
+  - A required protection is missing: an alum dot, the protection's title in alum SemiBold, " · Needs fixing" in ink, and an alum "Fix" at the end.
+  - Only an optional protection is left: a fg3 dot and "Next: …" in fg2.
+  - All are ready: an ok-green dot and an all-ready note in fg2.
+
+  While something is left, the whole line is a button that opens that protection's page.
+
+### Protection Rows
+Numbered rows, one per protection, in the order an alert needs them. They are divided by hairlines and never boxed.
+- **Anatomy:** each row is at least 64dp tall, with 10dp vertical and 4dp horizontal padding and 14dp gaps. It holds the number (labelMedium fg2, end-aligned in a 16dp minimum slot), the 22dp mark, the titleMedium title over a bodyMedium fg2 summary (2dp below), and a trailing fg2 Rounded chevron. A 1dp hair divider follows every row.
+- **Missing required:** the summary turns alum and an alum labelLarge "Fix" takes the chevron's slot. It is inset 7dp at the end of a 24dp minimum box, so it ends where the chevron glyph ends and the trailing column stays one line.
+- **Interaction:** the whole row is one button that opens its page. It carries a stateDescription (set, needs fixing, or not set), so TalkBack hears what the mark shows.
+- **Font scale:** rows grow with text (`heightIn(min)`), and summaries wrap rather than truncate.
+
+### Protection Marks
+- **Ready:** a filled ajrakh star in `primary` (indigo brand). It stamps in when it becomes ready: 1.6x to 1x over 200ms, 35% to full ink over 260ms, on the stamp curve.
+- **Missing required:** an alum outline star ring with a 2dp stroke.
+- **Optional, not set:** the same ring in ink-3 by night and ink-2 by day. Day ink-3 is under 3:1 against the resist ground, so the quiet ring steps up a tone by day. The direction contract named a star-off ring here. The build uses ink-3 and ink-2, and the build is what this records.
+
+### Also Rows
+The quiet group under the protections, for things that never change who gets told: Language, Privacy and sharing, and App. A labelLarge fg2 group heading "Also" names the group. Each row is at least 60dp tall, with a titleMedium title over a bodyMedium fg2 summary and a fg2 chevron. These rows have no number and no mark. Hairlines divide them, and the last row has none. A row with nothing to open (Language before Android 13) drops its chevron and is not clickable.
+
+### Sub-pages
+Each row opens a full page in place of the list.
+- **Header:** a row at least 64dp tall holding a back-arrow `IconButton` (Material Rounded) and the page title in headlineSmall. System Back also returns to the list.
+- **Body:** an optional bodyMedium fg2 one-liner, then sections 28dp apart. Each section is a titleMedium heading with an optional bodyMedium fg2 hint 4dp below, and its controls 10dp below that.
+- **Controls:** an on/off setting is a whole-row toggle at least 48dp tall: titleMedium title and fg2 bodyMedium body, with an M3 `Switch` on the right. Choices use M3 `FilterChip`s at least 48dp tall, and the chosen value states its effect in a line directly under them.
+- **Transition:** shared-axis horizontal. The incoming page slides a fifth of the width over 260ms on the stamp curve and fades in over 220ms. The outgoing page slides the opposite way over 200ms and fades out over 120ms. A page enters from the end, and the list returns from the start. Under Remove animations nothing moves.
+- **Validation:** problems show as `ProblemText`, an alum info icon with alum bodyMedium text. Problems are never madder.
+
 ### Marks
 - **In-app mark:** an indigo-container tile with a white ajrakh star, at 20 to 28dp.
 - **Launcher icon:** an adaptive vector with a white ajrakh star on a madder (#C7372F) background and a monochrome layer for themed icons. The launcher keeps madder because the user picked the Ajrakh mark, which was madder. Inside the app the mark is indigo, so madder stays reserved for help.
@@ -372,6 +444,9 @@ Night ground with 28dp corners. One madder Help tile (22dp corners, 30sp bold wh
 - **Do** use alum for anything that asks for attention before a message is sent.
 - **Do** let containers grow with font scale (`heightIn(min)` with intrinsic height) rather than clip names.
 - **Do** use the indigo tile for the in-app mark, and keep the madder launcher icon.
+- **Do** mark a ready protection with an indigo star, a missing required one with an alum ring, and an unset optional one with a quiet ring (ink-3 by night, ink-2 by day).
+- **Do** make each settings row one whole button with a stateDescription, and divide rows with hairlines.
+- **Do** skip the stamp, the count turnover and the page slide when Remove animations is on.
 
 ### Don't:
 - **Don't** use madder for anything other than help and alerts. That includes validation errors and decoration.
@@ -380,3 +455,5 @@ Night ground with 28dp corners. One madder Help tile (22dp corners, 30sp bold wh
 - **Don't** show the city chip while a plate chip is showing.
 - **Don't** add shadows. Separate layers with a surface step or a hairline.
 - **Don't** put a second full-contrast plate on a screen that already has one.
+- **Don't** mark an optional protection, or an Off she chose, in alum or with "Fix".
+- **Don't** box settings rows in cards. The readiness plate is the only container on the Settings list.

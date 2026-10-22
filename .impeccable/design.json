@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-18T23:30:00+05:30",
+  "generatedAt": "2026-10-22T02:00:00+05:30",
   "title": "Design System: Saathi",
   "extensions": {
     "platform": "android (Jetpack Compose, Material 3); normative source android/app/src/main/java/app/saathi/ui/theme/SaathiTheme.kt",
@@ -66,7 +66,9 @@
     "motion": [
       { "name": "stamp", "value": "CubicBezierEasing(0.05, 0.7, 0.1, 1); scale 1.6 to 1 over 200ms, alpha 0.35 to 1 over 260ms", "purpose": "Each watched minute stamps the next ajrakh star. Skipped when animator duration scale is 0." },
       { "name": "hold-fill", "value": "2000ms linear; release drains over 250ms", "purpose": "Hold for help fills with a 22% black wash; completion raises the alert." },
-      { "name": "countdown", "value": "100ms tick, alum arc sweeping from -90 degrees", "purpose": "Check-in ring drains over a 10s window." }
+      { "name": "countdown", "value": "100ms tick, alum arc sweeping from -90 degrees", "purpose": "Check-in ring drains over a 10s window." },
+      {"name":"count-turnover","value":"in: vertical slide 220ms on the stamp curve + fade 160ms; out: slide 160ms + fade 120ms","purpose":"The readiness count turns over like a departures board when a protection changes. Skipped under Remove animations."},
+      {"name":"shared-axis-page","value":"in: slide 1/5 width 260ms on the stamp curve + fade 220ms; out: slide 200ms + fade 120ms","purpose":"Settings list to sub-page and back; a page enters from the end, the list returns from the start. Skipped under Remove animations."}
     ],
     "breakpoints": [
       { "name": "phone", "value": "single column; verified at 1080x2400 and at 130% font scale" }
@@ -144,6 +146,22 @@
       "description": "Stamped ajrakh stars on a star-off rail; the newest turns alum on a stall.",
       "html": "<div class=\"ds-thread\"><svg class=\"ds-star\" viewBox=\"0 0 24 24\"><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\"/><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\" transform=\"rotate(45 12 12)\"/></svg><svg class=\"ds-star\" viewBox=\"0 0 24 24\"><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\"/><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\" transform=\"rotate(45 12 12)\"/></svg><svg class=\"ds-star ds-star-stall\" viewBox=\"0 0 24 24\"><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\"/><rect x=\"3.4\" y=\"3.4\" width=\"17.2\" height=\"17.2\" transform=\"rotate(45 12 12)\"/></svg></div>",
       "css": ".ds-thread { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 6px; background: linear-gradient(rgba(255,255,255,0.14),rgba(255,255,255,0.14)) center/2px 100% no-repeat, #0D1222; } .ds-star { width: 14px; height: 14px; fill: #EEF0F7; animation: ds-stamp 0.26s cubic-bezier(0.05,0.7,0.1,1) both; } .ds-star-stall { fill: #E7B94A; } @keyframes ds-stamp { from { transform: scale(1.6); opacity: 0.35; } to { transform: scale(1); opacity: 1; } } @media (prefers-reduced-motion: reduce) { .ds-star { animation: none; } }"
+    },
+    {
+      "name": "Readiness plate",
+      "kind": "card",
+      "refersTo": "readiness-plate",
+      "description": "Head of Settings: two-tone count, seven tilted protection marks, and one 48dp note line naming what comes next.",
+      "html": "<div class=\"ds-ready\"><div class=\"ds-ready-c\">6 of 7 <span>ready</span></div><div class=\"ds-ready-s\"><svg class=\"ds-pstar\" style=\"transform:rotate(-3deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar ds-pring\" style=\"transform:rotate(2deg)\" viewBox=\"0 0 22 22\"><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\"/><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar\" style=\"transform:rotate(-1deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar\" style=\"transform:rotate(4deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar\" style=\"transform:rotate(-4deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar\" style=\"transform:rotate(1deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><svg class=\"ds-pstar\" style=\"transform:rotate(3deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg></div><button class=\"ds-ready-n\"><i></i>Next: They know you added them</button></div>",
+      "css": ".ds-ready { max-width: 380px; padding: 18px 18px 10px; border-radius: 28px; background: #141A2E; border: 1px solid rgba(255,255,255,0.08); font-family: Figtree, sans-serif; color: #EEF0F7; } .ds-ready-c { font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; } .ds-ready-c span { margin-left: 4px; font-weight: 500; color: #AAB2CC; } .ds-ready-s { display: flex; gap: 10px; margin: 14px 0 6px; } .ds-pstar { width: 22px; height: 22px; fill: #8FA2E8; } .ds-pring { fill: none; stroke: #6F7899; stroke-width: 2px; } .ds-ready-n { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0; border: none; background: none; color: #AAB2CC; font: 400 15px/21px Figtree, sans-serif; text-align: left; cursor: pointer; } .ds-ready-n i { width: 8px; height: 8px; border-radius: 50%; background: #6F7899; } .ds-ready-n:focus-visible { outline: 3px solid #8FA2E8; outline-offset: 2px; border-radius: 8px; }"
+    },
+    {
+      "name": "Protection row",
+      "kind": "custom",
+      "refersTo": "protection-row",
+      "description": "Numbered settings row: number, 22dp mark, title over summary, chevron or alum Fix. Hairline-divided; the whole row is the button.",
+      "html": "<div class=\"ds-rows\"><button class=\"ds-row\"><span class=\"ds-row-n\">1</span><svg class=\"ds-pstar\" style=\"transform:rotate(0deg)\" viewBox=\"0 0 22 22\"><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\"/><rect x=\"3.1\" y=\"3.1\" width=\"15.8\" height=\"15.8\" transform=\"rotate(45 11 11)\"/></svg><span class=\"ds-row-b\"><b>People to text</b><span>Riya and 2 others</span></span><svg class=\"ds-row-ch\" viewBox=\"0 0 24 24\"><path d=\"M9.3 6.7 14.6 12l-5.3 5.3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button><button class=\"ds-row\"><span class=\"ds-row-n\">2</span><svg class=\"ds-pstar ds-pring\" style=\"transform:rotate(0deg)\" viewBox=\"0 0 22 22\"><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\"/><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\" transform=\"rotate(45 11 11)\"/></svg><span class=\"ds-row-b\"><b>They know you added them</b><span>Text Riya that you added them</span></span><svg class=\"ds-row-ch\" viewBox=\"0 0 24 24\"><path d=\"M9.3 6.7 14.6 12l-5.3 5.3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button><button class=\"ds-row\"><span class=\"ds-row-n\">3</span><svg class=\"ds-pstar ds-pring-alum\" style=\"transform:rotate(0deg)\" viewBox=\"0 0 22 22\"><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\"/><rect x=\"4.2\" y=\"4.2\" width=\"13.6\" height=\"13.6\" transform=\"rotate(45 11 11)\"/></svg><span class=\"ds-row-b\"><b>Your name in alerts</b><span class=\"ds-alum\">Add your name</span></span><span class=\"ds-row-fix\">Fix</span></button></div>",
+      "css": ".ds-rows { max-width: 380px; padding: 0 16px; background: #0D1222; font-family: Figtree, sans-serif; } .ds-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 10px 4px; border: none; border-bottom: 1px solid rgba(255,255,255,0.08); background: none; color: #EEF0F7; text-align: left; cursor: pointer; } .ds-row:hover { background: rgba(255,255,255,0.04); } .ds-row:focus-visible { outline: 3px solid #8FA2E8; outline-offset: -3px; } .ds-row-n { min-width: 16px; text-align: right; font-size: 13px; line-height: 18px; font-weight: 500; color: #AAB2CC; } .ds-pstar { flex: none; width: 22px; height: 22px; fill: #8FA2E8; } .ds-pring { fill: none; stroke: #6F7899; stroke-width: 2px; } .ds-pring-alum { fill: none; stroke: #E7B94A; stroke-width: 2px; } .ds-row-b { flex: 1; display: flex; flex-direction: column; gap: 2px; } .ds-row-b b { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.005em; } .ds-row-b span { font-size: 15px; line-height: 21px; color: #AAB2CC; } .ds-row-b .ds-alum { color: #E7B94A; } .ds-row-ch { flex: none; width: 24px; height: 24px; color: #AAB2CC; } .ds-row-fix { min-width: 24px; padding-right: 7px; text-align: right; font-size: 15px; line-height: 20px; font-weight: 600; color: #E7B94A; }"
     }
   ],
   "narrative": {
@@ -165,7 +183,8 @@
       { "name": "The Grow-Don't-Clip Rule", "body": "Layouts that hold text grow with the system font scale (`heightIn(min)` with `IntrinsicSize.Min`) instead of clipping. The help row was verified at 130% font scale.", "section": "typography" },
       { "name": "The Pinned Help Rule", "body": "Help never scrolls away. The help row lives outside the scroll container, under a hair rule, on every trip state.", "section": "layout" },
       { "name": "The One Plate Chip Rule", "body": "On a trip the vehicle plate outranks the city. While a plate chip shows in the map chip row, the city chip is hidden.", "section": "layout" },
-      { "name": "The Tonal-Only Rule", "body": "Separate layers by surface step or hairline. If something needs to read as \"above\", move it one surface step up rather than adding a shadow.", "section": "elevation" }
+      { "name": "The Tonal-Only Rule", "body": "Separate layers by surface step or hairline. If something needs to read as \"above\", move it one surface step up rather than adding a shadow.", "section": "elevation" },
+      {"name":"The Required-Versus-Optional Rule","body":"Alum marks only a required protection that is missing (people to text, her name, the permissions Saathi runs on). An optional one she has not set, or an Off she chose, gets a quiet ring and a fg2 summary: never alum, never a \"Fix\", never madder. Leaving an optional protection off is her choice, not a fault.","section":"colors"}
     ],
     "dos": [
       "Do read every colour through `MaterialTheme.colorScheme` or `Saathi.colors`, so both night and day resolve.",
@@ -175,7 +194,10 @@
       "Do stamp one ajrakh star per watched minute, and turn the newest one alum when the trip stalls.",
       "Do use alum for anything that asks for attention before a message is sent.",
       "Do let containers grow with font scale (`heightIn(min)` with intrinsic height) rather than clip names.",
-      "Do use the indigo tile for the in-app mark, and keep the madder launcher icon."
+      "Do use the indigo tile for the in-app mark, and keep the madder launcher icon.",
+      "Do mark a ready protection with an indigo star, a missing required one with an alum ring, and an unset optional one with a quiet ring (ink-3 by night, ink-2 by day).",
+      "Do make each settings row one whole button with a stateDescription, and divide rows with hairlines.",
+      "Do skip the stamp, the count turnover and the page slide when Remove animations is on."
     ],
     "donts": [
       "Don't use madder for anything other than help and alerts. That includes validation errors and decoration.",
@@ -183,7 +205,9 @@
       "Don't set text in fg3. It colours marks only.",
       "Don't show the city chip while a plate chip is showing.",
       "Don't add shadows. Separate layers with a surface step or a hairline.",
-      "Don't put a second full-contrast plate on a screen that already has one."
+      "Don't put a second full-contrast plate on a screen that already has one.",
+      "Don't mark an optional protection, or an Off she chose, in alum or with \"Fix\".",
+      "Don't box settings rows in cards. The readiness plate is the only container on the Settings list."
     ]
   }
 }
