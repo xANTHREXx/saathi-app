@@ -36,7 +36,16 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -104,7 +113,6 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                 }
             }
             ends != null -> {
-                val leftMs = (ends - now).coerceAtLeast(0)
                 val practice = s.practice
                 val reason = s.events.lastOrNull()?.let { ctx.eventText(it).capitalised() }
                 Column(Modifier.padding(horizontal = 6.dp)) {
@@ -118,7 +126,7 @@ private fun CheckIn(onOk: () -> Unit, onClose: () -> Unit, onDone: () -> Unit) {
                 // The countdown owns the middle of the screen: this is the one moment that asks loudly.
                 Spacer(Modifier.weight(1f))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Countdown(leftMs / 1000f / WINDOW_S, ((leftMs + 999) / 1000).toInt())
+                    Countdown(ends)
                     Text(stringResource(if (practice) R.string.checkin_seconds_practice else R.string.checkin_seconds), style = MaterialTheme.typography.bodyLarge, color = c.fg2,
                         modifier = Modifier.padding(top = 14.dp))
                 }
@@ -191,16 +199,31 @@ private fun StalledThread(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Countdown(fraction: Float, seconds: Int) {
+private fun Countdown(endsAtMs: Long) {
     val c = Saathi.colors
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
+    // Read the clock every frame while this is on screen, so the ring drains in one continuous sweep
+    // instead of steps. It only runs for the few seconds a check-in lasts.
+    val now by produceState(System.currentTimeMillis()) { while (true) withFrameMillis { value = System.currentTimeMillis() } }
+    val leftMs = (endsAtMs - now).coerceAtLeast(0)
+    val fraction = leftMs / 1000f / WINDOW_S
+    val seconds = ((leftMs + 999) / 1000).toInt()
+    val roll = motionMs(MOVE_MS); val out = motionMs(LEAVE_MS)
     Box(Modifier.size(200.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val w = 12.dp.toPx()
             drawArc(track, 0f, 360f, false, style = Stroke(w))
             drawArc(c.alum, -90f, 360f * fraction.coerceIn(0f, 1f), false, style = Stroke(w, cap = StrokeCap.Round))
         }
-        Text("$seconds", style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp, lineHeight = 76.sp))
+        // Each second drops in from above as the last falls away below, like a counter running down.
+        AnimatedContent(
+            seconds,
+            transitionSpec = {
+                (slideInVertically(tween(roll, easing = Arrive)) { -it / 2 } + fadeIn(tween(roll))) togetherWith
+                    (slideOutVertically(tween(out)) { it / 2 } + fadeOut(tween(out)))
+            },
+            label = "seconds",
+        ) { n -> Text("$n", style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp, lineHeight = 76.sp)) }
     }
 }
 

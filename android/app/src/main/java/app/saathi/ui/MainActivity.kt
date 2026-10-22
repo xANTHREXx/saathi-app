@@ -9,6 +9,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.draw.scale
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -263,8 +275,27 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
                 Column(Modifier.padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Box(Modifier.padding(top = 10.dp).align(Alignment.CenterHorizontally).size(36.dp, 4.dp)
                         .background(Saathi.colors.fg3.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
-                    if (s.alertActive) ToldBanner(s)
-                    if (s.onTrip) OnTrip(s) else Ready()
+                    // The alert unfolds from the top of the sheet; I'm okay folds it away. While it folds, it keeps
+                    // showing the alert it was, not an emptied one.
+                    val lastAlert = remember { arrayOf(s) }
+                    if (s.alertActive) lastAlert[0] = s
+                    val unfold = motionMs(UNFOLD_MS); val leave = motionMs(LEAVE_MS); val move = motionMs(MOVE_MS)
+                    Column {
+                        AnimatedVisibility(
+                            s.alertActive,
+                            enter = expandVertically(tween(unfold, easing = Arrive), expandFrom = Alignment.Top) + fadeIn(tween(move)),
+                            exit = shrinkVertically(tween(leave), shrinkTowards = Alignment.Top) + fadeOut(tween(leave)),
+                        ) { Box(Modifier.padding(bottom = 14.dp)) { ToldBanner(lastAlert[0]) } }
+                        // A ride picked up on its own: the sheet hands over from Ready to the trip, so she sees it begin.
+                        AnimatedContent(
+                            s.onTrip,
+                            transitionSpec = {
+                                (fadeIn(tween(move)) + slideInVertically(tween(unfold, easing = Arrive)) { it / 8 }) togetherWith
+                                    fadeOut(tween(leave)) using SizeTransform(clip = false)
+                            },
+                            label = "sheet",
+                        ) { onTrip -> if (onTrip) OnTrip(s) else Ready() }
+                    }
                     if (!s.alertActive && s.checkInEndsAtMs == null) CheckOnMe(s, settings, onChange)
                     AfterTrip(settings, onChange)
                     if (readyCardVisible(s.onTrip, s.alertActive, settings.contacts.isNotEmpty(),
@@ -305,12 +336,15 @@ private fun ToldBanner(s: UiState) {
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(c.helpContainer).padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            // The check draws itself the moment the texts are confirmed sent, not before.
             Box(Modifier.size(36.dp).background(c.help, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                DrawnCheck(s.told.isNotEmpty(), Color.White, Modifier.size(20.dp))
             }
             Column {
-                Text(if (s.told.isEmpty()) stringResource(R.string.told_telling) else ctx.toldText(s.told),
-                    style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
+                Crossfade(if (s.told.isEmpty()) stringResource(R.string.told_telling) else ctx.toldText(s.told),
+                    animationSpec = tween(motionMs(MOVE_MS)), label = "told") {
+                    Text(it, style = MaterialTheme.typography.titleSmall, color = c.onHelpContainer)
+                }
                 // Call 112 sits on the plate below, so the banner no longer needs to say Saathi doesn't call.
                 Text(buildString {
                     append(linkSent)
@@ -444,7 +478,7 @@ private fun LineDiagram(s: UiState, minutes: Int) {
                 repeat(shown) { i ->
                     val newest = i == shown - 1
                     // A slight, fixed tilt per star, like a hand-placed block.
-                    Star(if (newest && stalled) c.alum else c.starOn, 14.dp, stamp = i >= firstShown, tilt = ((i * 37) % 9 - 4).toFloat())
+                    ThreadStar(newest && stalled, stamp = i >= firstShown, tilt = ((i * 37) % 9 - 4).toFloat())
                 }
                 if (shown == 0) Box(Modifier.width(3.dp).height(18.dp).background(c.starOff, RoundedCornerShape(2.dp)))
             }
@@ -470,6 +504,24 @@ private fun LineDiagram(s: UiState, minutes: Int) {
         else s.destLabel?.let { Text(stringResource(R.string.line_ends_at_place, ctx.placeLabel(it)), style = MaterialTheme.typography.bodySmall,
             color = c.fg2, modifier = Modifier.padding(start = 40.dp, top = 6.dp)) }
     }
+}
+
+/**
+ * One watched minute on the thread. When the trip stalls, the newest turns alum with one settle, so she sees
+ * where it changed; the same call site for every star, so nothing re-stamps when the thread shortens.
+ */
+@Composable
+private fun ThreadStar(stalledHere: Boolean, stamp: Boolean, tilt: Float) {
+    val c = Saathi.colors
+    val color by animateColorAsState(if (stalledHere) c.alum else c.starOn, tween(motionMs(240)), label = "stall")
+    val settle = remember { Animatable(1f) }
+    // Already stalled when first shown (opening the app mid check-in) is not a change, so it doesn't settle.
+    val wasStalled = remember { stalledHere }
+    val ms = motionMs(320)
+    LaunchedEffect(stalledHere) {
+        if (stalledHere && !wasStalled && ms > 0) { settle.snapTo(1.35f); settle.animateTo(1f, tween(ms, easing = Arrive)) }
+    }
+    Star(color, 14.dp, stamp = stamp, tilt = tilt, modifier = Modifier.scale(settle.value))
 }
 
 @Composable
@@ -610,7 +662,10 @@ private fun HelpRow(settings: Settings, quiet: Boolean = false) {
     val ctx = LocalContext.current
     // Grows with the system font size instead of clipping her contacts' names.
     Row(Modifier.padding(horizontal = 16.dp).heightIn(min = 140.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        HoldForHelp(settings, Modifier.weight(1.15f).fillMaxHeight(), quiet)
+        // Her hold becomes the alert: the madder plate dissolves into the Call 112 plate in the same place.
+        Crossfade(quiet, Modifier.weight(1.15f).fillMaxHeight(), animationSpec = tween(motionMs(UNFOLD_MS)), label = "help-plate") { q ->
+            HoldForHelp(settings, Modifier.fillMaxSize(), q)
+        }
         Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Tile(Icons.Rounded.RecordVoiceOver, stringResource(R.string.tile_speak), Modifier.weight(1f)) { ctx.startActivity(Intent(ctx, SpeakForMeActivity::class.java)) }
             Tile(Icons.Rounded.Call, stringResource(R.string.tile_call), Modifier.weight(1f)) { ctx.startActivity(Intent(ctx, CompanionActivity::class.java)) }

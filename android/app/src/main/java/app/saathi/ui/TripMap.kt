@@ -6,7 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,6 +40,16 @@ fun TripMap(s: UiState, modifier: Modifier = Modifier) {
     val c = Saathi.colors
     val scheme = MaterialTheme.colorScheme
     val here = s.lastFix
+    // The expected route draws itself in when it arrives while she's looking: a trip picked up on its own,
+    // or its route found a moment later. Already there when the map first shows, it is simply there.
+    val routeShown = s.onTrip && s.route.size > 1
+    val wasShown = remember { booleanArrayOf(routeShown) }
+    val draw = remember { Animatable(1f) }
+    val drawMs = motionMs(700)
+    LaunchedEffect(routeShown) {
+        if (routeShown && !wasShown[0] && drawMs > 0) { draw.snapTo(0f); draw.animateTo(1f, tween(drawMs, easing = Arrive)) }
+        wasShown[0] = routeShown
+    }
     Box(modifier.clipToBounds().background(scheme.surfaceContainerHigh)) {
         if (here == null) {
             Canvas(Modifier.size(64.dp).align(Alignment.Center).alpha(0.18f)) { ajrakhStar(c.starOn) }
@@ -58,8 +72,10 @@ fun TripMap(s: UiState, modifier: Modifier = Modifier) {
                 update = { map ->
                     map.overlays.clear()
                     // The route Saathi expects, faint, under what she has actually travelled.
-                    if (s.onTrip && s.route.size > 1) map.overlays += Polyline(map).apply {
-                        setPoints(s.route.map { GeoPoint(it.lat, it.lng) })
+                    if (routeShown) map.overlays += Polyline(map).apply {
+                        // Reading draw.value here re-runs this block on every frame of the draw-in, then stops.
+                        val upTo = if (draw.value >= 1f) s.route.size else (s.route.size * draw.value).toInt().coerceIn(2, s.route.size)
+                        setPoints(s.route.take(upTo).map { GeoPoint(it.lat, it.lng) })
                         outlinePaint.apply { color = (line and 0x00FFFFFF) or 0x55000000; strokeWidth = 10f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
                     }
                     val pts = s.trail.map { GeoPoint(it.lat, it.lng) }
