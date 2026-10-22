@@ -271,6 +271,40 @@
     <string name="settings_up_to_date">You\'re on the latest version.</string>
     <string name="settings_update_failed">Couldn\'t check for updates. Try again later.</string>
 
+    <!-- Settings: the ready list -->
+    <string name="ready_count">%1$d of %2$d</string>
+    <string name="ready_all">All %1$d</string>
+    <string name="ready_word">ready</string>
+    <string name="ready_all_note">Saathi has what it needs to reach your people.</string>
+    <string name="ready_next">Next: %1$s</string>
+    <string name="ready_people_none">Add someone to text</string>
+    <string name="ready_known">They know you added them</string>
+    <string name="ready_known_done">They know a Saathi text is real</string>
+    <string name="ready_known_nobody">Add someone to text first</string>
+    <string name="ready_name">Your name in alerts</string>
+    <string name="ready_name_none">Add your first name</string>
+    <string name="ready_ways">Ways to ask for help</string>
+    <string name="ready_working">Keeps working</string>
+    <string name="ready_working_ok">Location, texts and check-ins are on</string>
+    <string name="ready_rides">Ride apps start trips</string>
+    <string name="ready_rides_on">Uber, Ola and Rapido trips start on their own</string>
+    <string name="ready_places_none">Add home or work to catch detours</string>
+    <string name="ready_state_set">Ready</string>
+    <string name="ready_state_unset">Not set yet</string>
+    <string name="ready_state_fix">Needs fixing</string>
+    <string name="ways_hold_body">On the Trip screen, hold the red plate for 2 seconds. Always on.</string>
+    <string name="ways_tile">help tile</string>
+    <string name="ways_earphone">earphone</string>
+    <string name="ways_shake">shake</string>
+    <string name="ways_power">power button</string>
+    <plurals name="settings_power_gesture">
+        <item quantity="one">Press the power button %1$d time quickly to ask for help.</item>
+        <item quantity="other">Press the power button %1$d times quickly to ask for help.</item>
+    </plurals>
+    <string name="settings_also">Also</string>
+    <string name="settings_privacy">Privacy and sharing</string>
+    <string name="settings_privacy_sum">Community sharing, crash reports and usage stats</string>
+
     <!-- Setup: flow -->
     <string name="setup_step">Step %1$d of %2$d</string>
     <string name="setup_continue">Continue</string>

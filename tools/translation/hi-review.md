@@ -2,7 +2,7 @@
 
 For a native Hindi speaker to check quickly. Every string the app shows is in the tables below, grouped by screen. Rows marked ⚠ are the ones I am least sure of; the reason is in the Notes column. The Hindi file is `android/app/src/main/res/values-hi/strings.xml`; the English is `res/values/strings.xml`. Fix a string there and it is live in the app.
 
-Counts: 413 entries (14 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
+Counts: 442 entries (15 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
 
 ## Not translated, on purpose
 
@@ -268,6 +268,42 @@ Counts: 413 entries (14 are plurals with a "one" and an "other" form, so some en
 | `settings_checking` | Checking… | देख रहे हैं… |  |
 | `settings_up_to_date` | You're on the latest version. | आपके पास सबसे नया वर्शन है। |  |
 | `settings_update_failed` | Couldn't check for updates. Try again later. | अपडेट नहीं देख पाए। बाद में फिर कोशिश करें। |  |
+
+## Settings: the ready list (new on 2026-10-22, not yet reviewed)
+
+Settings now opens on a count of seven protections, each a row that opens its own page. Every row below is a draft.
+
+| String name | English | Hindi | Notes |
+|---|---|---|---|
+| `ready_count` | %1$d of %2$d | %2$d में से %1$d | ⚠ First half of the page's headline, followed by `ready_word` in a lighter colour. The order of the two numbers is swapped for Hindi. |
+| `ready_all` | All %1$d | सभी %1$d | ⚠ Replaces `ready_count` when every protection is ready. |
+| `ready_word` | ready | तैयार | ⚠ Second half of the headline, after the count. |
+| `ready_all_note` | Saathi has what it needs to reach your people. | Saathi के पास आपके लोगों तक पहुँचने के लिए सब कुछ है। | ⚠ Must not read as "you're safe". |
+| `ready_next` | Next: %1$s | अगला: %1$s | ⚠ %1$s is a row title, such as "Places you go often". |
+| `ready_people_none` | Add someone to text | किसी को जोड़ें जिसे मैसेज जाए | ⚠ |
+| `ready_known` | They know you added them | उन्हें पता है कि आपने उन्हें जोड़ा है | ⚠ |
+| `ready_known_done` | They know a Saathi text is real | उन्हें पता है कि Saathi का मैसेज असली होता है | ⚠ |
+| `ready_known_nobody` | Add someone to text first | पहले किसी को जोड़ें जिसे मैसेज जाए | ⚠ |
+| `ready_name` | Your name in alerts | अलर्ट में आपका नाम | ⚠ |
+| `ready_name_none` | Add your first name | अपना पहला नाम जोड़ें | ⚠ |
+| `ready_ways` | Ways to ask for help | मदद माँगने के तरीके | ⚠ |
+| `ready_working` | Keeps working | Saathi चलता रहे | ⚠ Row title for the permissions page. |
+| `ready_working_ok` | Location, texts and check-ins are on | लोकेशन, मैसेज और चेक-इन चालू हैं | ⚠ |
+| `ready_rides` | Ride apps start trips | राइड ऐप से सफ़र शुरू हो | ⚠ |
+| `ready_rides_on` | Uber, Ola and Rapido trips start on their own | Uber, Ola और Rapido के सफ़र अपने आप शुरू होते हैं | ⚠ |
+| `ready_places_none` | Add home or work to catch detours | रास्ता बदलने का पता चले, इसके लिए घर या ऑफ़िस जोड़ें | ⚠ |
+| `ready_state_set` | Ready | तैयार | ⚠ Read aloud by TalkBack for each row. |
+| `ready_state_unset` | Not set yet | अभी सेट नहीं है | ⚠ Read aloud by TalkBack. |
+| `ready_state_fix` | Needs fixing | ठीक करना है | ⚠ Read aloud by TalkBack. |
+| `ways_hold_body` | On the Trip screen, hold the red plate for 2 seconds. Always on. | सफ़र वाली स्क्रीन पर लाल प्लेट को 2 सेकंड दबाए रखें। यह हमेशा चालू रहता है। | ⚠ |
+| `ways_tile` | help tile | मदद टाइल | ⚠ Joined into a list with the next three, after "Hold for help". |
+| `ways_earphone` | earphone | ईयरफ़ोन | ⚠ |
+| `ways_shake` | shake | फ़ोन हिलाना | ⚠ |
+| `ways_power` | power button | पावर बटन |  |
+| `settings_power_gesture` | one: Press the power button %1$d time quickly to ask for help.<br>other: Press the power button %1$d times quickly to ask for help. | one: मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ।<br>other: मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ। | ⚠ |
+| `settings_also` | Also | और भी | ⚠ Heading over Language, Privacy and App. |
+| `settings_privacy` | Privacy and sharing | प्राइवेसी और शेयरिंग | ⚠ |
+| `settings_privacy_sum` | Community sharing, crash reports and usage stats | कम्युनिटी शेयरिंग, क्रैश रिपोर्ट और इस्तेमाल के आँकड़े | ⚠ |
 
 ## Setup: flow
 

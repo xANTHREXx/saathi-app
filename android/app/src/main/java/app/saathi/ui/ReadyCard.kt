@@ -87,9 +87,10 @@ internal fun toldWho(contacts: List<Contact>): String {
     val names = toldNames(contacts)
     return when {
         names == null -> stringResource(R.string.ready_told_names_none)
+        // Three or more carry no second name, so "others" is checked first; otherwise only the first name showed.
+        names.others > 0 -> pluralStringResource(R.plurals.ready_told_names_more, names.others, names.first, names.others)
         names.second == null -> names.first
-        names.others == 0 -> stringResource(R.string.ready_told_names_two, names.first, names.second)
-        else -> pluralStringResource(R.plurals.ready_told_names_more, names.others, names.first, names.others)
+        else -> stringResource(R.string.ready_told_names_two, names.first, names.second)
     }
 }
 

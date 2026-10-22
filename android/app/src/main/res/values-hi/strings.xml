@@ -270,6 +270,40 @@
     <string name="settings_up_to_date">आपके पास सबसे नया वर्शन है।</string>
     <string name="settings_update_failed">अपडेट नहीं देख पाए। बाद में फिर कोशिश करें।</string>
 
+    <!-- Settings: the ready list (drafts, not yet reviewed) -->
+    <string name="ready_count">%2$d में से %1$d</string>
+    <string name="ready_all">सभी %1$d</string>
+    <string name="ready_word">तैयार</string>
+    <string name="ready_all_note">Saathi के पास आपके लोगों तक पहुँचने के लिए सब कुछ है।</string>
+    <string name="ready_next">अगला: %1$s</string>
+    <string name="ready_people_none">किसी को जोड़ें जिसे मैसेज जाए</string>
+    <string name="ready_known">उन्हें पता है कि आपने उन्हें जोड़ा है</string>
+    <string name="ready_known_done">उन्हें पता है कि Saathi का मैसेज असली होता है</string>
+    <string name="ready_known_nobody">पहले किसी को जोड़ें जिसे मैसेज जाए</string>
+    <string name="ready_name">अलर्ट में आपका नाम</string>
+    <string name="ready_name_none">अपना पहला नाम जोड़ें</string>
+    <string name="ready_ways">मदद माँगने के तरीके</string>
+    <string name="ready_working">Saathi चलता रहे</string>
+    <string name="ready_working_ok">लोकेशन, मैसेज और चेक-इन चालू हैं</string>
+    <string name="ready_rides">राइड ऐप से सफ़र शुरू हो</string>
+    <string name="ready_rides_on">Uber, Ola और Rapido के सफ़र अपने आप शुरू होते हैं</string>
+    <string name="ready_places_none">रास्ता बदलने का पता चले, इसके लिए घर या ऑफ़िस जोड़ें</string>
+    <string name="ready_state_set">तैयार</string>
+    <string name="ready_state_unset">अभी सेट नहीं है</string>
+    <string name="ready_state_fix">ठीक करना है</string>
+    <string name="ways_hold_body">सफ़र वाली स्क्रीन पर लाल प्लेट को 2 सेकंड दबाए रखें। यह हमेशा चालू रहता है।</string>
+    <string name="ways_tile">मदद टाइल</string>
+    <string name="ways_earphone">ईयरफ़ोन</string>
+    <string name="ways_shake">फ़ोन हिलाना</string>
+    <string name="ways_power">पावर बटन</string>
+    <plurals name="settings_power_gesture">
+        <item quantity="one">मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ।</item>
+        <item quantity="other">मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ।</item>
+    </plurals>
+    <string name="settings_also">और भी</string>
+    <string name="settings_privacy">प्राइवेसी और शेयरिंग</string>
+    <string name="settings_privacy_sum">कम्युनिटी शेयरिंग, क्रैश रिपोर्ट और इस्तेमाल के आँकड़े</string>
+
     <!-- Setup: flow -->
     <string name="setup_step">स्टेप %1$d / %2$d</string>
     <string name="setup_continue">आगे बढ़ें</string>
