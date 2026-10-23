@@ -8,7 +8,12 @@ import app.saathi.core.alertText
 import app.saathi.core.okText
 import app.saathi.core.recipients
 import app.saathi.core.retryTargets
+import app.saathi.core.Fingerprint
+import app.saathi.data.ALERT_RECORD
 import app.saathi.data.AlertLogEntry
+import app.saathi.data.Evidence
+import app.saathi.data.Onboarding
+import app.saathi.data.TripRecord
 import app.saathi.data.Store
 import app.saathi.data.TelemetryManager
 import app.saathi.trip.LocationOnce
@@ -42,6 +47,30 @@ object AlertManager {
     private val alertEntries = mutableListOf<AlertLogEntry>()
     /** The text the current alert went out with, kept so a manual retry sends the same message. */
     @Volatile private var lastAlertText: String? = null
+    /** The record of an alert raised with no trip running, while it lasts; retries and I'm okay are written to it. */
+    @Volatile private var offTripCase: String? = null
+
+    /**
+     * Where this alert's history goes: into the trip it happened on, or, with no trip running, into its own record,
+     * saved at once so a closed app or a dead phone doesn't lose it, and never tacked onto the next trip.
+     */
+    private fun logAlert(entry: AlertLogEntry, logLine: String) {
+        val ui = TripState.now
+        val case = offTripCase
+        when {
+            case != null -> Store.records(app).firstOrNull { it.caseId == case }
+                ?.let { Store.saveRecord(app, it.copy(alertEntries = it.alertEntries + entry)) }
+            ui.onTrip -> { alertLog += logLine; alertEntries += entry }
+            else -> {
+                val id = "SA-" + java.util.UUID.randomUUID().toString().take(8).uppercase()
+                offTripCase = id
+                Store.saveRecord(app, TripRecord(
+                    caseId = id, createdAt = entry.at, mode = ALERT_RECORD, alertEntries = listOf(entry),
+                    lat = ui.lastFix?.lat, lng = ui.lastFix?.lng,
+                ))
+            }
+        }
+    }
 
     /** Called by the trip service when she says she's okay, so the watcher can start fresh. */
     var onOkay: (() -> Unit)? = null
@@ -130,8 +159,8 @@ object AlertManager {
                 ui.place.label, ui.lastFix?.copy(t = ui.lastFixAtMs / 1000), fixAge, liveUrl)
             lastAlertText = text
             val r = SmsSender.send(app, to, text)
-            alertLog += "${reason.name} at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
-            alertEntries += AlertLogEntry(System.currentTimeMillis() / 1000, r.sent)
+            val now = System.currentTimeMillis() / 1000
+            logAlert(AlertLogEntry(now, r.sent, reason = reason.name), "${reason.name} at $now: told ${r.sent.joinToString()}")
             Log.i("Saathi", "alert ${reason.name}: $text")
             TripState.update { it.copy(told = r.sent, smsFailed = r.failed, recording = recording) }
             Notifier.showAlerted(app, r.sent, r.failed)
@@ -155,8 +184,8 @@ object AlertManager {
             if (!ui.alertActive || ui.smsFailed.isEmpty() || text == null) return@launch
             val to = retryTargets(Store.settings(app).contacts, TripState.city(), ui.smsFailed)
             val r = SmsSender.send(app, to, text)
-            alertLog += "RETRY at ${System.currentTimeMillis() / 1000}: told ${r.sent.joinToString()}"
-            alertEntries += AlertLogEntry(System.currentTimeMillis() / 1000, r.sent, retry = true)
+            val now = System.currentTimeMillis() / 1000
+            logAlert(AlertLogEntry(now, r.sent, retry = true), "RETRY at $now: told ${r.sent.joinToString()}")
             TripState.update { it.copy(told = (it.told + r.sent).distinct(), smsFailed = r.failed) }
             Notifier.showAlerted(app, TripState.now.told, r.failed)
         }
@@ -165,13 +194,27 @@ object AlertManager {
     /** She's okay: stop everything, tell contacts only if an alert went out. */
     fun imOkay() {
         lastAlertText = null
-        if (TripState.now.practice) { endPractice(); return } // a practice: nothing was sent, so nothing to take back
+        if (TripState.now.practice) {
+            Onboarding.markPracticeDone(app, answered = true, from = practiceFrom)
+            endPractice()
+            return
+        } // a practice: nothing was sent, so nothing to take back
         clearPending() // she says she's fine: a Speak for me window still counting down never goes out
         val wasAlert = TripState.now.alertActive
         val answeredCheckIn = TripState.now.checkInEndsAtMs != null // a real check-in was waiting (practices returned above)
         endCheckIn()
         liveJob?.cancel(); LiveShare.stop()
-        recorder.stop()
+        val audio = recorder.stop()
+        // An alert with no trip closes its own record: when she stood it down, and the sealed recording, if any.
+        offTripCase?.takeIf { wasAlert }?.let { case ->
+            offTripCase = null
+            scope.launch(Dispatchers.IO) {
+                val now = System.currentTimeMillis() / 1000
+                val sealed = audio?.takeIf { it.exists() }?.let { listOf(Evidence("audio ${it.name}", Fingerprint.sha256(it.readBytes()), now)) }.orEmpty()
+                Store.records(app).firstOrNull { it.caseId == case }
+                    ?.let { Store.saveRecord(app, it.copy(endedAt = now, evidence = it.evidence + sealed)) }
+            }
+        }
         Notifier.cancel(app, Notifier.ALERT_ID)
         TripState.update { it.copy(alertActive = false, told = emptyList(), smsFailed = emptyList(), recording = false) }
         if (answeredCheckIn) TelemetryManager.track(app, "checkin_answered")
@@ -182,9 +225,13 @@ object AlertManager {
         }
     }
 
+    @Volatile private var practiceFrom: String = "setup"
+
     /** A practice check-in: same alarm, notification and screen as a real one, but silence never texts anyone. */
-    fun startPractice(delayMs: Long) {
+    fun startPractice(delayMs: Long, from: String = "setup") {
         if (checkInJob?.isActive == true || TripState.now.alertActive || practiceJob?.isActive == true) return
+        practiceFrom = from
+        TelemetryManager.trackOnboarding(app, "practice_started", mapOf("from" to from))
         TripState.update { it.copy(practice = false, practiceOver = false) }
         practiceJob = scope.launch {
             delay(delayMs)
@@ -201,6 +248,7 @@ object AlertManager {
                 // Ran out unanswered: stop the noise and say so. Deliberately nothing is sent.
                 alarm.stop()
                 Notifier.cancel(app, Notifier.CHECKIN_ID)
+                Onboarding.markPracticeDone(app, answered = false, from = practiceFrom)
                 TripState.update { it.copy(checkInEndsAtMs = null, practiceOver = true) }
             }
         }

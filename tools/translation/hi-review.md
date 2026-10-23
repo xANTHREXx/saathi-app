@@ -344,7 +344,7 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `setup_step` | Step %1$d of %2$d | स्टेप %1$d / %2$d |  |
 | `setup_continue` | Continue | आगे बढ़ें |  |
 | `setup_finish` | Finish | पूरा करें |  |
-| `setup_start_practice` | Start practice | अभ्यास शुरू करें |  |
+| `setup_start_practice` | Try a practice check-in | एक अभ्यास आज़माएँ |  |
 | `setup_skip` | Skip | छोड़ें |  |
 | `setup_skip_practice` | Skip practice | अभ्यास छोड़ें |  |
 | `setup_later` | Set up later | बाद में सेट करें |  |

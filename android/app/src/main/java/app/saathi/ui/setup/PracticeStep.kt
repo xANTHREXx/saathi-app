@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,7 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -34,8 +30,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.saathi.R
 import app.saathi.alert.AlertManager
+import app.saathi.core.alertRules
+import app.saathi.data.Onboarding
+import app.saathi.data.Settings
+import app.saathi.data.TelemetryManager
 import app.saathi.trip.TripState
 import app.saathi.ui.CheckInActivity
+import app.saathi.ui.onboarding.AlertRulesContent
 import app.saathi.ui.theme.Saathi
 import kotlinx.coroutines.delay
 
@@ -104,7 +105,7 @@ internal fun rememberPractice(): PracticeState {
         start = {
             AlertManager.init(ctx)
             started = true; seen = false; done = false; opened = false; left = WAIT_S
-            AlertManager.startPractice(WAIT_S * 1000L)
+            AlertManager.startPractice(WAIT_S * 1000L, from = "setup")
         },
         reset = {
             AlertManager.init(ctx)
@@ -114,25 +115,27 @@ internal fun rememberPractice(): PracticeState {
     )
 }
 
-/** The last setup step: one safe check-in so the first real one is familiar. */
+/** The practice step: learn the alert rules, then try a safe practice check-in. */
 @Composable
-internal fun PracticeStep(practice: PracticeState) {
+internal fun PracticeStep(practice: PracticeState, settings: Settings) {
+    val ctx = LocalContext.current
     val c = Saathi.colors
-    Column {
-        Text(stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
-        Text(
-            stringResource(R.string.practice_body),
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 12.dp),
-        )
-        Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            PracticeFact(Icons.Rounded.VolumeUp, stringResource(R.string.practice_fact_rings))
-            PracticeFact(Icons.Rounded.Lock, stringResource(R.string.practice_fact_lock))
-            PracticeFact(Icons.Rounded.Check, stringResource(R.string.practice_fact_tap))
+
+    LaunchedEffect(Unit) {
+        if (Onboarding.once(ctx, "setup_learn_viewed")) {
+            TelemetryManager.trackOnboarding(ctx, "setup_learn_viewed")
         }
+    }
+
+    Column(Modifier.fillMaxWidth()) {
+        AlertRulesContent(
+            rules = alertRules(settings.powerPresses, settings.headsetHelp),
+        )
+
         when (practice.phase) {
             PracticePhase.IDLE -> Unit
             PracticePhase.COUNTDOWN, PracticePhase.RUNNING -> Column(
-                Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (practice.phase == PracticePhase.COUNTDOWN) {
                     Text("${practice.secondsToStart}", style = MaterialTheme.typography.displayLarge)
@@ -145,7 +148,7 @@ internal fun PracticeStep(practice: PracticeState) {
                         modifier = Modifier.padding(top = 6.dp))
                 }
             }
-            PracticePhase.DONE -> Column(Modifier.padding(top = 32.dp)) {
+            PracticePhase.DONE -> Column(Modifier.padding(top = 24.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Rounded.CheckCircle, null, tint = c.ok, modifier = Modifier.size(28.dp))
                     Text(stringResource(R.string.practice_done), style = MaterialTheme.typography.titleMedium)
@@ -154,13 +157,5 @@ internal fun PracticeStep(practice: PracticeState) {
                     style = MaterialTheme.typography.bodyMedium, color = c.fg2, modifier = Modifier.padding(top = 8.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun PracticeFact(icon: ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }

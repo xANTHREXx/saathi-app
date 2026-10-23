@@ -1,6 +1,7 @@
 package app.saathi.data
 
 import android.content.Context
+import app.saathi.core.practiceOutcome
 
 fun firstTime(seen: Set<String>, key: String): Boolean = !seen.contains(key)
 
@@ -30,7 +31,7 @@ object Onboarding {
 
     fun markPracticeDone(ctx: Context, answered: Boolean, from: String = "setup") {
         val already = practiceDone(ctx)
-        if (!already) {
+        if (practiceOutcome(answered, already)) {
             prefs(ctx).edit().putBoolean(KEY_PRACTICE_DONE, true).apply()
             TelemetryManager.trackOnboarding(ctx, "practice_done", mapOf("answered" to answered))
         }

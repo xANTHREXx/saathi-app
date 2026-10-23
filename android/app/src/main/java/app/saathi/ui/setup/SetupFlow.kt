@@ -53,6 +53,7 @@ import app.saathi.core.SavedPlace
 import app.saathi.core.SetupProblem
 import app.saathi.core.addPending
 import app.saathi.core.setupProblem
+import app.saathi.data.Onboarding
 import app.saathi.data.Settings
 import app.saathi.data.TelemetryManager
 import app.saathi.ui.theme.Saathi
@@ -132,6 +133,9 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
 
     fun finish() {
         practice.reset() // clears a practice that ran out unanswered; a no-op otherwise
+        if (Onboarding.once(ctx, "setup_finished")) {
+            TelemetryManager.trackOnboarding(ctx, "setup_finished")
+        }
         onDone(initial.copy(name = name.trim(), contacts = contacts, places = places, onboarded = true))
     }
 
@@ -211,7 +215,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     problemPerm = permProblem, problemNonce = permNonce,
                 )
                 Step.PLACES -> PlacesStep(places, { places = it })
-                Step.PRACTICE -> PracticeStep(practice)
+                Step.PRACTICE -> PracticeStep(practice, initial)
             }
         }
 
@@ -241,7 +245,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     }) { Text(stringResource(R.string.setup_skip)) }
                 }
                 if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
-                    TextButton(onClick = { finish() }) { Text(stringResource(R.string.setup_skip_practice)) }
+                    TextButton(onClick = {
+                        TelemetryManager.trackOnboarding(ctx, "practice_skipped")
+                        finish()
+                    }) { Text(stringResource(R.string.setup_skip_practice)) }
                 }
                 if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
                     TextButton(onClick = { skipDialog = true }) { Text(stringResource(R.string.setup_later)) }
