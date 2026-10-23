@@ -486,6 +486,27 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `places_saved` | Saved place | सेव की हुई जगह |  |
 | `places_from_location` | From your location | आपकी लोकेशन से |  |
 
+## Onboarding: alert rules
+
+| String name | English | Hindi | Notes |
+|---|---|---|---|
+| `rules_title` | When does Saathi text your people? | साथी आपके अपनों को कब मैसेज भेजता है? |  |
+| `onb_clip_you_ask_desc` | Animation showing asking for help by holding the button or tapping the tile | बटन दबाकर या टाइल टैप करके मदद माँगने का एनिमेशन |  |
+| `onb_clip_saathi_asks_desc` | Animation showing a check-in alert when the ride stops, with option to tap I'm okay | सफ़र रुकने पर चेक-इन बजने और ठीक हूँ दबाने का एनिमेशन |  |
+| `rules_lane_you_title` | You ask · goes straight away | जब आप कहें · तुरंत जाता है |  |
+| `rules_trigger_hold` | Hold the help button for 2 seconds | मदद के बटन को 2 सेकंड तक दबाए रखें |  |
+| `rules_trigger_tile` | Quick Settings tile (5s to cancel) | क्विक सेटिंग्स टाइल (रोकने के लिए 5 सेकंड) |  |
+| `rules_trigger_speak_for_me` | Speak for me (5s to cancel) | स्पीक फ़ॉर मी (रोकने के लिए 5 सेकंड) |  |
+| `rules_trigger_power` | Power button pressed quickly | पावर बटन को तेज़ी से दबाने पर |  |
+| `rules_trigger_earphone` | Earphone button 3 times (5s to cancel) | ईयरफ़ोन बटन 3 बार दबाने पर (रोकने के लिए 5 सेकंड) |  |
+| `rules_lane_saathi_title` | Saathi asks you first · only if you don't answer | साथी पहले आपसे पूछता है · जवाब न देने पर ही जाता है |  |
+| `rules_saathi_subtitle` | Rings for %1$d seconds. If you don't answer, your contacts are texted. | %1$d सेकंड तक बजता है। जवाब न मिलने पर ही आपके अपनों को मैसेज भेजा जाता है। |  |
+| `rules_trigger_long_stop` | Ride stops for unusually long | सफ़र में गाड़ी बहुत देर रुकने पर |  |
+| `rules_trigger_off_route` | Ride leaves the expected route | गाड़ी तय रास्ते से अलग जाने पर |  |
+| `rules_trigger_late` | Ride is taking much longer than expected | सफ़र में उम्मीद से बहुत ज़्यादा देर होने पर |  |
+| `rules_trigger_check_on_me` | Scheduled Check on me timer ends | चेक ऑन मी का समय पूरा होने पर |  |
+| `rules_closing_summary` | Saathi never texts silently: you either asked for help yourself, or you didn't answer when it asked if you were okay. | साथी कभी बिना बताए मैसेज नहीं भेजता: या तो आपने खुद मदद माँगी हो, या ठीक होने का पूछने पर आपने जवाब न दिया हो। |  |
+
 ## Setup: practice
 
 | String name | English | Hindi | Notes |

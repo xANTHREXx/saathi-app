@@ -464,6 +464,24 @@
     <string name="places_saved">सेव की हुई जगह</string>
     <string name="places_from_location">आपकी लोकेशन से</string>
 
+    <!-- Onboarding: alert rules -->
+    <string name="rules_title">साथी आपके अपनों को कब मैसेज भेजता है?</string>
+    <string name="onb_clip_you_ask_desc">बटन दबाकर या टाइल टैप करके मदद माँगने का एनिमेशन</string>
+    <string name="onb_clip_saathi_asks_desc">सफ़र रुकने पर चेक-इन बजने और ठीक हूँ दबाने का एनिमेशन</string>
+    <string name="rules_lane_you_title">जब आप कहें · तुरंत जाता है</string>
+    <string name="rules_trigger_hold">मदद के बटन को 2 सेकंड तक दबाए रखें</string>
+    <string name="rules_trigger_tile">क्विक सेटिंग्स टाइल (रोकने के लिए 5 सेकंड)</string>
+    <string name="rules_trigger_speak_for_me">स्पीक फ़ॉर मी (रोकने के लिए 5 सेकंड)</string>
+    <string name="rules_trigger_power">पावर बटन को तेज़ी से दबाने पर</string>
+    <string name="rules_trigger_earphone">ईयरफ़ोन बटन 3 बार दबाने पर (रोकने के लिए 5 सेकंड)</string>
+    <string name="rules_lane_saathi_title">साथी पहले आपसे पूछता है · जवाब न देने पर ही जाता है</string>
+    <string name="rules_saathi_subtitle">%1$d सेकंड तक बजता है। जवाब न मिलने पर ही आपके अपनों को मैसेज भेजा जाता है।</string>
+    <string name="rules_trigger_long_stop">सफ़र में गाड़ी बहुत देर रुकने पर</string>
+    <string name="rules_trigger_off_route">गाड़ी तय रास्ते से अलग जाने पर</string>
+    <string name="rules_trigger_late">सफ़र में उम्मीद से बहुत ज़्यादा देर होने पर</string>
+    <string name="rules_trigger_check_on_me">चेक ऑन मी का समय पूरा होने पर</string>
+    <string name="rules_closing_summary">साथी कभी बिना बताए मैसेज नहीं भेजता: या तो आपने खुद मदद माँगी हो, या ठीक होने का पूछने पर आपने जवाब न दिया हो।</string>
+
     <!-- Setup: practice -->
     <string name="practice_title">एक अभ्यास, ताकि असली चेक-इन चौंकाए नहीं।</string>
     <string name="practice_body">सफ़र में कुछ गड़बड़ लगे तो Saathi ज़ोर से बजता है और पूछता है कि आप ठीक हैं या नहीं। चलिए, एक बार आज़माते हैं। कुछ भेजा नहीं जाएगा।</string>
