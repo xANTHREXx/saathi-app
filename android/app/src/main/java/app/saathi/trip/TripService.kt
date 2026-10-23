@@ -8,10 +8,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.location.Geocoder
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
@@ -40,7 +36,6 @@ import app.saathi.core.Plate
 import app.saathi.core.PowerPress
 import app.saathi.core.Reason
 import app.saathi.core.SavedPlace
-import app.saathi.core.ShakeDetector
 import app.saathi.core.TripEvent
 import app.saathi.core.Watcher
 import app.saathi.core.arrivedText
@@ -160,36 +155,17 @@ class TripService : Service() {
     /** Whether a silence from this phone would mean something to her contacts. */
     private fun watching() = TripState.now.onTrip || TripState.now.checkAtMs != null
 
-    // --- trip-only gestures she turns on in Settings: the earphone button (help) and a hard shake (check-in)
+    // --- trip-only gesture she turns on in Settings: the earphone button (help)
 
     private var media: MediaSession? = null
     private val headsetPresses = PowerPress(needed = 3, windowS = 2.0)
-    private val shake = ShakeDetector()
-
-    private val shakeListener = object : SensorEventListener {
-        override fun onSensorChanged(e: SensorEvent) {
-            if (!shake.onSample(SystemClock.elapsedRealtime(), e.values[0], e.values[1], e.values[2])) return
-            val ui = TripState.now
-            if (!ui.onTrip || ui.alertActive || ui.checkInEndsAtMs != null) return
-            val event = TripEvent(EventKind.SHAKE, "phone shaken hard", System.currentTimeMillis() / 1000)
-            Log.i("Saathi", "shake: check-in")
-            TripState.update { it.copy(events = it.events + event) }
-            app.saathi.data.TelemetryManager.track(this@TripService, "checkin_triggered", mapOf("reason" to event.kind.name))
-            AlertManager.startCheckIn(event)
-        }
-        override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
-    }
 
     private fun startGestures() {
         val s = Store.settings(this)
-        if (s.shakeCheckIn) getSystemService(SensorManager::class.java)?.let { sm ->
-            sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let { sm.registerListener(shakeListener, it, SensorManager.SENSOR_DELAY_GAME) }
-        }
         if (s.headsetHelp && media == null) startHeadset()
     }
 
     private fun stopGestures() {
-        runCatching { getSystemService(SensorManager::class.java)?.unregisterListener(shakeListener) }
         media?.run { isActive = false; release() }
         media = null
     }
@@ -299,7 +275,7 @@ class TripService : Service() {
         super.onCreate()
         Notifier.channels(this)
         AlertManager.init(this)
-        AlertManager.onOkay = { watcher?.reset(); shake.quiet(SystemClock.elapsedRealtime()) }
+        AlertManager.onOkay = { watcher?.reset() }
         registerReceiver(screen, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         })

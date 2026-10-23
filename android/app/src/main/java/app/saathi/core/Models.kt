@@ -9,6 +9,7 @@ data class Fix(val lat: Double, val lng: Double, val t: Long)
 @Serializable
 enum class Mode { AUTO, CAB, BIKE, WALK, BUS, TRAIN }
 
+/** SHAKE is no longer produced (the shake gesture was removed), but stays so trip records that stored it still decode. */
 @Serializable
 enum class EventKind { LONG_STOP, OFF_ROUTE, LATE, TIMER, SHAKE }
 

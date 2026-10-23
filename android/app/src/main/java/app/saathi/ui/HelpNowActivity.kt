@@ -44,8 +44,9 @@ import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiTheme
 
 /**
- * "Saathi Help": its own launcher entry, so a phone's back-tap gesture (Pixel Quick Tap, Samsung RegiStar),
- * the long-press shortcut on Saathi's icon, or a home-screen icon can ask for help. Opening it is the gesture:
+ * "Saathi Help": so a phone's back-tap gesture (Pixel Quick Tap, Samsung RegiStar) or the long-press shortcut on
+ * Saathi's icon can ask for help. Its app-list icon is the `.HelpLauncher` alias, off until she turns it on in
+ * Settings. Opening it is the gesture:
  * the same 5 s undo as the help tile, then the alert. Works over the lock screen.
  */
 class HelpNowActivity : ComponentActivity() {

@@ -1,6 +1,8 @@
 package app.saathi.ui
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
@@ -309,7 +311,6 @@ private fun protections(s: Settings, granted: Map<Perm, Boolean>): List<Protecti
         add(stringResource(R.string.help_title))
         if (s.tileAsked) add(stringResource(R.string.ways_tile))
         if (s.headsetHelp) add(stringResource(R.string.ways_earphone))
-        if (s.shakeCheckIn) add(stringResource(R.string.ways_shake))
         if (s.powerPresses > 0) add(stringResource(R.string.ways_power))
     }.joinToString(", ")
     return listOf(
@@ -600,18 +601,14 @@ private fun WaysPage(settings: Settings, onChange: (Settings) -> Unit) {
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SettingSwitch(
-                stringResource(R.string.settings_headset_title), stringResource(R.string.settings_headset_body),
-                settings.headsetHelp, { onChange(settings.copy(headsetHelp = it)) },
-            )
-            SettingSwitch(
-                stringResource(R.string.settings_shake_title), stringResource(R.string.settings_shake_body),
-                settings.shakeCheckIn, { onChange(settings.copy(shakeCheckIn = it)) },
-            )
-        }
+        SettingSwitch(
+            stringResource(R.string.settings_headset_title), stringResource(R.string.settings_headset_body),
+            settings.headsetHelp, { onChange(settings.copy(headsetHelp = it)) },
+        )
 
-        PageSection(stringResource(R.string.settings_backtap_title), stringResource(R.string.settings_backtap_body))
+        PageSection(stringResource(R.string.settings_backtap_title), stringResource(R.string.settings_backtap_body)) {
+            HelpIconSwitch()
+        }
 
         PageSection(stringResource(R.string.settings_speak_says)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -712,6 +709,36 @@ private fun SettingSwitch(title: String, body: String, checked: Boolean, onCheck
             Text(body, style = MaterialTheme.typography.bodyMedium, color = Saathi.colors.fg2, modifier = Modifier.padding(top = 2.dp))
         }
         Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
+/**
+ * Shows or hides the "Saathi Help" app-list icon (the `.HelpLauncher` alias in the manifest, off by default).
+ * The phone's own component state is the truth, not Settings: DEFAULT means the manifest default, which is off.
+ */
+@Composable
+private fun HelpIconSwitch() {
+    val ctx = LocalContext.current
+    val alias = remember { ComponentName(ctx, "app.saathi.HelpLauncher") }
+    fun shown() = ctx.packageManager.getComponentEnabledSetting(alias) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+    var on by remember { mutableStateOf(shown()) }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
+            value = on, role = Role.Switch,
+            onValueChange = {
+                ctx.packageManager.setComponentEnabledSetting(
+                    alias,
+                    if (it) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                on = shown()
+            },
+        ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(stringResource(R.string.settings_backtap_icon), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(checked = on, onCheckedChange = null)
     }
 }
 

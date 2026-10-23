@@ -12,17 +12,18 @@
   "Cancel check" work from the lock screen.
 - **Arriving ends the trip** when it reaches the saved place it was headed to. An optional arrival text is
   off by default (Settings › Places).
-- **Saathi Help** in the app drawer and as a long-press shortcut, for back-tap gestures. 5 s to undo.
-- **Earphone button ×3** for help, and **shake ×3** for a check-in, both on trips only and off until she
-  turns them on.
+- **Saathi Help** as a long-press shortcut, and as an app-list icon for back-tap gestures that she turns on in
+  Settings › Ways to ask for help (off by default: it is the `.HelpLauncher` activity-alias). 5 s to undo.
+- **Earphone button ×3** for help, on trips only and off until she turns it on. (A shake for a check-in was
+  tried and removed: it clashed with phone makers' shake-for-torch gestures, and bumpy rides could set it off.)
 
 ### For coding agents: rules to keep
 - A deliberate gesture (Saathi Help, earphone button) calls `AlertManager.raiseAfter(reason, 5 s)`. An unclear
-  signal (shake, timer) calls `AlertManager.startCheckIn(event)`, never `raise` directly.
+  signal (timer) calls `AlertManager.startCheckIn(event)`, never `raise` directly.
 - The extra texts (`batteryText`, `offText`, `arrivedText` in `core/AlertText.kt`) are not alerts. They go
   through `TripService.textContacts` and never set `alertActive`. None may say "safe".
 - The timer lives in `TripState.checkAtMs` and is persisted in `RunState.check` so a restarted service fires it.
-- New `EventKind`s (`TIMER`, `SHAKE`) need wording in `ui/Localised.kt` `eventText`.
+- New `EventKind`s (`TIMER`) need wording in `ui/Localised.kt` `eventText`.  `SHAKE` is never produced now but stays in the enum so old trip records decode.
 - New strings go in `values/` and `values-hi/` (`StringsParityTest`), and in the review sheet
   `tools/translation/hi-review.md`.
 

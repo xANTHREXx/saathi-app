@@ -1,6 +1,7 @@
 package app.saathi.ui
 
 import android.content.Context
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +11,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.FilledTonalButton
@@ -23,10 +27,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,13 +58,22 @@ private fun checkIntent(ctx: Context, action: String) = TripService.intent(ctx, 
  * out, the usual "Are you okay?" check-in, and silence after that alerts. Tonal, not alum: nothing is wrong yet.
  * Hidden during a check-in or alert, when the screen has something more important to say.
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun CheckOnMe(s: UiState, settings: Settings, onChange: (Settings) -> Unit) {
     val ctx = LocalContext.current
     val c = Saathi.colors
     var open by rememberSaveable { mutableStateOf(false) }
     val at = s.checkAtMs
+    // The lengths appear at the bottom of Home's scroll, under the fade above the pinned help row: scroll them into view
+    // once they are laid out.
+    val choices = remember { BringIntoViewRequester() }
+    LaunchedEffect(open) {
+        if (open) {
+            withFrameNanos { }
+            choices.bringIntoView()
+        }
+    }
 
     Column(
         Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(MaterialTheme.shapes.medium)
@@ -93,19 +109,22 @@ internal fun CheckOnMe(s: UiState, settings: Settings, onChange: (Settings) -> U
                     Text(stringResource(R.string.check_set))
                 }
             }
-            if (open) FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CHECK_CHOICES.forEach { m ->
-                    FilterChip(
-                        selected = settings.checkMinutes == m,
-                        onClick = {
-                            ctx.startForegroundService(checkIntent(ctx, TripService.ACTION_CHECK_START).putExtra(TripService.EXTRA_MINUTES, m))
-                            if (settings.checkMinutes != m) onChange(settings.copy(checkMinutes = m))
-                            open = false
-                        },
-                        label = { Text(pluralStringResource(R.plurals.check_minutes, m, m)) },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    )
+            if (open) Column(Modifier.bringIntoViewRequester(choices)) {
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CHECK_CHOICES.forEach { m ->
+                        FilterChip(
+                            selected = settings.checkMinutes == m,
+                            onClick = {
+                                ctx.startForegroundService(checkIntent(ctx, TripService.ACTION_CHECK_START).putExtra(TripService.EXTRA_MINUTES, m))
+                                if (settings.checkMinutes != m) onChange(settings.copy(checkMinutes = m))
+                                open = false
+                            },
+                            label = { Text(pluralStringResource(R.plurals.check_minutes, m, m)) },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                        )
+                    }
                 }
+                Spacer(Modifier.height(24.dp)) // so the chips clear the fade above the pinned help row
             }
         }
     }

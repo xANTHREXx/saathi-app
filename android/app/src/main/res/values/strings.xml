@@ -248,10 +248,9 @@
     <string name="settings_dying_body">During a trip, text your contacts your last location if the battery reaches 5% or the phone is switched off. Some phones switch off too fast for the text to go.</string>
     <string name="settings_headset_title">Earphone button for help</string>
     <string name="settings_headset_body">On a trip, press your earphone button 3 times quickly. Your contacts are texted after 5 seconds unless you tap Don\'t text. Works while no music or video is playing.</string>
-    <string name="settings_shake_title">Shake for a check-in</string>
-    <string name="settings_shake_body">On a trip, shake the phone hard 3 times and Saathi asks \"Are you okay?\". Bumpy rides may set it off.</string>
     <string name="settings_backtap_title">Back-tap for help</string>
     <string name="settings_backtap_body">Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi\'s icon for the same Get help shortcut.</string>
+    <string name="settings_backtap_icon">Show a Saathi Help icon</string>
     <string name="settings_community">Community sharing</string>
     <string name="settings_community_body">Share anonymously: count my rides by vehicle plate and add my reports to the community map. Never my name or number.</string>
     <string name="settings_improve">Help improve Saathi</string>
@@ -295,7 +294,6 @@
     <string name="ways_hold_body">On the Trip screen, hold the red plate for 2 seconds. Always on.</string>
     <string name="ways_tile">help tile</string>
     <string name="ways_earphone">earphone</string>
-    <string name="ways_shake">shake</string>
     <string name="ways_power">power button</string>
     <plurals name="settings_power_gesture">
         <item quantity="one">Press the power button %1$d time quickly to ask for help.</item>

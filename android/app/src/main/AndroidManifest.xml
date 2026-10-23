@@ -60,8 +60,8 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
-        <!-- "Saathi Help": its own launcher entry, so back-tap gestures (Pixel Quick Tap, Samsung RegiStar)
-             can pick it from the app list. Opening it asks for help, with 5 s to undo. -->
+        <!-- "Saathi Help": asking for help, with 5 s to undo. Opened by the long-press "Get help" shortcut
+             (res/xml/shortcuts.xml, by class, so it stays exported) and by the .HelpLauncher alias below. -->
         <activity
             android:name=".ui.HelpNowActivity"
             android:exported="true"
@@ -70,12 +70,22 @@
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
             android:showWhenLocked="true"
-            android:turnScreenOn="true">
+            android:turnScreenOn="true" />
+
+        <!-- The "Saathi Help" app-list icon, so back-tap gestures (Pixel Quick Tap, Samsung RegiStar) can pick it.
+             Off by default: on a phone without back-tap it is a confusing second icon. Settings › Ways to ask for
+             help turns it on, with PackageManager.setComponentEnabledSetting on app.saathi.HelpLauncher. -->
+        <activity-alias
+            android:name=".HelpLauncher"
+            android:targetActivity=".ui.HelpNowActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="@string/help_now_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <activity
             android:name=".ui.CheckInActivity"

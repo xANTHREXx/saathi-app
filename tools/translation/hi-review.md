@@ -296,9 +296,8 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `ready_state_unset` | Not set yet | अभी सेट नहीं है | ⚠ Read aloud by TalkBack. |
 | `ready_state_fix` | Needs fixing | ठीक करना है | ⚠ Read aloud by TalkBack. |
 | `ways_hold_body` | On the Trip screen, hold the red plate for 2 seconds. Always on. | सफ़र वाली स्क्रीन पर लाल प्लेट को 2 सेकंड दबाए रखें। यह हमेशा चालू रहता है। | ⚠ |
-| `ways_tile` | help tile | मदद टाइल | ⚠ Joined into a list with the next three, after "Hold for help". |
+| `ways_tile` | help tile | मदद टाइल | ⚠ Joined into a list with the next two, after "Hold for help". |
 | `ways_earphone` | earphone | ईयरफ़ोन | ⚠ |
-| `ways_shake` | shake | फ़ोन हिलाना | ⚠ |
 | `ways_power` | power button | पावर बटन |  |
 | `settings_power_gesture` | one: Press the power button %1$d time quickly to ask for help.<br>other: Press the power button %1$d times quickly to ask for help. | one: मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ।<br>other: मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ। | ⚠ |
 | `settings_also` | Also | और भी | ⚠ Heading over Language, Privacy and App. |
@@ -619,7 +618,7 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 
 ## New on 2026-10-22: alerting additions (not yet reviewed)
 
-Added with the "Check on me" timer, arrival, back-tap, earphone button, shake, Call 112 and the one-tap intro text. All are drafts. `ready_told_message`, `no_112_full` and `settings_intro_contacts` replace earlier wording in the tables above; `ready_told_write` and `settings_write_contacts` were removed.
+Added with the "Check on me" timer, arrival, back-tap, earphone button, Call 112 and the one-tap intro text. All are drafts. `ready_told_message`, `no_112_full` and `settings_intro_contacts` replace earlier wording in the tables above; `ready_told_write` and `settings_write_contacts` were removed.
 
 | String name | English | Hindi | Notes |
 |---|---|---|---|
@@ -653,8 +652,7 @@ Added with the "Check on me" timer, arrival, back-tap, earphone button, shake, C
 | `event_shake` | phone shaken hard | फ़ोन ज़ोर से हिलाया गया |  |
 | `settings_headset_title` | Earphone button for help | मदद के लिए ईयरफ़ोन का बटन |  |
 | `settings_headset_body` | On a trip, press your earphone button 3 times quickly. Your contacts are texted after 5 seconds unless you tap Don't text. Works while no music or video is playing. | सफ़र के दौरान ईयरफ़ोन का बटन जल्दी-जल्दी 3 बार दबाएँ। 5 सेकंड बाद आपके कॉन्टैक्ट को मैसेज जाएगा, जब तक आप "मैसेज न भेजें" न दबाएँ। तभी काम करता है जब कोई गाना या वीडियो न चल रहा हो। | Quotes `speak_dont_text`. |
-| `settings_shake_title` | Shake for a check-in | हिलाने पर हाल पूछें |  |
-| `settings_shake_body` | On a trip, shake the phone hard 3 times and Saathi asks "Are you okay?". Bumpy rides may set it off. | सफ़र के दौरान फ़ोन को ज़ोर से 3 बार हिलाएँ, तो Saathi पूछेगा "क्या आप ठीक हैं?"। ऊबड़-खाबड़ रास्ते पर यह अपने-आप भी हो सकता है। |  |
 | `settings_backtap_title` | Back-tap for help | पीछे टैप करके मदद |  |
 | `settings_backtap_body` | Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi's icon for the same Get help shortcut. | कुछ फ़ोन में पीछे दो बार टैप करने पर कोई ऐप खुलता है। उसमें Saathi मदद चुनें। Pixel: सेटिंग्स › सिस्टम › जेस्चर › क्विक टैप। Samsung: Good Lock › RegiStar। रद्द करने के लिए 5 सेकंड मिलेंगे। Saathi के आइकन को दबाकर रखने पर भी "मदद लें" मिलता है। | ⚠ The menu paths are the phone makers' own; on a Hindi phone their labels may differ. |
+| `settings_backtap_icon` | Show a Saathi Help icon | Saathi मदद का आइकन दिखाएँ |  |
 | `okay_unlock_first` | You'll be asked to unlock first. | पहले फ़ोन अनलॉक करना होगा। | Under I'm okay on the alert screen, only when the phone is locked. |
