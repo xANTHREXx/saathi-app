@@ -26,6 +26,7 @@ android {
         // Updates are only accepted from here (forks set UPDATE_URL_PREFIX in local.properties).
         buildConfigField("String", "UPDATE_URL_PREFIX", "\"${localProps.getProperty("UPDATE_URL_PREFIX", "https://github.com/xANTHREXx/saathi-app/releases/download/")}\"")
         buildConfigField("String", "API_URL","\"${localProps.getProperty("API_URL", "http://10.0.2.2:8000/api").trimEnd('/')}\"")
+        buildConfigField("String", "ONBOARDING_VIDEO_URL", "\"${localProps.getProperty("ONBOARDING_VIDEO_URL", "")}\"")
     }
 
     // The release key lives outside the repo; local.properties only points at it. Never log these values.

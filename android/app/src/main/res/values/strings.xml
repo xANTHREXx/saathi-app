@@ -325,6 +325,15 @@
     <string name="settings_privacy">Privacy and sharing</string>
     <string name="settings_privacy_sum">Community sharing, crash reports and usage stats</string>
 
+    <!-- Setup: welcome -->
+    <string name="onb_clip_welcome_desc">Animation showing a ride being watched and stamped with stars</string>
+    <string name="welcome_title">How Saathi watches over you</string>
+    <string name="welcome_line_watch">Watches your ride quietly in the background</string>
+    <string name="welcome_line_ask">Asks if you are okay if something feels off</string>
+    <string name="welcome_line_text">Texts your people from your SIM, even without data</string>
+    <string name="welcome_video_link">Watch the 3-min video (uses data)</string>
+    <string name="welcome_start">Start</string>
+
     <!-- Setup: flow -->
     <string name="setup_step">Step %1$d of %2$d</string>
     <string name="setup_continue">Continue</string>

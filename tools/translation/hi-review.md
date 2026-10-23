@@ -325,6 +325,18 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `settings_privacy` | Privacy and sharing | प्राइवेसी और शेयरिंग | ⚠ |
 | `settings_privacy_sum` | Community sharing, crash reports and usage stats | कम्युनिटी शेयरिंग, क्रैश रिपोर्ट और इस्तेमाल के आँकड़े | ⚠ |
 
+## Setup: welcome
+
+| String name | English | Hindi | Notes |
+|---|---|---|---|
+| `onb_clip_welcome_desc` | Animation showing a ride being watched and stamped with stars | सफ़र पर नज़र रखने और स्टार दर्ज होने का एनिमेशन |  |
+| `welcome_title` | How Saathi watches over you | साथी आपके सफ़र का ध्यान कैसे रखता है |  |
+| `welcome_line_watch` | Watches your ride quietly in the background | बैकग्राउंड में आपके सफ़र पर नज़र रखता है |  |
+| `welcome_line_ask` | Asks if you are okay if something feels off | कुछ ठीक न लगे तो पहले आपसे पूछता है |  |
+| `welcome_line_text` | Texts your people from your SIM, even without data | इंटरनेट न होने पर भी आपके सिम से आपके अपनों को मैसेज भेजता है |  |
+| `welcome_video_link` | Watch the 3-min video (uses data) | 3 मिनट का वीडियो देखें (डेटा खर्च होगा) |  |
+| `welcome_start` | Start | शुरू करें |  |
+
 ## Setup: flow
 
 | String name | English | Hindi | Notes |

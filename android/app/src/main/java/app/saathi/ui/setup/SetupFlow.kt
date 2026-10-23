@@ -60,7 +60,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 
-private enum class Step { CONTACTS, PERMISSIONS, PLACES, PRACTICE }
+private enum class Step { WELCOME, CONTACTS, PERMISSIONS, PLACES, PRACTICE }
 
 private val stateJson = Json { ignoreUnknownKeys = true }
 
@@ -74,10 +74,10 @@ private inline fun <reified T> rememberJsonState(initial: T): MutableState<T> =
         ),
     ) { mutableStateOf(initial) }
 
-/** First-run setup: three short steps, then a practice screen. */
+/** First-run setup: welcome, three short steps, then a practice screen. */
 @Composable
 fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
-    var stepIndex by rememberSaveable { mutableIntStateOf(Step.CONTACTS.ordinal) }
+    var stepIndex by rememberSaveable { mutableIntStateOf(Step.WELCOME.ordinal) }
     val step = Step.values()[stepIndex]
 
     var name by rememberSaveable { mutableStateOf(initial.name) }
@@ -126,6 +126,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
     }
 
     fun next() = when (step) {
+        Step.WELCOME -> goTo(Step.CONTACTS)
         Step.CONTACTS -> continueContacts()
         Step.PERMISSIONS -> continuePermissions()
         Step.PLACES -> goTo(Step.PRACTICE)
@@ -138,10 +139,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
 
     fun back() {
         if (step == Step.PRACTICE) practice.reset() // stop a pending practice before leaving
-        if (step != Step.CONTACTS) goTo(Step.values()[step.ordinal - 1])
+        if (step != Step.WELCOME) goTo(Step.values()[step.ordinal - 1])
     }
 
-    BackHandler(enabled = step != Step.CONTACTS) { back() }
+    BackHandler(enabled = step != Step.WELCOME) { back() }
 
     val c = Saathi.colors
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()) {
@@ -149,7 +150,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (step != Step.CONTACTS) {
+            if (step != Step.WELCOME) {
                 IconButton(onClick = { back() }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back)) }
             } else {
                 Spacer(Modifier.size(48.dp))
@@ -158,21 +159,23 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             Spacer(Modifier.size(8.dp))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.weight(1f))
-            if (step != Step.PRACTICE) {
+            if (step != Step.WELCOME && step != Step.PRACTICE) {
                 Text(
-                    stringResource(R.string.setup_step, step.ordinal + 1, 3), style = MaterialTheme.typography.labelMedium, color = c.fg2,
+                    stringResource(R.string.setup_step, step.ordinal, 3), style = MaterialTheme.typography.labelMedium, color = c.fg2,
                     modifier = Modifier.padding(end = 8.dp),
                 )
             }
         }
 
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            repeat(3) { i ->
-                val color by animateColorAsState(
-                    if (i <= step.ordinal) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
-                    label = "stepBar",
-                )
-                Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(color))
+        if (step != Step.WELCOME && step != Step.PRACTICE) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(3) { i ->
+                    val color by animateColorAsState(
+                        if (i <= step.ordinal - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                        label = "stepBar",
+                    )
+                    Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(color))
+                }
             }
         }
 
@@ -181,6 +184,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                 .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
         ) {
             when (step) {
+                Step.WELCOME -> WelcomeStep(onStart = { goTo(Step.CONTACTS) })
                 Step.CONTACTS -> ContactsStep(
                     name = name, onNameChange = { name = it },
                     contacts = contacts, onContactsChange = { contacts = it },
@@ -198,32 +202,34 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             }
         }
 
-        Box(Modifier.fillMaxWidth().height(1.dp).background(c.hair))
-        Column(
-            Modifier.fillMaxWidth().imePadding().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(
-                onClick = { next() },
-                Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                enabled = step != Step.PRACTICE || practice.phase == PracticePhase.IDLE || practice.phase == PracticePhase.DONE,
-                shape = RoundedCornerShape(20.dp),
+        if (step != Step.WELCOME) {
+            Box(Modifier.fillMaxWidth().height(1.dp).background(c.hair))
+            Column(
+                Modifier.fillMaxWidth().imePadding().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val label = stringResource(when {
-                    step != Step.PRACTICE -> R.string.setup_continue
-                    practice.phase == PracticePhase.DONE -> R.string.setup_finish
-                    else -> R.string.setup_start_practice
-                })
-                Text(label, style = MaterialTheme.typography.titleMedium)
-            }
-            if (step == Step.PLACES) {
-                TextButton(onClick = { goTo(Step.PRACTICE) }) { Text(stringResource(R.string.setup_skip)) }
-            }
-            if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
-                TextButton(onClick = { finish() }) { Text(stringResource(R.string.setup_skip_practice)) }
-            }
-            if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
-                TextButton(onClick = { skipDialog = true }) { Text(stringResource(R.string.setup_later)) }
+                Button(
+                    onClick = { next() },
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    enabled = step != Step.PRACTICE || practice.phase == PracticePhase.IDLE || practice.phase == PracticePhase.DONE,
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    val label = stringResource(when {
+                        step != Step.PRACTICE -> R.string.setup_continue
+                        practice.phase == PracticePhase.DONE -> R.string.setup_finish
+                        else -> R.string.setup_start_practice
+                    })
+                    Text(label, style = MaterialTheme.typography.titleMedium)
+                }
+                if (step == Step.PLACES) {
+                    TextButton(onClick = { goTo(Step.PRACTICE) }) { Text(stringResource(R.string.setup_skip)) }
+                }
+                if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
+                    TextButton(onClick = { finish() }) { Text(stringResource(R.string.setup_skip_practice)) }
+                }
+                if (step == Step.PERMISSIONS && firstMissingRequired(live.granted) != null) {
+                    TextButton(onClick = { skipDialog = true }) { Text(stringResource(R.string.setup_later)) }
+                }
             }
         }
     }
