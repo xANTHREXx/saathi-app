@@ -420,6 +420,13 @@ footer { margin: 32px 0 8px; color: var(--ink2); font-size: 13px; text-align: ce
         label: 'Plate read rate', value: pct(n0(k.plate_reads), n0(k.plate_scans)) ?? '–',
         small: n0(k.plate_scans) ? `${fmt(k.plate_reads)} of ${fmt(k.plate_scans)} photos` : 'No plate photos yet',
       },
+      {
+        label: 'Practised within 7 days',
+        value: pct(n0(k.practice_within_7d), n0(k.onboarding_started)) ?? '–',
+        small: n0(k.onboarding_started)
+          ? `${fmt(k.practice_within_7d)} of ${fmt(k.onboarding_started)} (${fmt(k.practice_within_7d_answered)} answered, ${fmt(n0(k.practice_within_7d) - n0(k.practice_within_7d_answered))} timed out)`
+          : 'No onboarding yet',
+      },
       { label: 'Crashes', value: fmt(k.crashes), small: `${fmt(k.crash_installs)} installs hit`, alert: true },
     ];
     const host = $('kpis');
@@ -541,9 +548,14 @@ footer { margin: 32px 0 8px; color: var(--ink2); font-size: 13px; text-align: ce
     }
     for (const f of funnels) {
       const steps = Array.isArray(f.steps) ? f.steps : [];
+      const note = f.name === 'Onboarding' ? 'Only people who took a trip and agreed to share stats.' : null;
       const c = card(host, String(f.name ?? ''), null);
       const first = n0(steps[0] && steps[0].value);
-      if (!(first > 0)) { c.append(el('p', 'empty', 'No data yet')); continue; }
+      if (!(first > 0)) {
+        c.append(el('p', 'empty', 'No data yet'));
+        if (note) c.append(el('p', 'sub', note));
+        continue;
+      }
       const top = Math.max(...steps.map((s) => n0(s.value)), 1);
       const list = el('ol', 'steps');
       steps.forEach((s, i) => {
@@ -568,6 +580,11 @@ footer { margin: 32px 0 8px; color: var(--ink2); font-size: 13px; text-align: ce
         list.append(li);
       });
       c.append(list);
+      if (note) {
+        const noteEl = el('p', 'sub', note);
+        noteEl.style.marginTop = '14px';
+        c.append(noteEl);
+      }
     }
   }
 

@@ -33,7 +33,7 @@ object Onboarding {
         val already = practiceDone(ctx)
         if (practiceOutcome(answered, already)) {
             prefs(ctx).edit().putBoolean(KEY_PRACTICE_DONE, true).apply()
-            TelemetryManager.trackOnboarding(ctx, "practice_done", mapOf("answered" to answered))
+            TelemetryManager.trackOnboarding(ctx, "practice_done", mapOf("answered" to answered, "from" to from))
         }
     }
 
