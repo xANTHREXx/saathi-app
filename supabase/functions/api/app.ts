@@ -63,6 +63,10 @@ const PROP_KEY = /^[a-z_]{1,32}$/;
 const EVENT_NAMES = new Set([
   "trip_started", "checkin_triggered", "checkin_answered", "checkin_timed_out",
   "plate_scanned", "alert_sent", "update_prompted", "update_completed",
+  "setup_started", "setup_video_opened", "setup_contacts_done",
+  "setup_permissions_done", "setup_places_done", "setup_learn_viewed",
+  "practice_started", "practice_done", "practice_skipped",
+  "setup_finished", "how_it_works_opened",
 ]);
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);

@@ -579,3 +579,30 @@ Deno.test("telemetryEndpointStoresCrashesAndEventsWithTruncation", async () => {
   assertEquals(a.store.events[0].properties, { mode: "cab" });
 });
 
+Deno.test("telemetryAcceptsOnboardingEvents", async () => {
+  const a = app();
+  const newNames = [
+    { name: "setup_started" },
+    { name: "setup_video_opened" },
+    { name: "setup_contacts_done" },
+    { name: "setup_permissions_done", properties: { all_required: true } },
+    { name: "setup_places_done", properties: { skipped: false } },
+    { name: "setup_learn_viewed" },
+    { name: "practice_started", properties: { from: "home" } },
+    { name: "practice_done", properties: { answered: true } },
+    { name: "practice_skipped" },
+    { name: "setup_finished" },
+    { name: "how_it_works_opened" },
+  ];
+  const res = await a.call("POST", "/telemetry", {
+    installId: IID,
+    events: newNames,
+  });
+  assertEquals(res.status, 200);
+  const json = await res.json();
+  assertEquals(json.events, 11);
+  const practiceStarted = a.store.events.find((e) => e.event_name === "practice_started");
+  assertEquals(practiceStarted?.properties.from, "home");
+});
+
+
