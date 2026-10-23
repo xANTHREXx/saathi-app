@@ -610,18 +610,19 @@ private fun WaysPage(settings: Settings, onChange: (Settings) -> Unit) {
             HelpIconSwitch()
         }
 
-        PageSection(stringResource(R.string.settings_speak_says)) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                PHRASES.forEach { (key, textRes) ->
-                    FilterChip(
-                        selected = settings.phraseKey == key,
-                        onClick = { if (settings.phraseKey != key) onChange(settings.copy(phraseKey = key)) },
-                        label = { Text(stringResource(textRes), Modifier.padding(vertical = 8.dp)) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
+        // Speak for me phrase picker is off until the feature is validated.
+        // PageSection(stringResource(R.string.settings_speak_says)) {
+        //     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        //         PHRASES.forEach { (key, textRes) ->
+        //             FilterChip(
+        //                 selected = settings.phraseKey == key,
+        //                 onClick = { if (settings.phraseKey != key) onChange(settings.copy(phraseKey = key)) },
+        //                 label = { Text(stringResource(textRes), Modifier.padding(vertical = 8.dp)) },
+        //                 modifier = Modifier.fillMaxWidth(),
+        //             )
+        //         }
+        //     }
+        // }
     }
 }
 
@@ -651,7 +652,12 @@ private fun PrivacyPage(settings: Settings, onChange: (Settings) -> Unit) {
                     stringResource(R.string.settings_usage_title), stringResource(R.string.settings_usage_body),
                     settings.usageStats,
                     {
-                        if (!it) TelemetryManager.clearQueue(ctx) // nothing queued stays behind once she says no
+                        if (it) {
+                            TelemetryManager.releaseHeld(ctx)
+                        } else {
+                            TelemetryManager.clearQueue(ctx) // nothing queued stays behind once she says no
+                            TelemetryManager.dropHeld(ctx)
+                        }
                         onChange(settings.copy(usageStats = it))
                     },
                 )

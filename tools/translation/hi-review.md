@@ -2,7 +2,7 @@
 
 For a native Hindi speaker to check quickly. Every string the app shows is in the tables below, grouped by screen. Rows marked ⚠ are the ones I am least sure of; the reason is in the Notes column. The Hindi file is `android/app/src/main/res/values-hi/strings.xml`; the English is `res/values/strings.xml`. Fix a string there and it is live in the app.
 
-Counts: 450 entries (15 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
+Counts: 471 entries (15 are plurals with a "one" and an "other" form, so some entries have two Hindi sentences).
 
 ## Not translated, on purpose
 
@@ -57,7 +57,7 @@ Counts: 450 entries (15 are plurals with a "one" and an "other" form, so some en
 | String name | English | Hindi | Notes |
 |---|---|---|---|
 | `nav_trip` | Trip | सफ़र |  |
-| `nav_my_trips` | My trips | मेरे सफ़र |  |
+| ⚠ `nav_my_trips` | Activity | गतिविधि | Renamed from "My trips": the tab now holds alerts and intro texts as well as trips. |
 | `nav_map` | Map | मैप |  |
 | `nav_settings` | Settings | सेटिंग्स |  |
 
@@ -193,7 +193,7 @@ Counts: 450 entries (15 are plurals with a "one" and an "other" form, so some en
 |---|---|---|---|
 | `consent_title` | Help other women? | दूसरी महिलाओं की मदद करें? |  |
 | `consent_body` | Count this ride anonymously, and add your answer to the community map. Never your name or number. You can change this in Settings. | इस राइड को बिना नाम के गिना जाएगा और आपका जवाब कम्युनिटी मैप में जुड़ेगा। आपका नाम या नंबर कभी नहीं। इसे आप सेटिंग्स में बदल सकती हैं। |  |
-| `consent_stats` | Also send anonymous usage stats: which features get used, never where you go. | साथ ही बिना नाम के इस्तेमाल के आँकड़े भेजें: कौन से फ़ीचर इस्तेमाल हुए, आप कहाँ गईं यह कभी नहीं। |  |
+| `consent_stats` | Also send anonymous usage stats: how setup went, which features get used, never where you go. | साथ ही बिना नाम के इस्तेमाल के आँकड़े भेजें: सेटअप कैसा रहा, कौन से फ़ीचर इस्तेमाल हुए, आप कहाँ गईं यह कभी नहीं। |  |
 | `consent_yes` | Yes, share | हाँ, शेयर करें |  |
 | `consent_no` | No thanks | नहीं, रहने दें |  |
 | `felt_title` | Anything felt off on that trip? | उस सफ़र में कुछ ठीक नहीं लगा? |  |
@@ -206,14 +206,35 @@ Counts: 450 entries (15 are plurals with a "one" and an "other" form, so some en
 
 | String name | English | Hindi | Notes |
 |---|---|---|---|
-| `trips_title` | My trips | मेरे सफ़र |  |
-| ⚠ `trips_empty` | Trips Saathi watched will appear here, each with its sealed record. | जिन सफ़र पर Saathi ने नज़र रखी, वे यहाँ दिखेंगे, हर एक के साथ उसका सील किया हुआ रिकॉर्ड। | "sealed record" is a product term. "सील किया हुआ रिकॉर्ड" is literal; check it reads clearly. |
+| ⚠ `trips_title` | Activity | गतिविधि | Same as the tab name. |
+| ⚠ `trips_empty` | Your trips, any alert you raise, and the texts that told your contacts about Saathi will show here. Trips and alerts each keep a sealed record. | आपके सफ़र, आपका भेजा हर अलर्ट, और वे मैसेज जिनसे आपके कॉन्टैक्ट को Saathi के बारे में बताया गया, यहाँ दिखेंगे। हर सफ़र और अलर्ट का एक सील किया हुआ रिकॉर्ड रहता है। | Rewritten for Activity (new draft). "sealed record" is a product term; "सील किया हुआ रिकॉर्ड" is literal. |
 | `trips_plate_matched` | Plate check: matched (%1$s) | प्लेट जाँच: मेल खाई (%1$s) |  |
 | `trips_plate_mismatch` | Plate check: saw %1$s, booked %2$s | प्लेट जाँच: दिखी %1$s, बुक थी %2$s |  |
 | `trips_plate_other` | Plate check: %1$s | प्लेट जाँच: %1$s | Fallback for an old record whose note can't be read. |
 | `trips_alert_sent` | Alert sent at %1$s. Told: %2$s | %1$s पर अलर्ट भेजा गया। बताया गया: %2$s |  |
 | `trips_alert_none` | No one was reached at %1$s. | %1$s पर किसी तक मैसेज नहीं पहुँचा। |  |
 | `trips_alert_retry` | Tried again at %1$s. Told: %2$s | %1$s पर फिर कोशिश की गई। बताया गया: %2$s |  |
+| ⚠ `activity_today` | Today | आज | Day heading in Activity. New, not yet reviewed (as are the rows below). |
+| ⚠ `activity_yesterday` | Yesterday | कल | "कल" also means tomorrow; under a list of past days it can only mean yesterday. |
+| ⚠ `activity_okay_at` | You said you were okay at %1$s | %1$s पर आपने बताया कि आप ठीक हैं | Her own words, not a claim that she is safe. |
+| ⚠ `activity_alert_live` | Still going. Tap I'm okay on the Trip screen when you can. | अभी चालू है। जब हो सके, सफ़र वाली स्क्रीन पर "मैं ठीक हूँ" दबाएँ। |  |
+| ⚠ `activity_intro` | Texted %1$s that you added them | %1$s को मैसेज किया कि आपने उन्हें जोड़ा है |  |
+| ⚠ `activity_told` | Told %1$s | %1$s को बताया गया | Short summary under an alert in the Activity list. |
+| ⚠ `activity_none` | No one was reached | किसी तक नहीं पहुँचा |  |
+| ⚠ `activity_okay_short` | okay at %1$s | %1$s पर ठीक | Follows the line above after a " · ", so it starts lowercase in English. |
+| ⚠ `activity_live_short` | still going | अभी चालू है | Same position: an alert that hasn't been stood down. |
+| ⚠ `activity_reason_hold` | You held for help | आपने मदद के लिए दबाए रखा | Headline of an alert: how she asked for help. |
+| ⚠ `activity_reason_power` | You pressed the power button | आपने पावर बटन दबाया |  |
+| ⚠ `activity_reason_notification` | You asked for help from the notification | आपने नोटिफ़िकेशन से मदद माँगी |  |
+| ⚠ `activity_reason_widget` | You asked for help from the widget | आपने विजेट से मदद माँगी |  |
+| ⚠ `activity_reason_tile` | You asked for help from the Quick Settings tile | आपने क्विक सेटिंग्स टाइल से मदद माँगी |  |
+| ⚠ `activity_reason_shortcut` | You asked for help from Saathi Help | आपने Saathi Help से मदद माँगी |  |
+| ⚠ `activity_reason_headset` | You pressed the earphone button | आपने ईयरफ़ोन का बटन दबाया |  |
+| ⚠ `activity_reason_speak` | Speak for me sent an alert | "मेरी तरफ़ से बोलें" ने अलर्ट भेजा | Feature name in quotes, as elsewhere. |
+| ⚠ `activity_reason_companion` | An alert went out from Call Saathi | Saathi कॉल से अलर्ट गया |  |
+| ⚠ `activity_reason_checkin` | You didn't answer a check-in | आपने चेक-इन का जवाब नहीं दिया |  |
+| ⚠ `activity_reason_plate` | The plate didn't match | नंबर प्लेट मेल नहीं खाई |  |
+| ⚠ `activity_reason_unknown` | Help was asked for | मदद माँगी गई | For alerts saved before the app kept how help was asked. |
 | `trips_sealed` | Sealed · fingerprints | सील · फ़िंगरप्रिंट | "fingerprint" here means the SHA-256 hash of a file. |
 | `trips_evidence_location` | location log | लोकेशन लॉग |  |
 | `trips_evidence_audio` | audio %1$s | ऑडियो %1$s | %1$s is the recording's file name. |

@@ -10,6 +10,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import app.saathi.ui.theme.reduceMotion
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.SizeTransform
@@ -33,6 +44,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -43,6 +55,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
@@ -66,6 +79,7 @@ import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.Route
+import androidx.compose.material.icons.rounded.Sms
 import androidx.compose.material.icons.rounded.Sos
 import androidx.compose.material.icons.rounded.StopCircle
 import androidx.compose.material.icons.rounded.Train
@@ -123,11 +137,14 @@ import app.saathi.core.parsePlateCheck
 import app.saathi.core.readyCardVisible
 import app.saathi.core.recipients
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.saathi.alert.AlertManager
 import app.saathi.alert.Notifier
 import app.saathi.core.Reason
+import app.saathi.data.ALERT_RECORD
+import app.saathi.data.IntroRecord
 import app.saathi.data.Settings
 import app.saathi.BuildConfig
 import app.saathi.data.RunState
@@ -235,7 +252,7 @@ private fun Home(settings: Settings, onChange: (Settings) -> Unit, justSetUp: Bo
         Box(Modifier.padding(bottom = pad.calculateBottomPadding())) {
             when (tab) {
                 Tab.TRIP -> TripTab(settings, onChange)
-                Tab.TRIPS -> TripsTab()
+                Tab.TRIPS -> ActivityTab()
                 Tab.SETTINGS -> SettingsScreen(settings, onChange)
             }
         }
@@ -656,7 +673,7 @@ private fun ModeChip(icon: ImageVector, label: String, modifier: Modifier, selec
     }
 }
 
-/** Help on the left, larger; Speak for me and the companion beside it. */
+/** Help on the left, larger; the companion call beside it. Speak for me's tile is off until the feature is validated. */
 @Composable
 private fun HelpRow(settings: Settings, quiet: Boolean = false) {
     val ctx = LocalContext.current
@@ -666,22 +683,22 @@ private fun HelpRow(settings: Settings, quiet: Boolean = false) {
         Crossfade(quiet, Modifier.weight(1.15f).fillMaxHeight(), animationSpec = tween(motionMs(UNFOLD_MS)), label = "help-plate") { q ->
             HoldForHelp(settings, Modifier.fillMaxSize(), q)
         }
-        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Tile(Icons.Rounded.RecordVoiceOver, stringResource(R.string.tile_speak), Modifier.weight(1f)) { ctx.startActivity(Intent(ctx, SpeakForMeActivity::class.java)) }
-            Tile(Icons.Rounded.Call, stringResource(R.string.tile_call), Modifier.weight(1f)) { ctx.startActivity(Intent(ctx, CompanionActivity::class.java)) }
-        }
+        // Speak for me tile, off until validated:
+        // Tile(Icons.Rounded.RecordVoiceOver, stringResource(R.string.tile_speak), Modifier.weight(1f)) { ctx.startActivity(Intent(ctx, SpeakForMeActivity::class.java)) }
+        Tile(Icons.Rounded.Call, stringResource(R.string.tile_call), Modifier.weight(1f).fillMaxHeight()) { ctx.startActivity(Intent(ctx, CompanionActivity::class.java)) }
     }
 }
 
+/** One tall tile: icon over label, anchored bottom-left to echo the Help plate beside it. */
 @Composable
 private fun Tile(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
-    Row(
-        modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick).padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+    Column(
+        modifier.clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(role = Role.Button, onClick = onClick).padding(18.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-        Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+        Text(label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -776,11 +793,17 @@ private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
     val scope = rememberCoroutineScope()
     var refresh by remember { mutableIntStateOf(0) }
     val records = remember(s.onTrip, refresh) { Store.records(ctx) }
-    val latest = records.lastOrNull()
+    // The "anything felt off?" question is about a trip; an alert record has no trip to ask about.
+    val latest = records.lastOrNull { it.mode != ALERT_RECORD }
     // Asked once, in context, right after she has answered for her first trip.
     if (!s.onTrip && !settings.consentAsked && latest != null && latest.feltOff != null) {
         ConsentCard(
             onYes = { stats ->
+                if (stats) {
+                    app.saathi.data.TelemetryManager.releaseHeld(ctx)
+                } else {
+                    app.saathi.data.TelemetryManager.dropHeld(ctx)
+                }
                 onChange(settings.copy(communityConsent = true, consentAsked = true, usageStats = stats))
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     if (latest.plate != null) app.saathi.data.Api.ride(ctx, latest.plate, latest.createdAt, latest.caseId)
@@ -790,7 +813,10 @@ private fun AfterTrip(settings: Settings, onChange: (Settings) -> Unit) {
                     }
                 }
             },
-            onNo = { stats -> onChange(settings.copy(consentAsked = true, usageStats = stats)) },
+            onNo = { stats ->
+                app.saathi.data.TelemetryManager.dropHeld(ctx)
+                onChange(settings.copy(consentAsked = true, usageStats = stats))
+            },
         )
     }
     latest?.takeIf { it.feltOff == null && !s.onTrip }?.let { last ->
@@ -854,88 +880,286 @@ private fun FeltOff(onPick: (String) -> Unit) {
     }
 }
 
+/** One thing that happened, for the Activity timeline: a trip, an alert raised with no trip, or an intro text. */
+private sealed interface Happening { val atMs: Long }
+private class TripHappening(val r: TripRecord) : Happening { override val atMs = r.createdAt * 1000 }
+private class AlertHappening(val r: TripRecord) : Happening { override val atMs = r.createdAt * 1000 }
+private class IntroHappening(val i: IntroRecord) : Happening { override val atMs = i.at * 1000 }
+
+/**
+ * Everything Saathi did for her, newest first, under a heading per day: trips, alerts raised with no trip running,
+ * and the texts that told her contacts about Saathi. The list says what happened in one row each; a tap opens the
+ * record, where the fingerprints, the reporting draft and delete live. System Back returns to the list.
+ */
 @Composable
-private fun TripsTab() {
+private fun ActivityTab() {
     val ctx = LocalContext.current
-    val c = Saathi.colors
+    val s by TripState.ui.collectAsState()
     var refresh by remember { mutableIntStateOf(0) }
-    val records = remember(refresh) { Store.records(ctx) }
+    // Re-read when an alert or trip starts or ends, so what just happened shows without leaving the tab.
+    val items = remember(refresh, s.alertActive, s.onTrip, s.told, s.smsFailed) {
+        (Store.records(ctx).map { if (it.mode == ALERT_RECORD) AlertHappening(it) else TripHappening(it) } +
+            Store.intros(ctx).map { IntroHappening(it) }).sortedByDescending { it.atMs }
+    }
+    // The newest alert record with no end yet is the one still going, if one is.
+    val liveAlert = if (s.alertActive) items.firstNotNullOfOrNull { (it as? AlertHappening)?.r?.takeIf { r -> r.endedAt == null }?.caseId } else null
+    var open by rememberSaveable { mutableStateOf<String?>(null) }
+    BackHandler(enabled = open != null) { open = null }
+    val listScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(stringResource(R.string.trips_title), style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp))
-        if (records.isEmpty()) Text(stringResource(R.string.trips_empty),
-            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(horizontal = 6.dp))
-        records.reversed().forEach { r -> TripCard(r, ctx.dayAndTime(r.createdAt * 1000),
-            onGuide = { ctx.startActivity(Intent(ctx, GuideActivity::class.java).putExtra(GuideActivity.EXTRA_CASE, r.caseId)) },
+    val still = reduceMotion()
+    AnimatedContent(
+        open,
+        transitionSpec = {
+            if (still) EnterTransition.None togetherWith ExitTransition.None
+            else {
+                // Shared axis, as in Settings: a record comes in from the side it belongs to.
+                val dir = if (targetState == null) -1 else 1
+                (slideInHorizontally(tween(260, easing = Arrive)) { it * dir / 5 } + fadeIn(tween(220))) togetherWith
+                    (slideOutHorizontally(tween(200)) { -it * dir / 5 } + fadeOut(tween(120)))
+            }
+        },
+        label = "activity",
+    ) { caseId ->
+        val record = caseId?.let { id ->
+            items.firstNotNullOfOrNull { h -> when (h) { is TripHappening -> h.r; is AlertHappening -> h.r; else -> null }?.takeIf { it.caseId == id } }
+        }
+        if (record != null) RecordPage(
+            record, live = record.caseId == liveAlert, onBack = { open = null },
+            onGuide = { ctx.startActivity(Intent(ctx, GuideActivity::class.java).putExtra(GuideActivity.EXTRA_CASE, record.caseId)) },
             onDelete = {
                 // Gone from the phone now; its anonymous community share goes too, when the server can be reached.
-                Store.deleteRecord(ctx, r.caseId)
-                scope.launch(kotlinx.coroutines.Dispatchers.IO) { app.saathi.data.Api.deleteMine(ctx, r.caseId) }
-                refresh++
+                Store.deleteRecord(ctx, record.caseId)
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) { app.saathi.data.Api.deleteMine(ctx, record.caseId) }
+                open = null; refresh++
             },
-        ) }
+        ) else ActivityList(items, liveAlert, listScroll) { open = it }
     }
 }
 
 @Composable
-private fun TripCard(r: TripRecord, whenText: String, onGuide: () -> Unit, onDelete: () -> Unit) {
-    var confirm by remember { mutableStateOf(false) }
-    // An armed delete disarms itself, so a stray tap later can't erase a record.
-    LaunchedEffect(confirm) { if (confirm) { delay(4_000); confirm = false } }
+private fun ActivityList(items: List<Happening>, liveAlert: String?, scroll: androidx.compose.foundation.ScrollState, onOpen: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).statusBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text(stringResource(R.string.trips_title), style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp))
+        if (items.isEmpty()) Text(stringResource(R.string.trips_empty),
+            style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(horizontal = 4.dp))
+        items.groupBy { ctx.dayHeading(it.atMs) }.forEach { (day, list) ->
+            Text(day, style = MaterialTheme.typography.labelLarge, color = c.fg2, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 4.dp))
+            list.forEachIndexed { i, h ->
+                when (h) {
+                    is TripHappening -> TripRow(h.r) { onOpen(h.r.caseId) }
+                    is AlertHappening -> AlertRow(h.r, live = h.r.caseId == liveAlert) { onOpen(h.r.caseId) }
+                    is IntroHappening -> IntroRow(h.i)
+                }
+                if (i < list.lastIndex) HorizontalDivider(thickness = 1.dp, color = c.hair, modifier = Modifier.padding(start = 54.dp))
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * One row of the timeline: a 36dp marker, what happened, when, and one line of what came of it. The whole row opens the
+ * record; a row with nothing to open (an intro text) has no chevron.
+ */
+@Composable
+private fun HappeningRow(
+    marker: @Composable () -> Unit, title: String, time: String, summary: String?, summaryColor: Color,
+    onClick: (() -> Unit)?, trailing: (@Composable () -> Unit)? = null,
+) {
+    val c = Saathi.colors
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp)
+            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+            .padding(horizontal = 4.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        marker()
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(title, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleMedium)
+                Text(time, style = MaterialTheme.typography.bodySmall, color = c.fg2)
+            }
+            summary?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = summaryColor, maxLines = 2,
+                overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp)) }
+        }
+        trailing?.invoke()
+        if (onClick != null) Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = c.fg2)
+    }
+}
+
+/** A round 36dp marker: an icon on a tinted disc. */
+@Composable
+private fun Marker(icon: ImageVector, disc: Color, tint: Color) {
+    Box(Modifier.size(36.dp).background(disc, CircleShape), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
+    }
+}
+
+private fun modeIcon(mode: Mode?): ImageVector = when (mode) {
+    Mode.BUS -> Icons.Rounded.DirectionsBus
+    Mode.TRAIN -> Icons.Rounded.Train
+    Mode.AUTO -> Icons.Rounded.ElectricRickshaw
+    Mode.CAB -> Icons.Rounded.LocalTaxi
+    Mode.BIKE -> Icons.Rounded.TwoWheeler
+    else -> Icons.AutoMirrored.Rounded.DirectionsWalk
+}
+
+/** What came of an alert, in a few words: who was told (or that no one was), and when she said she was okay. */
+@Composable
+private fun alertOutcome(r: TripRecord, live: Boolean): Pair<String, Color> {
     val c = Saathi.colors
     val ctx = LocalContext.current
+    val told = r.alertEntries.flatMap { it.told }.distinct()
+    val first = if (told.isEmpty()) stringResource(R.string.activity_none) else stringResource(R.string.activity_told, ctx.namesText(told))
+    val then = when {
+        r.endedAt != null -> stringResource(R.string.activity_okay_short, ctx.clockTime(r.endedAt * 1000))
+        live -> stringResource(R.string.activity_live_short)
+        else -> null
+    }
+    return listOfNotNull(first, then).joinToString(" · ") to when { told.isEmpty() -> c.help; live -> c.alum; else -> c.fg2 }
+}
+
+@Composable
+private fun TripRow(r: TripRecord, onClick: () -> Unit) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
     val mode = runCatching { Mode.valueOf(r.mode) }.getOrNull()
-    // Older records kept only English lines; newer ones keep the facts, so they can be worded in her language.
-    val eventLines = if (r.eventItems.isNotEmpty()) r.eventItems.map { ctx.eventText(it) } else r.events
-    val alertLines = r.alertEntries.ifEmpty { r.alerts.mapNotNull { app.saathi.data.legacyAlertEntry(it) } }.map { a ->
-        val at = ctx.clockTime(a.at * 1000)
-        when {
-            a.told.isEmpty() -> ctx.getString(R.string.trips_alert_none, at)
-            a.retry -> ctx.getString(R.string.trips_alert_retry, at, ctx.namesText(a.told))
-            else -> ctx.getString(R.string.trips_alert_sent, at, ctx.namesText(a.told))
+    val alerts = r.alertEntries.ifEmpty { r.alerts.mapNotNull { app.saathi.data.legacyAlertEntry(it) } }
+    // An alert on the trip is the thing to see; otherwise what the watcher noticed.
+    val (summary, color) = if (alerts.isNotEmpty()) alertOutcome(r.copy(alertEntries = alerts), live = false)
+    else (r.eventItems.map { ctx.eventText(it) }.ifEmpty { r.events }).take(2).joinToString(" · ") { it.capitalised() }
+        .ifEmpty { null }.let { it to c.fg2 }
+    HappeningRow(
+        marker = { Marker(modeIcon(mode), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer) },
+        title = mode?.let { stringResource(modeNameRes(it)) } ?: r.mode, time = ctx.clockTime(r.createdAt * 1000),
+        summary = summary, summaryColor = color, onClick = onClick,
+    )
+}
+
+@Composable
+private fun AlertRow(r: TripRecord, live: Boolean, onClick: () -> Unit) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    val (summary, color) = alertOutcome(r, live)
+    HappeningRow(
+        marker = { Marker(Icons.Rounded.Sos, c.help, Color.White) },
+        title = stringResource(alertReasonRes(r.alertEntries.firstOrNull()?.reason)), time = ctx.clockTime(r.createdAt * 1000),
+        summary = summary, summaryColor = color, onClick = onClick,
+    )
+}
+
+/** The text that told her contacts about Saathi: nothing to open. */
+@Composable
+private fun IntroRow(i: IntroRecord) {
+    val ctx = LocalContext.current
+    val c = Saathi.colors
+    HappeningRow(
+        marker = { Marker(Icons.Rounded.Sms, MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.primary) },
+        title = stringResource(R.string.activity_intro, ctx.namesText(i.to)), time = ctx.clockTime(i.at * 1000),
+        summary = null, summaryColor = c.fg2, onClick = null,
+    )
+}
+
+/**
+ * One record, opened from the list: everything it holds, in the order it happened, then its sealed fingerprints, the
+ * reporting draft, and delete.
+ */
+@Composable
+private fun RecordPage(r: TripRecord, live: Boolean, onBack: () -> Unit, onGuide: () -> Unit, onDelete: () -> Unit) {
+    val c = Saathi.colors
+    val ctx = LocalContext.current
+    val isAlert = r.mode == ALERT_RECORD
+    val mode = runCatching { Mode.valueOf(r.mode) }.getOrNull()
+    val title = if (isAlert) stringResource(alertReasonRes(r.alertEntries.firstOrNull()?.reason))
+        else mode?.let { stringResource(modeNameRes(it)) } ?: r.mode
+    val alerts = r.alertEntries.ifEmpty { r.alerts.mapNotNull { app.saathi.data.legacyAlertEntry(it) } }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(bottom = 24.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back)) }
+            Text(title, Modifier.weight(1f).padding(start = 4.dp, end = 16.dp), style = MaterialTheme.typography.headlineSmall)
         }
-    }.ifEmpty { r.alerts } // a line we can't read is still shown as stored, never dropped
-    Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .border(1.dp, c.hair, MaterialTheme.shapes.large).padding(18.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(mode?.let { stringResource(modeNameRes(it)) } ?: r.mode, style = MaterialTheme.typography.titleMedium)
-                Text(whenText, style = MaterialTheme.typography.bodySmall, color = c.fg2)
+        Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(ctx.dayAndTime(r.createdAt * 1000), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.fg2)
+                r.plate?.let { PlateText(it) }
             }
-            r.plate?.let { PlateText(it) }
-        }
-        eventLines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
-        alertLines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = c.help) }
-        r.plateCheck?.let { raw ->
-            val pc = parsePlateCheck(raw)
-            Text(
-                when {
-                    pc == null -> stringResource(R.string.trips_plate_other, raw)
-                    pc.matched -> stringResource(R.string.trips_plate_matched, pc.seen)
-                    else -> stringResource(R.string.trips_plate_mismatch, pc.seen, pc.booked.orEmpty())
-                },
-                style = MaterialTheme.typography.bodyMedium, color = c.fg2,
-            )
-        }
-        if (r.evidence.isNotEmpty()) Column(Modifier.padding(top = 4.dp)) {
-            Text(stringResource(R.string.trips_sealed), style = MaterialTheme.typography.labelSmall, color = c.fg2)
-            r.evidence.forEach {
-                Text("${ctx.evidenceName(it.name)}  ${it.sha256.take(16)}…", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = c.fg2)
+            Spacer(Modifier.height(4.dp))
+            (r.eventItems.map { ctx.eventText(it) }.ifEmpty { r.events }).forEach { Text(it.capitalised(), style = MaterialTheme.typography.bodyLarge) }
+            alerts.forEach { a ->
+                val at = ctx.clockTime(a.at * 1000)
+                Text(
+                    when {
+                        a.told.isEmpty() -> stringResource(R.string.trips_alert_none, at)
+                        a.retry -> stringResource(R.string.trips_alert_retry, at, ctx.namesText(a.told))
+                        else -> stringResource(R.string.trips_alert_sent, at, ctx.namesText(a.told))
+                    },
+                    style = MaterialTheme.typography.bodyLarge, color = if (a.told.isEmpty()) c.help else MaterialTheme.colorScheme.onBackground,
+                )
             }
+            if (alerts.isEmpty() && r.alerts.isNotEmpty()) r.alerts.forEach { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            if (isAlert) when {
+                r.endedAt != null -> Text(stringResource(R.string.activity_okay_at, ctx.clockTime(r.endedAt * 1000)),
+                    style = MaterialTheme.typography.bodyLarge, color = c.fg2)
+                live -> Text(stringResource(R.string.activity_alert_live), style = MaterialTheme.typography.bodyLarge, color = c.alum)
+            }
+            r.plateCheck?.let { raw ->
+                val pc = parsePlateCheck(raw)
+                Text(
+                    when {
+                        pc == null -> stringResource(R.string.trips_plate_other, raw)
+                        pc.matched -> stringResource(R.string.trips_plate_matched, pc.seen)
+                        else -> stringResource(R.string.trips_plate_mismatch, pc.seen, pc.booked.orEmpty())
+                    },
+                    style = MaterialTheme.typography.bodyLarge, color = c.fg2,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            SealedRows(r)
+            // While an alert is still going its record is still being written, so it can't be deleted yet.
+            RecordActions(onGuide, onDelete.takeUnless { live })
         }
-        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(onClick = onGuide) { Text(stringResource(R.string.trips_guide)) }
-            OutlinedButton(onClick = { if (confirm) onDelete() else confirm = true }) {
-                Text(stringResource(if (confirm) R.string.trips_delete_armed else R.string.trips_delete))
+    }
+}
+
+/** One line per sealed file: what it is on the left, its fingerprint on the right, so long names never push a hash down. */
+@Composable
+private fun SealedRows(r: TripRecord) {
+    if (r.evidence.isEmpty()) return
+    val c = Saathi.colors
+    val ctx = LocalContext.current
+    Column(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(stringResource(R.string.trips_sealed), style = MaterialTheme.typography.labelSmall, color = c.fg2)
+        r.evidence.forEach {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(ctx.evidenceName(it.name), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = c.fg2,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("${it.sha256.take(12)}…", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = c.fg2)
             }
         }
     }
+}
+
+/** The report is the action; delete is quieter and sits below, so neither squeezes the other. No [onDelete], no delete. */
+@Composable
+private fun RecordActions(onGuide: () -> Unit, onDelete: (() -> Unit)?) {
+    val c = Saathi.colors
+    var confirm by remember { mutableStateOf(false) }
+    // An armed delete disarms itself, so a stray tap later can't erase a record.
+    LaunchedEffect(confirm) { if (confirm) { delay(4_000); confirm = false } }
+    FilledTonalButton(onClick = onGuide, Modifier.padding(top = 8.dp).fillMaxWidth().heightIn(min = 48.dp)) {
+        Text(stringResource(R.string.trips_guide), textAlign = TextAlign.Center)
+    }
+    if (onDelete != null) TextButton(
+        onClick = { if (confirm) onDelete() else confirm = true },
+        Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp),
+        // No side padding: the word lines up with the card's text above; the 48dp target stays.
+        contentPadding = PaddingValues(vertical = 8.dp),
+        // Armed, it takes the attention colour: one more tap and the record is gone for good.
+        colors = ButtonDefaults.textButtonColors(contentColor = if (confirm) c.alum else MaterialTheme.colorScheme.primary),
+    ) { Text(stringResource(if (confirm) R.string.trips_delete_armed else R.string.trips_delete)) }
 }
 
 @Composable

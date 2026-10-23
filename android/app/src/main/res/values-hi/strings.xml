@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App and shared labels -->
-    <string name="widget_description">SOS आपकी तरफ़ से बोलता है और आपके कॉन्टैक्ट को अलर्ट भेजता है। सफ़र शुरू करने के लिए स्लाइड करें।</string>
+    <string name="widget_description">SOS पर एक टैप से आपके कॉन्टैक्ट को मैसेज जाता है। सफ़र शुरू करने के लिए स्लाइड करें।</string>
     <string name="lang_name">हिन्दी</string>
     <string name="action_cancel">रद्द करें</string>
     <string name="action_close">बंद करें</string>
@@ -17,7 +17,7 @@
 
     <!-- Navigation -->
     <string name="nav_trip">सफ़र</string>
-    <string name="nav_my_trips">मेरे सफ़र</string>
+    <string name="nav_my_trips">गतिविधि</string>
     <string name="nav_map">मैप</string>
     <string name="nav_settings">सेटिंग्स</string>
 
@@ -138,7 +138,7 @@
     <string name="help_now_title">मदद माँगी जा रही है</string>
     <string name="help_now_not_sent">नहीं भेजा। किसी को मैसेज नहीं गया।</string>
     <string name="notif_pending_title">%1$d सेकंड में आपके कॉन्टैक्ट को मैसेज जाएगा</string>
-    <string name="notif_pending_text">आपने ईयरफ़ोन का बटन 3 बार दबाया।</string>
+    <string name="notif_pending_text">गलती से हुआ हो, तो \"मैसेज न भेजें\" दबाएँ।</string>
     <plurals name="event_timer">
         <item quantity="one">आपका %1$d मिनट का समय पूरा हुआ</item>
         <item quantity="other">आपका %1$d मिनट का समय पूरा हुआ</item>
@@ -187,7 +187,7 @@
     <!-- Home: after a trip -->
     <string name="consent_title">दूसरी महिलाओं की मदद करें?</string>
     <string name="consent_body">इस राइड को बिना नाम के गिना जाएगा और आपका जवाब कम्युनिटी मैप में जुड़ेगा। आपका नाम या नंबर कभी नहीं। इसे आप सेटिंग्स में बदल सकती हैं।</string>
-    <string name="consent_stats">साथ ही बिना नाम के इस्तेमाल के आँकड़े भेजें: कौन से फ़ीचर इस्तेमाल हुए, आप कहाँ गईं यह कभी नहीं।</string>
+    <string name="consent_stats">साथ ही बिना नाम के इस्तेमाल के आँकड़े भेजें: सेटअप कैसा रहा, कौन से फ़ीचर इस्तेमाल हुए, आप कहाँ गईं यह कभी नहीं।</string>
     <string name="consent_yes">हाँ, शेयर करें</string>
     <string name="consent_no">नहीं, रहने दें</string>
     <string name="felt_title">उस सफ़र में कुछ ठीक नहीं लगा?</string>
@@ -197,14 +197,36 @@
     <string name="felt_happened">कुछ हुआ</string>
 
     <!-- My trips -->
-    <string name="trips_title">मेरे सफ़र</string>
-    <string name="trips_empty">जिन सफ़र पर Saathi ने नज़र रखी, वे यहाँ दिखेंगे, हर एक के साथ उसका सील किया हुआ रिकॉर्ड।</string>
+    <string name="trips_title">गतिविधि</string>
+    <string name="trips_empty">आपके सफ़र, आपका भेजा हर अलर्ट, और वे मैसेज जिनसे आपके कॉन्टैक्ट को Saathi के बारे में बताया गया, यहाँ दिखेंगे। हर सफ़र और अलर्ट का एक सील किया हुआ रिकॉर्ड रहता है।</string>
     <string name="trips_plate_matched">प्लेट जाँच: मेल खाई (%1$s)</string>
     <string name="trips_plate_mismatch">प्लेट जाँच: दिखी %1$s, बुक थी %2$s</string>
     <string name="trips_plate_other">प्लेट जाँच: %1$s</string>
     <string name="trips_alert_sent">%1$s पर अलर्ट भेजा गया। बताया गया: %2$s</string>
     <string name="trips_alert_none">%1$s पर किसी तक मैसेज नहीं पहुँचा।</string>
     <string name="trips_alert_retry">%1$s पर फिर कोशिश की गई। बताया गया: %2$s</string>
+    <!-- Activity (drafts, not yet reviewed) -->
+    <string name="activity_today">आज</string>
+    <string name="activity_yesterday">कल</string>
+    <string name="activity_okay_at">%1$s पर आपने बताया कि आप ठीक हैं</string>
+    <string name="activity_alert_live">अभी चालू है। जब हो सके, सफ़र वाली स्क्रीन पर \"मैं ठीक हूँ\" दबाएँ।</string>
+    <string name="activity_intro">%1$s को मैसेज किया कि आपने उन्हें जोड़ा है</string>
+    <string name="activity_told">%1$s को बताया गया</string>
+    <string name="activity_none">किसी तक नहीं पहुँचा</string>
+    <string name="activity_okay_short">%1$s पर ठीक</string>
+    <string name="activity_live_short">अभी चालू है</string>
+    <string name="activity_reason_hold">आपने मदद के लिए दबाए रखा</string>
+    <string name="activity_reason_power">आपने पावर बटन दबाया</string>
+    <string name="activity_reason_notification">आपने नोटिफ़िकेशन से मदद माँगी</string>
+    <string name="activity_reason_widget">आपने विजेट से मदद माँगी</string>
+    <string name="activity_reason_tile">आपने क्विक सेटिंग्स टाइल से मदद माँगी</string>
+    <string name="activity_reason_shortcut">आपने Saathi Help से मदद माँगी</string>
+    <string name="activity_reason_headset">आपने ईयरफ़ोन का बटन दबाया</string>
+    <string name="activity_reason_speak">\"मेरी तरफ़ से बोलें\" ने अलर्ट भेजा</string>
+    <string name="activity_reason_companion">Saathi कॉल से अलर्ट गया</string>
+    <string name="activity_reason_checkin">आपने चेक-इन का जवाब नहीं दिया</string>
+    <string name="activity_reason_plate">नंबर प्लेट मेल नहीं खाई</string>
+    <string name="activity_reason_unknown">मदद माँगी गई</string>
     <string name="trips_sealed">सील · फ़िंगरप्रिंट</string>
     <string name="trips_evidence_location">लोकेशन लॉग</string>
     <string name="trips_evidence_audio">ऑडियो %1$s</string>
@@ -491,7 +513,7 @@
     <!-- Companion call -->
     <string name="companion_title">Saathi कॉल पर है</string>
     <string name="companion_online">ज़ोर से बोलें, ताकि पास के लोग सुनें कि आप कॉल पर हैं।</string>
-    <string name="companion_offline">इंटरनेट नहीं है। मदद या \"मेरी तरफ़ से बोलें\" इस्तेमाल करें।</string>
+    <string name="companion_offline">इंटरनेट नहीं है। मदद इस्तेमाल करें।</string>
     <string name="companion_told">आपके कॉन्टैक्ट को बता दिया गया: %1$s</string>
     <string name="companion_type">या लिखें</string>
     <string name="companion_send">भेजें</string>
@@ -543,7 +565,7 @@
     <string name="notif_guard_ready">Saathi तैयार है</string>
     <string name="notif_guard_alert">%1$s को अलर्ट भेजा गया</string>
     <string name="guard_text_power">मदद के लिए पावर बटन दबाएँ</string>
-    <string name="guard_text_lock">लॉक स्क्रीन से भी मदद और \"मेरी तरफ़ से बोलें\" काम करते हैं</string>
+    <string name="guard_text_lock">लॉक स्क्रीन से भी मदद काम करती है</string>
     <string name="notif_action_stop">नज़र रखना बंद करें</string>
     <string name="notif_checkin_practice_title">चेक-इन का अभ्यास</string>
     <string name="notif_checkin_practice_text">यह अभ्यास है। कुछ भेजा नहीं जाएगा। \"मैं ठीक हूँ\" दबाएँ।</string>
@@ -571,8 +593,8 @@
 
     <!-- Home-screen widget and Quick Settings tile -->
     <string name="widget_help">मदद</string>
-    <string name="widget_sub">एक टैप में आपकी तरफ़ से बोलता है और कॉन्टैक्ट को मैसेज भेजता है</string>
-    <string name="widget_sub_trip">आपके सफ़र पर नज़र है · एक टैप में आपकी तरफ़ से बोलता है और कॉन्टैक्ट को मैसेज भेजता है</string>
+    <string name="widget_sub">एक टैप में कॉन्टैक्ट को मैसेज जाता है</string>
+    <string name="widget_sub_trip">आपके सफ़र पर नज़र है · एक टैप में कॉन्टैक्ट को मैसेज जाता है</string>
     <string name="widget_slide">पैदल, बस, ट्रेन के लिए स्लाइड करें</string>
     <string name="widget_back">SOS पर वापस</string>
     <string name="tile_contacts_told">कॉन्टैक्ट को बता दिया गया · खोलने के लिए टैप करें</string>

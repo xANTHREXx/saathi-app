@@ -2,7 +2,7 @@
 <resources>
     <!-- App and shared labels -->
     <string name="app_name" translatable="false">Saathi</string>
-    <string name="widget_description">SOS speaks for you and alerts your contacts. Slide to start a trip.</string>
+    <string name="widget_description">One tap on SOS texts your contacts. Slide to start a trip.</string>
     <string name="lang_name">English</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_close">Close</string>
@@ -18,7 +18,7 @@
 
     <!-- Navigation -->
     <string name="nav_trip">Trip</string>
-    <string name="nav_my_trips">My trips</string>
+    <string name="nav_my_trips">Activity</string>
     <string name="nav_map">Map</string>
     <string name="nav_settings">Settings</string>
 
@@ -139,7 +139,7 @@
     <string name="help_now_title">Getting help</string>
     <string name="help_now_not_sent">Not sent. Nobody was texted.</string>
     <string name="notif_pending_title">Texting your contacts in %1$d seconds</string>
-    <string name="notif_pending_text">You pressed the earphone button 3 times.</string>
+    <string name="notif_pending_text">Tap Don\'t text if this was a mistake.</string>
     <plurals name="event_timer">
         <item quantity="one">your %1$d-minute check ran out</item>
         <item quantity="other">your %1$d-minute check ran out</item>
@@ -188,7 +188,7 @@
     <!-- Home: after a trip -->
     <string name="consent_title">Help other women?</string>
     <string name="consent_body">Count this ride anonymously, and add your answer to the community map. Never your name or number. You can change this in Settings.</string>
-    <string name="consent_stats">Also send anonymous usage stats: which features get used, never where you go.</string>
+    <string name="consent_stats">Also send anonymous usage stats: how setup went, which features get used, never where you go.</string>
     <string name="consent_yes">Yes, share</string>
     <string name="consent_no">No thanks</string>
     <string name="felt_title">Anything felt off on that trip?</string>
@@ -198,14 +198,36 @@
     <string name="felt_happened">Something happened</string>
 
     <!-- My trips -->
-    <string name="trips_title">My trips</string>
-    <string name="trips_empty">Trips Saathi watched will appear here, each with its sealed record.</string>
+    <string name="trips_title">Activity</string>
+    <string name="trips_empty">Your trips, any alert you raise, and the texts that told your contacts about Saathi will show here. Trips and alerts each keep a sealed record.</string>
     <string name="trips_plate_matched">Plate check: matched (%1$s)</string>
     <string name="trips_plate_mismatch">Plate check: saw %1$s, booked %2$s</string>
     <string name="trips_plate_other">Plate check: %1$s</string>
     <string name="trips_alert_sent">Alert sent at %1$s. Told: %2$s</string>
     <string name="trips_alert_none">No one was reached at %1$s.</string>
     <string name="trips_alert_retry">Tried again at %1$s. Told: %2$s</string>
+    <!-- Activity: day headings, alerts raised with no trip, intro texts -->
+    <string name="activity_today">Today</string>
+    <string name="activity_yesterday">Yesterday</string>
+    <string name="activity_okay_at">You said you were okay at %1$s</string>
+    <string name="activity_alert_live">Still going. Tap I\'m okay on the Trip screen when you can.</string>
+    <string name="activity_intro">Texted %1$s that you added them</string>
+    <string name="activity_told">Told %1$s</string>
+    <string name="activity_none">No one was reached</string>
+    <string name="activity_okay_short">okay at %1$s</string>
+    <string name="activity_live_short">still going</string>
+    <string name="activity_reason_hold">You held for help</string>
+    <string name="activity_reason_power">You pressed the power button</string>
+    <string name="activity_reason_notification">You asked for help from the notification</string>
+    <string name="activity_reason_widget">You asked for help from the widget</string>
+    <string name="activity_reason_tile">You asked for help from the Quick Settings tile</string>
+    <string name="activity_reason_shortcut">You asked for help from Saathi Help</string>
+    <string name="activity_reason_headset">You pressed the earphone button</string>
+    <string name="activity_reason_speak">Speak for me sent an alert</string>
+    <string name="activity_reason_companion">An alert went out from Call Saathi</string>
+    <string name="activity_reason_checkin">You didn\'t answer a check-in</string>
+    <string name="activity_reason_plate">The plate didn\'t match</string>
+    <string name="activity_reason_unknown">Help was asked for</string>
     <string name="trips_sealed">Sealed · fingerprints</string>
     <string name="trips_evidence_location">location log</string>
     <string name="trips_evidence_audio">audio %1$s</string>
@@ -492,7 +514,7 @@
     <!-- Companion call -->
     <string name="companion_title">Saathi is on the call</string>
     <string name="companion_online">Speak out loud, so anyone near you hears you\'re on a call.</string>
-    <string name="companion_offline">No connection. Use Help or Speak for me.</string>
+    <string name="companion_offline">No connection. Use Help.</string>
     <string name="companion_told">Your contacts were told: %1$s</string>
     <string name="companion_type">Or type</string>
     <string name="companion_send">Send</string>
@@ -544,7 +566,7 @@
     <string name="notif_guard_ready">Saathi is ready</string>
     <string name="notif_guard_alert">Alert sent to %1$s</string>
     <string name="guard_text_power">Press the power button to get help</string>
-    <string name="guard_text_lock">Help and Speak for me work from the lock screen</string>
+    <string name="guard_text_lock">Help works from the lock screen</string>
     <string name="notif_action_stop">Stop watching</string>
     <string name="notif_checkin_practice_title">Practice check-in</string>
     <string name="notif_checkin_practice_text">This is a practice. Nothing will be sent. Tap I\'m okay.</string>
@@ -572,8 +594,8 @@
 
     <!-- Home-screen widget and Quick Settings tile -->
     <string name="widget_help">Help</string>
-    <string name="widget_sub">One tap speaks for you and texts your contacts</string>
-    <string name="widget_sub_trip">Watching your trip · one tap speaks for you and texts your contacts</string>
+    <string name="widget_sub">One tap texts your contacts</string>
+    <string name="widget_sub_trip">Watching your trip · one tap texts your contacts</string>
     <string name="widget_slide">Slide for Walk, Bus, Train</string>
     <string name="widget_back">Back to SOS</string>
     <string name="tile_contacts_told">Contacts told · tap to open</string>

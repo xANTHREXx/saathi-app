@@ -16,6 +16,10 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicBoolean
 
 data class TelemetryEvent(
@@ -30,13 +34,31 @@ data class TelemetryEvent(
  */
 object TelemetryManager {
     private const val QUEUE_FILE = "telemetry_queue.json"
+    private const val HELD_FILE = "telemetry_held.json"
     private const val MAX_CAPACITY = 200
+    private const val HELD_CAPACITY = 50
     private const val BATCH_THRESHOLD = 10
 
     private val lock = Any()
     private val flushing = AtomicBoolean(false)
     private const val RETRY_WAIT_MS = 60_000L
     @Volatile private var lastFailMs = 0L
+
+    /** Drops held events older than [maxAgeMs] (default 30 days). */
+    fun pruneHeld(
+        events: List<TelemetryEvent>,
+        nowMs: Long = System.currentTimeMillis(),
+        maxAgeMs: Long = 30L * 24 * 3600 * 1000,
+    ): List<TelemetryEvent> {
+        val cutoffMs = nowMs - maxAgeMs
+        val fmt = SimpleDateFormat("yyyy-MM-dd'T'HH:00:00'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        return events.filter { ev ->
+            val evMs = runCatching { fmt.parse(ev.occurredAt)?.time }.getOrNull()
+            evMs == null || evMs >= cutoffMs
+        }
+    }
 
     /** Time is rounded down to the hour so events can't be lined up with a trip minute by minute. */
     fun createEventRecord(name: String, properties: Map<String, Any>, nowMs: Long = System.currentTimeMillis()): TelemetryEvent =
@@ -181,6 +203,75 @@ object TelemetryManager {
                 file.writeText(serializeEvents(events))
                 tmp.delete()
             }
+        }
+    }
+
+    /**
+     * Records an onboarding event. If usageStats is on, behaves like [track]; otherwise appends
+     * to telemetry_held.json (capped at 50 events) with pruning of events older than 30 days. Never throws.
+     */
+    fun trackOnboarding(ctx: Context, name: String, properties: Map<String, Any> = emptyMap()) {
+        runCatching {
+            if (Store.settings(ctx).usageStats) {
+                track(ctx, name, properties)
+            } else {
+                val record = createEventRecord(name, properties)
+                synchronized(lock) {
+                    val current = readHeld(ctx)
+                    val updated = enforceCap(current + record, HELD_CAPACITY)
+                    writeHeld(ctx, updated)
+                }
+            }
+        }
+    }
+
+    /** Moves held onboarding events into the normal queue, deletes the held file, and flushes. */
+    fun releaseHeld(ctx: Context) {
+        runCatching {
+            val held = synchronized(lock) {
+                val h = readHeld(ctx)
+                deleteHeldFile(ctx)
+                h
+            }
+            if (held.isNotEmpty()) {
+                synchronized(lock) {
+                    val q = readQueue(ctx)
+                    val updated = enforceCap(q + held, MAX_CAPACITY)
+                    writeQueue(ctx, updated)
+                }
+                flush(ctx)
+            }
+        }
+    }
+
+    /** Deletes the held onboarding events file. */
+    fun dropHeld(ctx: Context) {
+        synchronized(lock) { deleteHeldFile(ctx) }
+    }
+
+    private fun readHeld(ctx: Context): List<TelemetryEvent> {
+        val file = File(ctx.filesDir, HELD_FILE)
+        if (!file.exists()) return emptyList()
+        val parsed = runCatching { parseEvents(file.readText()) }.getOrDefault(emptyList())
+        return pruneHeld(parsed)
+    }
+
+    private fun writeHeld(ctx: Context, events: List<TelemetryEvent>) {
+        runCatching {
+            val file = File(ctx.filesDir, HELD_FILE)
+            val tmp = File(ctx.filesDir, "$HELD_FILE.tmp")
+            tmp.writeText(serializeEvents(events))
+            if (!tmp.renameTo(file)) {
+                file.writeText(serializeEvents(events))
+                tmp.delete()
+            }
+        }
+    }
+
+    private fun deleteHeldFile(ctx: Context) {
+        runCatching {
+            val file = File(ctx.filesDir, HELD_FILE)
+            if (file.exists()) file.delete()
         }
     }
 
