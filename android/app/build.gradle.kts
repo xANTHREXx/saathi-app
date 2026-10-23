@@ -20,8 +20,8 @@ android {
         applicationId = "app.saathi"
         minSdk = 29
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3"
+        versionCode = 4
+        versionName = "0.4"
         // The backend function: https://<ref>.supabase.co/functions/v1/api, or the local Deno server from the emulator.
         // Updates are only accepted from here (forks set UPDATE_URL_PREFIX in local.properties).
         buildConfigField("String", "UPDATE_URL_PREFIX", "\"${localProps.getProperty("UPDATE_URL_PREFIX", "https://github.com/xANTHREXx/saathi-app/releases/download/")}\"")
