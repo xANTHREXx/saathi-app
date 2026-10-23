@@ -45,6 +45,7 @@ import app.saathi.core.recipients
 import app.saathi.core.vehicleNote
 import app.saathi.data.Api
 import app.saathi.data.Evidence
+import app.saathi.data.Onboarding
 import app.saathi.data.RouteCache
 import app.saathi.data.RunState
 import app.saathi.data.Store
@@ -76,6 +77,7 @@ class TripService : Service() {
         const val ACTION_START_TRIP = "app.saathi.START_TRIP"
         const val ACTION_STOP_TRIP = "app.saathi.STOP_TRIP"
         const val ACTION_HELP = "app.saathi.HELP"
+        const val ACTION_WIDGET_SOS = "app.saathi.WIDGET_SOS"
         const val ACTION_OK = "app.saathi.OK"
         const val ACTION_SET_DEST = "app.saathi.SET_DEST"
         const val ACTION_SET_PLATE = "app.saathi.SET_PLATE"
@@ -210,11 +212,14 @@ class TripService : Service() {
     }.onFailure { Log.w("Saathi", "headset: silence not played: ${it.message}") }
 
     /** Three presses: the same 5 s undo as the help tile, from a notification she can reach without the screen. */
-    private fun headsetHelp() {
+    private fun headsetHelp() = undoableHelp(Reason.HEADSET)
+
+    /** The widget SOS tap shares the earphone button's 5 s "Don't text" window, since a home-screen tap is easy to make by accident. */
+    private fun undoableHelp(reason: Reason) {
         val ui = TripState.now
         if (ui.alertActive || ui.pendingAlertEndsAtMs != null) return
-        Log.i("Saathi", "earphone button: help")
-        AlertManager.raiseAfter(Reason.HEADSET, HEADSET_UNDO_MS)
+        Log.i("Saathi", "undoable help: $reason")
+        AlertManager.raiseAfter(reason, HEADSET_UNDO_MS)
         Alarm(this).buzzOnce()
         Notifier.showPending(this, HEADSET_UNDO_MS)
     }
@@ -307,6 +312,7 @@ class TripService : Service() {
             ACTION_START_TRIP -> startTrip(intent)
             ACTION_STOP_TRIP -> stopTrip()
             ACTION_HELP -> AlertManager.raise(Reason.NOTIFICATION)
+            ACTION_WIDGET_SOS -> undoableHelp(Reason.WIDGET_SOS)
             ACTION_OK -> okayFromNotification()
             ACTION_SET_DEST -> setDestination(intent.getStringExtra(EXTRA_DEST))
             ACTION_SET_PLATE -> setPlate(intent.getStringExtra(EXTRA_PLATE))
@@ -361,6 +367,11 @@ class TripService : Service() {
             "auto_detected" to (i.getStringExtra(EXTRA_APP) != null)
         ))
         val replay = i.getStringExtra(EXTRA_REPLAY)
+        if (replay == null && !Onboarding.tipShown(this, "first_trip")) {
+            Onboarding.markTip(this, "first_trip")
+            val text = getString(R.string.tip_first_trip)
+            TripState.update { it.copy(tip = text) }
+        }
         demoRoute = replay != null && loadDemoRoute(replay)
         val source = if (replay != null) ReplaySource(this, replay, i.getIntExtra(EXTRA_SPEED, 30)) else FusedSource(this)
         tripJob = scope.launch {

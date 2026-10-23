@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import app.saathi.ui.onboarding.PracticeCard
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -220,10 +221,17 @@ private fun Home(settings: Settings, onChange: (Settings) -> Unit, justSetUp: Bo
     var tab by remember { mutableStateOf(Tab.TRIP) }
     val snackbar = remember { SnackbarHostState() }
     val readyMessage = stringResource(R.string.home_ready_snackbar)
+    val s by TripState.ui.collectAsState()
     LaunchedEffect(justSetUp) {
         if (justSetUp) {
             snackbar.showSnackbar(readyMessage)
             onSetUpShown()
+        }
+    }
+    LaunchedEffect(s.tip) {
+        s.tip?.let { text ->
+            snackbar.showSnackbar(text)
+            TripState.update { it.copy(tip = null) }
         }
     }
     Scaffold(
@@ -264,6 +272,13 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
     val s by TripState.ui.collectAsState()
     val ctx = LocalContext.current
     var showDemo by remember { mutableStateOf(false) }
+
+    val runningPractice = s.practice && s.checkInEndsAtMs != null
+    LaunchedEffect(runningPractice) {
+        if (runningPractice) {
+            ctx.startActivity(Intent(ctx, CheckInActivity::class.java))
+        }
+    }
 
     // The map only peeks above the sheet, scaled to the screen so short phones keep room for the sheet's last rows.
     val peek = (LocalConfiguration.current.screenHeightDp * 0.2f).coerceIn(112f, 184f)
@@ -314,6 +329,7 @@ private fun TripTab(settings: Settings, onChange: (Settings) -> Unit) {
                         ) { onTrip -> if (onTrip) OnTrip(s) else Ready() }
                     }
                     if (!s.alertActive && s.checkInEndsAtMs == null) CheckOnMe(s, settings, onChange)
+                    if (!s.onTrip && !s.alertActive) PracticeCard()
                     AfterTrip(settings, onChange)
                     if (readyCardVisible(s.onTrip, s.alertActive, settings.contacts.isNotEmpty(),
                             settings.readyCardDismissed, settings.contactsToldAsked, settings.tileAsked)) ReadyCard(settings, onChange)

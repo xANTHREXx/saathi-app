@@ -51,6 +51,8 @@ data class UiState(
     val checkAtMs: Long? = null,
     /** The timer's length in minutes, including any "Add 10 min", for the check-in's words. */
     val checkMinutes: Int = 0,
+    /** One-time tip message to show on Home, cleared after display. */
+    val tip: String? = null,
 )
 
 /** One shared state for the service, the screens, the widget. */

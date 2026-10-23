@@ -321,6 +321,8 @@
         <item quantity="other">मदद माँगने के लिए पावर बटन %1$d बार जल्दी-जल्दी दबाएँ।</item>
     </plurals>
     <string name="settings_also">और भी</string>
+    <string name="settings_how_it_works">साथी कैसे काम करता है</string>
+    <string name="settings_how_it_works_sum">अलर्ट नियम, असल स्थितियाँ और वीडियो</string>
     <string name="settings_privacy">प्राइवेसी और शेयरिंग</string>
     <string name="settings_privacy_sum">कम्युनिटी शेयरिंग, क्रैश रिपोर्ट और इस्तेमाल के आँकड़े</string>
 
@@ -493,6 +495,35 @@
     <string name="practice_tap_okay">चेक-इन पर \"मैं ठीक हूँ\" दबाएँ।</string>
     <string name="practice_done">अभ्यास पूरा हुआ</string>
     <string name="practice_done_body">चेक-इन ऐसा लगता है। आप सेटिंग्स से फिर अभ्यास कर सकती हैं।</string>
+
+    <!-- Home card: practice -->
+    <string name="practice_card_title">एक अभ्यास आज़माएँ</string>
+    <string name="practice_card_body">सुनें कि आवाज़ कैसी होती है और जवाब कैसे देना है। आपके संपर्कों को कुछ भी नहीं भेजा जाएगा।</string>
+    <string name="practice_card_starting">%1$d सेकंड में शुरू हो रहा है…</string>
+
+    <!-- How Saathi works: real situations -->
+    <string name="how_situations_title">असल स्थितियाँ</string>
+    <string name="how_what_saathi_does">साथी क्या करता है</string>
+    <string name="how_what_you_can_do">आप क्या कर सकती हैं</string>
+    <string name="how_sit_stop_title">सवारी किसी सुनसान जगह रुक जाती है</string>
+    <string name="how_sit_stop_saathi">काफ़ी देर रुकने पर साथी घंटी बजाता है और 10 सेकंड की उल्टी गिनती शुरू करता है।</string>
+    <string name="how_sit_stop_you">रोकने के लिए \"मैं ठीक हूँ\" दबाएँ, या संपर्कों को अलर्ट भेजने के लिए समय समाप्त होने दें।</string>
+    <string name="how_sit_route_title">सवारी तय रास्ते से अलग जाती है</string>
+    <string name="how_sit_route_saathi">रास्ता बदलने पर साथी ध्यान देता है और पूछता है कि क्या आप ठीक हैं।</string>
+    <string name="how_sit_route_you">अगर आप जानबूझकर दूसरे रास्ते से जा रही हैं, तो \"मैं ठीक हूँ\" दबाएँ।</string>
+    <string name="how_sit_check_title">घर पैदल जाते समय असहज लगना</string>
+    <string name="how_sit_check_saathi">चेक ऑन मी टाइमर शुरू करता है और समय पूरा होने पर पूछता है कि क्या आप सुरक्षित पहुँच गईं।</string>
+    <string name="how_sit_check_you">चलना शुरू करने से पहले होम स्क्रीन पर 10 या 20 मिनट का टाइमर लगाएँ।</string>
+    <string name="how_sit_urgent_title">बिना बोले तुरंत मदद चाहिए</string>
+    <string name="how_sit_urgent_saathi">सभी संपर्कों को आपकी लाइव लोकेशन के साथ इमरजेंसी मैसेज भेजता है।</string>
+    <string name="how_sit_urgent_you">स्क्रीन पर मदद बटन 2 सेकंड तक दबाए रखें, या पावर बटन दबाएँ।</string>
+    <string name="how_sit_plate_title">रात में ऑटो लेना</string>
+    <string name="how_sit_plate_saathi">नंबर प्लेट की फ़ोटो ट्रिप के साथ सहेजता है, जो सिर्फ़ आपके फ़ोन पर रहती है।</string>
+    <string name="how_sit_plate_you">सवारी में बैठते समय होम स्क्रीन पर कैमरा बटन दबाकर नंबर प्लेट की फ़ोटो लें।</string>
+
+    <!-- One-time tips -->
+    <string name="tip_first_trip">साथी नज़र रख रहा है। अगर सवारी ज़्यादा देर रुकती है या रास्ते से भटकती है, तो पहले आपसे पूछेगा।</string>
+    <string name="tip_first_checkin">अगर आपने जवाब नहीं दिया होता, तो %1$s को मैसेज भेजा जाता।</string>
 
     <!-- Check-in screen -->
     <string name="checkin_title">क्या आप ठीक हैं?</string>

@@ -725,3 +725,36 @@ Added with the "Check on me" timer, arrival, back-tap, earphone button, Call 112
 | `settings_backtap_body` | Some phones open an app when you tap the back twice. Pick Saathi Help. Pixel: Settings › System › Gestures › Quick Tap. Samsung: Good Lock › RegiStar. You get 5 seconds to undo. Long-press Saathi's icon for the same Get help shortcut. | कुछ फ़ोन में पीछे दो बार टैप करने पर कोई ऐप खुलता है। उसमें Saathi मदद चुनें। Pixel: सेटिंग्स › सिस्टम › जेस्चर › क्विक टैप। Samsung: Good Lock › RegiStar। रद्द करने के लिए 5 सेकंड मिलेंगे। Saathi के आइकन को दबाकर रखने पर भी "मदद लें" मिलता है। | ⚠ The menu paths are the phone makers' own; on a Hindi phone their labels may differ. |
 | `settings_backtap_icon` | Show a Saathi Help icon | Saathi मदद का आइकन दिखाएँ |  |
 | `okay_unlock_first` | You'll be asked to unlock first. | पहले फ़ोन अनलॉक करना होगा। | Under I'm okay on the alert screen, only when the phone is locked. |
+
+## New on 2026-10-24: Onboarding education (Task 10)
+
+Added for Home practice card, Settings "How Saathi works", real situations, and first-time tips.
+
+| String name | English | Hindi | Notes |
+|---|---|---|---|
+| `settings_how_it_works` | How Saathi works | साथी कैसे काम करता है | Sub-page in Settings "Also". |
+| `settings_how_it_works_sum` | Alert rules, real situations, and video | अलर्ट नियम, असल स्थितियाँ और वीडियो | Subtitle in Settings list. |
+| `practice_card_title` | Try a practice check-in | एक अभ्यास आज़माएँ | Home screen prompt card. |
+| `practice_card_body` | Hear what an alert sounds like and see how to answer. Nothing will be sent to your contacts. | सुनें कि आवाज़ कैसी होती है और जवाब कैसे देना है। आपके संपर्कों को कुछ भी नहीं भेजा जाएगा। | Explains why to try practice. |
+| `practice_card_starting` | Starting in %1$d seconds… | %1$d सेकंड में शुरू हो रहा है… | Shown while counting down to practice check-in. |
+| `how_situations_title` | Real situations | असल स्थितियाँ | Section header in How Saathi works. |
+| `how_what_saathi_does` | What Saathi does | साथी क्या करता है | Column / label for system action. |
+| `how_what_you_can_do` | What you can do | आप क्या कर सकती हैं | Column / label for user action. |
+| `how_sit_stop_title` | Ride stops on a dark stretch | सवारी किसी सुनसान जगह रुक जाती है | Situation 1. |
+| `how_sit_stop_saathi` | After a long stop, Saathi rings and counts down for 10 seconds. | काफ़ी देर रुकने पर साथी घंटी बजाता है और 10 सेकंड की उल्टी गिनती शुरू करता है। | |
+| `how_sit_stop_you` | Tap "I'm okay" to clear it, or let the timer run out to alert your contacts. | रोकने के लिए "मैं ठीक हूँ" दबाएँ, या संपर्कों को अलर्ट भेजने के लिए समय समाप्त होने दें। | |
+| `how_sit_route_title` | Ride leaves the expected route | सवारी तय रास्ते से अलग जाती है | Situation 2. |
+| `how_sit_route_saathi` | Saathi notices you turned off and asks if you are okay. | रास्ता बदलने पर साथी ध्यान देता है और पूछता है कि क्या आप ठीक हैं। | |
+| `how_sit_route_you` | If you took a different way on purpose, tap "I'm okay". | अगर आप जानबूझकर दूसरे रास्ते से जा रही हैं, तो "मैं ठीक हूँ" दबाएँ। | |
+| `how_sit_check_title` | Walking home and feeling uneasy | घर पैदल जाते समय असहज लगना | Situation 3. |
+| `how_sit_check_saathi` | Check on me starts a countdown and asks if you reached safely. | चेक ऑन मी टाइमर शुरू करता है और समय पूरा होने पर पूछता है कि क्या आप सुरक्षित पहुँच गईं। | |
+| `how_sit_check_you` | Set a 10 or 20 minute timer on Home before you start walking. | चलना शुरू करने से पहले होम स्क्रीन पर 10 या 20 मिनट का टाइमर लगाएँ। | |
+| `how_sit_urgent_title` | Need help without speaking | बिना बोले तुरंत मदद चाहिए | Situation 4. |
+| `how_sit_urgent_saathi` | Sends emergency SMS with your live location to all contacts. | सभी संपर्कों को आपकी लाइव लोकेशन के साथ इमरजेंसी मैसेज भेजता है। | |
+| `how_sit_urgent_you` | Hold the help button on your screen for 2 seconds, or press the power button. | स्क्रीन पर मदद बटन 2 सेकंड तक दबाए रखें, या पावर बटन दबाएँ। | |
+| `how_sit_plate_title` | Taking an auto at night | रात में ऑटो लेना | Situation 5. |
+| `how_sit_plate_saathi` | Saves the number plate photo with your trip, kept only on your phone. | नंबर प्लेट की फ़ोटो ट्रिप के साथ सहेजता है, जो सिर्फ़ आपके फ़ोन पर रहती है। | |
+| `how_sit_plate_you` | Tap the camera button on Home to snap the number plate as you get in. | सवारी में बैठते समय होम स्क्रीन पर कैमरा बटन दबाकर नंबर प्लेट की फ़ोटो लें। | |
+| `tip_first_trip` | Saathi is watching. If the ride stops for long or leaves the route, it asks you first. | साथी नज़र रख रहा है। अगर सवारी ज़्यादा देर रुकती है या रास्ते से भटकती है, तो पहले आपसे पूछेगा। | Shown once on first real trip start. |
+| `tip_first_checkin` | If you hadn't answered, %1$s would have been texted. | अगर आपने जवाब नहीं दिया होता, तो %1$s को मैसेज भेजा जाता। | Shown once on first real check-in answer. |
+

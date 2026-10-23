@@ -322,6 +322,8 @@
         <item quantity="other">Press the power button %1$d times quickly to ask for help.</item>
     </plurals>
     <string name="settings_also">Also</string>
+    <string name="settings_how_it_works">How Saathi works</string>
+    <string name="settings_how_it_works_sum">Alert rules, real situations, and video</string>
     <string name="settings_privacy">Privacy and sharing</string>
     <string name="settings_privacy_sum">Community sharing, crash reports and usage stats</string>
 
@@ -494,6 +496,35 @@
     <string name="practice_tap_okay">Tap I\'m okay on the check-in.</string>
     <string name="practice_done">Practice done</string>
     <string name="practice_done_body">That\'s what a check-in feels like. You can practise again from Settings.</string>
+
+    <!-- Home card: practice -->
+    <string name="practice_card_title">Try a practice check-in</string>
+    <string name="practice_card_body">Hear what an alert sounds like and see how to answer. Nothing will be sent to your contacts.</string>
+    <string name="practice_card_starting">Starting in %1$d seconds…</string>
+
+    <!-- How Saathi works: real situations -->
+    <string name="how_situations_title">Real situations</string>
+    <string name="how_what_saathi_does">What Saathi does</string>
+    <string name="how_what_you_can_do">What you can do</string>
+    <string name="how_sit_stop_title">Ride stops on a dark stretch</string>
+    <string name="how_sit_stop_saathi">After a long stop, Saathi rings and counts down for 10 seconds.</string>
+    <string name="how_sit_stop_you">Tap \"I\'m okay\" to clear it, or let the timer run out to alert your contacts.</string>
+    <string name="how_sit_route_title">Ride leaves the expected route</string>
+    <string name="how_sit_route_saathi">Saathi notices you turned off and asks if you are okay.</string>
+    <string name="how_sit_route_you">If you took a different way on purpose, tap \"I\'m okay\".</string>
+    <string name="how_sit_check_title">Walking home and feeling uneasy</string>
+    <string name="how_sit_check_saathi">Check on me starts a countdown and asks if you reached safely.</string>
+    <string name="how_sit_check_you">Set a 10 or 20 minute timer on Home before you start walking.</string>
+    <string name="how_sit_urgent_title">Need help without speaking</string>
+    <string name="how_sit_urgent_saathi">Sends emergency SMS with your live location to all contacts.</string>
+    <string name="how_sit_urgent_you">Hold the help button on your screen for 2 seconds, or press the power button.</string>
+    <string name="how_sit_plate_title">Taking an auto at night</string>
+    <string name="how_sit_plate_saathi">Saves the number plate photo with your trip, kept only on your phone.</string>
+    <string name="how_sit_plate_you">Tap the camera button on Home to snap the number plate as you get in.</string>
+
+    <!-- One-time tips -->
+    <string name="tip_first_trip">Saathi is watching. If the ride stops for long or leaves the route, it asks you first.</string>
+    <string name="tip_first_checkin">If you hadn\'t answered, %1$s would have been texted.</string>
 
     <!-- Check-in screen -->
     <string name="checkin_title">Are you okay?</string>

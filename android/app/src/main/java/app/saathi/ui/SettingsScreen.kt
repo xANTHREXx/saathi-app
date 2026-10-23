@@ -118,6 +118,8 @@ import app.saathi.ui.theme.reduceMotion
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+import app.saathi.ui.onboarding.HowItWorksPage
+
 private val PHRASES = listOf(
     "touched" to R.string.settings_phrase_touched,
     "following" to R.string.settings_phrase_following,
@@ -127,7 +129,7 @@ private val PHRASES = listOf(
 private val PRESS_CHOICES = listOf(3, 4, 6, 0)
 
 /** The list, and the page each row opens. System Back returns to the list. */
-private enum class Page { LIST, PEOPLE, NAME, WAYS, WORKING, RIDES, PLACES, PRIVACY, APP }
+private enum class Page { LIST, PEOPLE, NAME, WAYS, WORKING, RIDES, PLACES, HOW, PRIVACY, APP }
 
 /**
  * One thing Saathi needs to reach her people. [required] ones show alum when missing; the rest show a quiet
@@ -240,6 +242,7 @@ fun SettingsScreen(settings: Settings, onChange: (Settings) -> Unit) {
                     settings.arrivalText, { onChange(settings.copy(arrivalText = it)) }, Modifier.padding(top = 16.dp),
                 )
             }
+            Page.HOW -> SubPage(stringResource(R.string.settings_how_it_works), back) { HowItWorksPage(settings) }
             Page.PRIVACY -> SubPage(stringResource(R.string.settings_privacy), back) { PrivacyPage(settings, onChange) }
             Page.APP -> SubPage(stringResource(R.string.settings_app), back) { AppSection() }
         }
@@ -285,7 +288,7 @@ private fun ReadyList(
         }
 
         FilledTonalButton(
-            onClick = { AlertManager.startPractice(5_000); practiceHint = true },
+            onClick = { AlertManager.startPractice(5_000, from = "settings"); practiceHint = true },
             Modifier.padding(top = 28.dp).fillMaxWidth().heightIn(min = 56.dp),
             shape = RoundedCornerShape(20.dp),
         ) { Text(stringResource(R.string.settings_practice_button), style = MaterialTheme.typography.titleMedium) }
@@ -295,6 +298,7 @@ private fun ReadyList(
         Text(stringResource(R.string.settings_also), style = MaterialTheme.typography.labelLarge, color = c.fg2,
             modifier = Modifier.padding(start = 4.dp, top = 28.dp, bottom = 2.dp))
         LanguageRow()
+        AlsoRow(stringResource(R.string.settings_how_it_works), stringResource(R.string.settings_how_it_works_sum)) { open(Page.HOW) }
         AlsoRow(stringResource(R.string.settings_privacy), stringResource(R.string.settings_privacy_sum)) { open(Page.PRIVACY) }
         AlsoRow(stringResource(R.string.settings_app), stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), last = true) { open(Page.APP) }
         Spacer(Modifier.height(8.dp))

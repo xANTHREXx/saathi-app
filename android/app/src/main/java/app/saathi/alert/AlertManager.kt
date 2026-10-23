@@ -2,13 +2,15 @@ package app.saathi.alert
 
 import android.content.Context
 import android.util.Log
+import app.saathi.R
+import app.saathi.core.Fingerprint
 import app.saathi.core.Reason
 import app.saathi.core.TripEvent
 import app.saathi.core.alertText
 import app.saathi.core.okText
 import app.saathi.core.recipients
 import app.saathi.core.retryTargets
-import app.saathi.core.Fingerprint
+import app.saathi.core.toldNames
 import app.saathi.data.ALERT_RECORD
 import app.saathi.data.AlertLogEntry
 import app.saathi.data.Evidence
@@ -217,7 +219,22 @@ object AlertManager {
         }
         Notifier.cancel(app, Notifier.ALERT_ID)
         TripState.update { it.copy(alertActive = false, told = emptyList(), smsFailed = emptyList(), recording = false) }
-        if (answeredCheckIn) TelemetryManager.track(app, "checkin_answered")
+        if (answeredCheckIn) {
+            TelemetryManager.track(app, "checkin_answered")
+            if (!Onboarding.tipShown(app, "first_checkin")) {
+                Onboarding.markTip(app, "first_checkin")
+                val contacts = Store.settings(app).contacts
+                val names = toldNames(contacts)
+                val who = when {
+                    names == null -> app.getString(R.string.names_none)
+                    names.others > 0 -> app.resources.getQuantityString(R.plurals.ready_told_names_more, names.others, names.first, names.others)
+                    names.second != null -> app.getString(R.string.ready_told_names_two, names.first, names.second)
+                    else -> names.first
+                }
+                val text = app.getString(R.string.tip_first_checkin, who)
+                TripState.update { it.copy(tip = text) }
+            }
+        }
         onOkay?.invoke()
         if (wasAlert) scope.launch(Dispatchers.IO) {
             val s = Store.settings(app)
