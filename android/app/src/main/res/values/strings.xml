@@ -348,6 +348,9 @@
     <string name="setup_skip_anyway">Skip anyway</string>
 
     <!-- Setup: people to text -->
+    <string name="onb_clip_contacts_desc">Animation showing a contact chosen and receiving an alert preview</string>
+    <string name="setup_alert_preview_title">This is what %1$s gets</string>
+    <string name="setup_alert_preview_default_target">your contact</string>
     <string name="setup_contacts_title">Who should we tell?</string>
     <string name="setup_name_hint">Shown in alerts: \"%1$s hasn\'t answered a check-in.\"</string>
     <string name="contacts_heading">People to text</string>

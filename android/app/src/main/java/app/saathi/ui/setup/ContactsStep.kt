@@ -71,6 +71,8 @@ import app.saathi.core.addPending
 import app.saathi.core.formatPhone
 import app.saathi.core.isAnywhere
 import app.saathi.core.normalisePhone
+import app.saathi.core.previewAlert
+import app.saathi.ui.onboarding.LoopingClip
 import app.saathi.ui.problemText
 import app.saathi.trip.Geocode
 import app.saathi.trip.LocationOnce
@@ -116,6 +118,15 @@ internal fun ContactsStep(
     }
 
     Column(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().padding(bottom = 16.dp), contentAlignment = Alignment.Center) {
+            LoopingClip(
+                clip = R.raw.onb_contacts,
+                poster = R.drawable.onb_contacts_poster,
+                contentDescription = stringResource(R.string.onb_clip_contacts_desc),
+                modifier = Modifier.size(160.dp),
+            )
+        }
+
         Text(stringResource(R.string.setup_contacts_title), style = MaterialTheme.typography.headlineMedium)
         Text(
             stringResource(R.string.contacts_hint),
@@ -148,6 +159,27 @@ internal fun ContactsStep(
             modifier = Modifier.padding(top = 24.dp),
             heading = stringResource(R.string.contacts_heading),
         )
+
+        val recipientName = contacts.firstOrNull()?.name?.trim()?.ifBlank { null }
+            ?: stringResource(R.string.setup_alert_preview_default_target)
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, c.hair),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.setup_alert_preview_title, recipientName),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = previewAlert(name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.fg2,
+                )
+            }
+        }
     }
 }
 

@@ -54,6 +54,7 @@ import app.saathi.core.SetupProblem
 import app.saathi.core.addPending
 import app.saathi.core.setupProblem
 import app.saathi.data.Settings
+import app.saathi.data.TelemetryManager
 import app.saathi.ui.theme.Saathi
 import app.saathi.ui.theme.SaathiMark
 import kotlinx.serialization.encodeToString
@@ -110,6 +111,7 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             is PendingResult.Ok -> { contacts = r.contacts; formName = ""; formPhone = ""; formOpen = false }
         }
         setupProblem(name, contacts)?.let { raise(it); return }
+        TelemetryManager.trackOnboarding(ctx, "setup_contacts_done")
         goTo(Step.PERMISSIONS)
     }
 

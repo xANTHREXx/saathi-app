@@ -357,6 +357,9 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 
 | String name | English | Hindi | Notes |
 |---|---|---|---|
+| `onb_clip_contacts_desc` | Animation showing a contact chosen and receiving an alert preview | कॉन्टैक्ट चुने जाने और अलर्ट का प्रीव्यू मिलने का एनिमेशन |  |
+| `setup_alert_preview_title` | This is what %1$s gets | %1$s को यही मैसेज मिलेगा |  |
+| `setup_alert_preview_default_target` | your contact | आपके कॉन्टैक्ट |  |
 | `setup_contacts_title` | Who should we tell? | किसे बताएँ? |  |
 | `setup_name_hint` | Shown in alerts: "%1$s hasn't answered a check-in." | अलर्ट में दिखता है: "%1$s hasn't answered a check-in." | Example is the English alert SMS, so it stays English. |
 | `contacts_heading` | People to text | जिन्हें मैसेज जाए |  |

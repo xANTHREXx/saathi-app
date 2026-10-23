@@ -347,6 +347,9 @@
     <string name="setup_skip_anyway">फिर भी छोड़ें</string>
 
     <!-- Setup: people to text -->
+    <string name="onb_clip_contacts_desc">कॉन्टैक्ट चुने जाने और अलर्ट का प्रीव्यू मिलने का एनिमेशन</string>
+    <string name="setup_alert_preview_title">%1$s को यही मैसेज मिलेगा</string>
+    <string name="setup_alert_preview_default_target">आपके कॉन्टैक्ट</string>
     <string name="setup_contacts_title">किसे बताएँ?</string>
     <string name="setup_name_hint">अलर्ट में दिखता है: \"%1$s hasn\'t answered a check-in.\"</string>
     <string name="contacts_heading">जिन्हें मैसेज जाए</string>
