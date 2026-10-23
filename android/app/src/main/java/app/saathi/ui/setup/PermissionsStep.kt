@@ -67,22 +67,30 @@ import app.saathi.trip.openBackgroundSettings
 import androidx.compose.material3.TextButton
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Surface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.saathi.ui.theme.Saathi
 
 /** Everything step 2 asks for, in the order she sees it. Required ones first, then the optional ones. */
-enum class Perm(@StringRes val title: Int, @StringRes val why: Int, val icon: ImageVector, val required: Boolean) {
-    LOCATION(R.string.perm_location, R.string.perm_location_why, Icons.Rounded.LocationOn, true),
-    LOCATION_ALWAYS(R.string.perm_location_always, R.string.perm_location_always_why, Icons.Rounded.MyLocation, true),
-    SMS(R.string.perm_sms, R.string.perm_sms_why, Icons.Rounded.Sms, true),
-    NOTIFICATIONS(R.string.perm_notifications, R.string.perm_notifications_why, Icons.Rounded.Notifications, true),
-    LOCK_SCREEN(R.string.perm_lock_screen, R.string.perm_lock_screen_why, Icons.Rounded.Lock, true),
-    BACKGROUND(R.string.perm_background, R.string.perm_background_why, Icons.Rounded.BatteryChargingFull, true),
+enum class Perm(
+    @StringRes val title: Int,
+    @StringRes val why: Int,
+    @StringRes val never: Int,
+    val icon: ImageVector,
+    val required: Boolean,
+) {
+    LOCATION(R.string.perm_location, R.string.perm_location_why, R.string.perm_location_never, Icons.Rounded.LocationOn, true),
+    LOCATION_ALWAYS(R.string.perm_location_always, R.string.perm_location_always_why, R.string.perm_location_always_never, Icons.Rounded.MyLocation, true),
+    SMS(R.string.perm_sms, R.string.perm_sms_why, R.string.perm_sms_never, Icons.Rounded.Sms, true),
+    NOTIFICATIONS(R.string.perm_notifications, R.string.perm_notifications_why, R.string.perm_notifications_never, Icons.Rounded.Notifications, true),
+    LOCK_SCREEN(R.string.perm_lock_screen, R.string.perm_lock_screen_why, R.string.perm_lock_screen_never, Icons.Rounded.Lock, true),
+    BACKGROUND(R.string.perm_background, R.string.perm_background_why, R.string.perm_background_never, Icons.Rounded.BatteryChargingFull, true),
     /** Her phone maker's own switch. Android can't tell us it's on, so she says so. Drawn by [KeepRunningCard], which holds its steps. */
-    KEEP_RUNNING(R.string.perm_keep_title, R.string.perm_keep_why, Icons.Rounded.BatteryChargingFull, true),
-    RIDES(R.string.perm_rides, R.string.perm_rides_why, Icons.Rounded.LocalTaxi, false),
-    MICROPHONE(R.string.perm_microphone, R.string.perm_microphone_why, Icons.Rounded.Mic, false),
+    KEEP_RUNNING(R.string.perm_keep_title, R.string.perm_keep_why, R.string.perm_keep_never, Icons.Rounded.BatteryChargingFull, true),
+    RIDES(R.string.perm_rides, R.string.perm_rides_why, R.string.perm_rides_never, Icons.Rounded.LocalTaxi, false),
+    MICROPHONE(R.string.perm_microphone, R.string.perm_microphone_why, R.string.perm_microphone_never, Icons.Rounded.Mic, false),
 }
 
 /** The permissions worth showing on this Android version. */
@@ -98,6 +106,10 @@ internal fun visiblePerms(sdk: Int = Build.VERSION.SDK_INT, oem: Oem = deviceOem
 /** The first required permission still missing, in display order, or null when she is done. */
 internal fun firstMissingRequired(granted: Map<Perm, Boolean>, sdk: Int = Build.VERSION.SDK_INT, oem: Oem = deviceOem()): Perm? =
     visiblePerms(sdk, oem).firstOrNull { it.required && granted[it] != true }
+
+/** Whether all required permissions visible on this device are granted. */
+internal fun allRequiredGranted(granted: Map<Perm, Boolean>, visible: List<Perm>): Boolean =
+    visible.filter { it.required }.all { granted[it] == true }
 
 /** Reads one permission's real state from the system, right now. */
 internal fun granted(ctx: Context, perm: Perm): Boolean {
@@ -130,7 +142,7 @@ internal fun rememberLivePerms(): LivePerms {
     return LivePerms(state, refresh)
 }
 
-/** Step 2: the heading, then [PermissionList]. State is read by [rememberLivePerms] in [SetupFlow]. */
+/** Step 2: the heading, stays/leaves strip, open-source link, then [PermissionList]. State is read by [rememberLivePerms] in [SetupFlow]. */
 @Composable
 internal fun PermissionsStep(
     granted: Map<Perm, Boolean>,
@@ -139,13 +151,48 @@ internal fun PermissionsStep(
     problemNonce: Int,
 ) {
     val c = Saathi.colors
+    val ctx = LocalContext.current
     Column(Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.perm_heading), style = MaterialTheme.typography.headlineMedium)
         Text(
             stringResource(R.string.perm_subheading),
             style = MaterialTheme.typography.bodyLarge, color = c.fg2, modifier = Modifier.padding(top = 8.dp),
         )
-        PermissionList(granted, onRefresh, problemPerm, problemNonce, Modifier.padding(top = 24.dp))
+
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, c.hair),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        ) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.perm_strip_stays),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.fg2,
+                )
+                Text(
+                    text = stringResource(R.string.perm_strip_leaves),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.fg2,
+                )
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.perm_open_source_link),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable {
+                    runCatching {
+                        ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/xANTHREXx/saathi-app")))
+                    }
+                }
+                .padding(top = 12.dp, bottom = 4.dp),
+        )
+
+        PermissionList(granted, onRefresh, problemPerm, problemNonce, Modifier.padding(top = 16.dp))
     }
 }
 
@@ -286,6 +333,7 @@ private fun KeepRunningCard(oem: Oem, isDone: Boolean, onOpen: () -> Unit, onDon
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.perm_keep_title), style = MaterialTheme.typography.titleSmall)
                 Text(stringResource(R.string.perm_keep_why), style = MaterialTheme.typography.bodySmall, color = c.fg2)
+                Text(stringResource(R.string.perm_keep_never), style = MaterialTheme.typography.bodySmall, color = c.fg2)
             }
             if (isDone) {
                 Spacer(Modifier.size(8.dp))
@@ -347,6 +395,7 @@ private fun PermCard(perm: Perm, isGranted: Boolean, enabled: Boolean, onAllow: 
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(stringResource(perm.why), style = MaterialTheme.typography.bodySmall, color = c.fg2)
+            Text(stringResource(perm.never), style = MaterialTheme.typography.bodySmall, color = c.fg2)
             if (perm == Perm.LOCATION_ALWAYS && !isGranted) {
                 Text(
                     stringResource(if (enabled) R.string.perm_always_steps else R.string.perm_after_first),

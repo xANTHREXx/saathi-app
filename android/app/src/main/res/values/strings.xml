@@ -375,23 +375,34 @@
     <!-- Setup: permissions -->
     <string name="perm_heading">Let Saathi watch your trips</string>
     <string name="perm_subheading">Android asks once for each. Saathi uses them only on trips and alerts.</string>
+    <string name="perm_strip_stays">Stays on your phone: Your contacts, trips, places and audio recordings.</string>
+    <string name="perm_strip_leaves">Leaves it: Route and place lookups, alert SMS and live link when you ask for help, and anonymous stats only if you agree.</string>
+    <string name="perm_open_source_link">Saathi is open source</string>
     <string name="perm_optional">Optional</string>
     <string name="perm_location">Location</string>
     <string name="perm_location_why">To know where your trip goes.</string>
+    <string name="perm_location_never">Never shared with your contacts unless an alert goes out</string>
     <string name="perm_location_always">Location all the time</string>
     <string name="perm_location_always_why">So Saathi keeps watching with the screen off.</string>
+    <string name="perm_location_always_never">Never tracks you when you are not on a trip</string>
     <string name="perm_sms">Text messages</string>
     <string name="perm_sms_why">Alerts go from your own SIM, even with no data.</string>
+    <string name="perm_sms_never">Never texts anyone without asking you first or during an alert</string>
     <string name="perm_notifications">Notifications</string>
     <string name="perm_notifications_why">For check-ins and the trip card.</string>
+    <string name="perm_notifications_never">Never sends marketing or spam notifications</string>
     <string name="perm_lock_screen">Check-ins over the lock screen</string>
     <string name="perm_lock_screen_why">So \'Are you okay?\' shows even when your phone is locked.</string>
+    <string name="perm_lock_screen_never">Never opens your phone to anyone else</string>
     <string name="perm_background">Keep running in the background</string>
     <string name="perm_background_why">So Android doesn\'t stop Saathi mid-trip.</string>
+    <string name="perm_background_never">Never runs heavy tasks when you are not on a trip</string>
     <string name="perm_rides">Notice Uber, Ola and Rapido rides</string>
     <string name="perm_rides_why">Trips start on their own when a ride is booked.</string>
+    <string name="perm_rides_never">Never reads messages from other apps or personal chats</string>
     <string name="perm_microphone">Microphone</string>
     <string name="perm_microphone_why">Records only after help is raised.</string>
+    <string name="perm_microphone_never">Never listens or records unless an alert is active</string>
     <string name="perm_allow_label">Allow %1$s</string>
     <string name="perm_allow">Allow</string>
     <string name="perm_allowed">Allowed</string>
@@ -402,6 +413,7 @@
     <!-- Setup and Settings: keep Saathi running -->
     <string name="perm_keep_title">Keep Saathi running</string>
     <string name="perm_keep_why">Your phone stops apps in the background. Saathi has to keep watching during a trip.</string>
+    <string name="perm_keep_never">Never keeps sensors running once your trip is done</string>
     <string name="perm_keep_open">Open settings</string>
     <string name="perm_keep_needed">Needed so Saathi keeps watching during a trip.</string>
     <string name="oem_xiaomi_1">Turn on Autostart for Saathi.</string>

@@ -28,4 +28,18 @@ class PermissionsStepTest {
         assertEquals(Perm.KEEP_RUNNING, firstMissingRequired(allGrantedExceptKeep(false), sdk = 34, oem = Oem.VIVO))
         assertNull(firstMissingRequired(allGrantedExceptKeep(true), sdk = 34, oem = Oem.VIVO))
     }
+
+    @Test
+    fun allRequiredGrantedIgnoresOptional() {
+        val visible = visiblePerms(sdk = 34, oem = Oem.OTHER)
+        val granted = visible.associateWith { it != Perm.RIDES && it != Perm.MICROPHONE }
+        assertTrue(allRequiredGranted(granted, visible))
+    }
+
+    @Test
+    fun missingRequiredMakesItFalse() {
+        val visible = visiblePerms(sdk = 34, oem = Oem.OTHER)
+        val granted = visible.associateWith { it != Perm.LOCATION }
+        assertFalse(allRequiredGranted(granted, visible))
+    }
 }

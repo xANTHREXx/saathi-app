@@ -118,8 +118,16 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
     fun continuePermissions() {
         live.refresh()
         // Read the system again rather than trust what was drawn a moment ago.
-        val missing = firstMissingRequired(readAllPerms(ctx))
-        if (missing == null) goTo(Step.PLACES) else { permProblem = missing; permNonce++ }
+        val perms = readAllPerms(ctx)
+        val missing = firstMissingRequired(perms)
+        if (missing == null) {
+            val allReq = allRequiredGranted(perms, visiblePerms())
+            TelemetryManager.trackOnboarding(ctx, "setup_permissions_done", mapOf("all_required" to allReq))
+            goTo(Step.PLACES)
+        } else {
+            permProblem = missing
+            permNonce++
+        }
     }
 
     fun finish() {
@@ -131,7 +139,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
         Step.WELCOME -> goTo(Step.CONTACTS)
         Step.CONTACTS -> continueContacts()
         Step.PERMISSIONS -> continuePermissions()
-        Step.PLACES -> goTo(Step.PRACTICE)
+        Step.PLACES -> {
+            TelemetryManager.trackOnboarding(ctx, "setup_places_done", mapOf("skipped" to false))
+            goTo(Step.PRACTICE)
+        }
         Step.PRACTICE -> when (practice.phase) {
             PracticePhase.IDLE -> practice.start()
             PracticePhase.DONE -> finish()
@@ -224,7 +235,10 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
                     Text(label, style = MaterialTheme.typography.titleMedium)
                 }
                 if (step == Step.PLACES) {
-                    TextButton(onClick = { goTo(Step.PRACTICE) }) { Text(stringResource(R.string.setup_skip)) }
+                    TextButton(onClick = {
+                        TelemetryManager.trackOnboarding(ctx, "setup_places_done", mapOf("skipped" to true))
+                        goTo(Step.PRACTICE)
+                    }) { Text(stringResource(R.string.setup_skip)) }
                 }
                 if (step == Step.PRACTICE && practice.phase == PracticePhase.IDLE) {
                     TextButton(onClick = { finish() }) { Text(stringResource(R.string.setup_skip_practice)) }
@@ -242,7 +256,14 @@ fun SetupFlow(initial: Settings, onDone: (Settings) -> Unit) {
             title = { Text(stringResource(R.string.setup_skip_title)) },
             text = { Text(stringResource(R.string.setup_skip_body)) },
             confirmButton = { TextButton(onClick = { skipDialog = false }) { Text(stringResource(R.string.setup_go_back)) } },
-            dismissButton = { TextButton(onClick = { skipDialog = false; goTo(Step.PLACES) }) { Text(stringResource(R.string.setup_skip_anyway)) } },
+            dismissButton = {
+                TextButton(onClick = {
+                    skipDialog = false
+                    val allReq = allRequiredGranted(readAllPerms(ctx), visiblePerms())
+                    TelemetryManager.trackOnboarding(ctx, "setup_permissions_done", mapOf("all_required" to allReq))
+                    goTo(Step.PLACES)
+                }) { Text(stringResource(R.string.setup_skip_anyway)) }
+            },
         )
     }
 }

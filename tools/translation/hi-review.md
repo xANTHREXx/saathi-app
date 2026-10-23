@@ -387,23 +387,34 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 |---|---|---|---|
 | `perm_heading` | Let Saathi watch your trips | Saathi को अपने सफ़र पर नज़र रखने दें |  |
 | `perm_subheading` | Android asks once for each. Saathi uses them only on trips and alerts. | Android हर एक के लिए एक बार पूछता है। Saathi इन्हें सिर्फ़ सफ़र और अलर्ट में इस्तेमाल करता है। |  |
+| `perm_strip_stays` | Stays on your phone: Your contacts, trips, places and audio recordings. | फ़ोन पर रहता है: आपके कॉन्टैक्ट, सफ़र, जगहें और ऑडियो रिकॉर्डिंग। |  |
+| `perm_strip_leaves` | Leaves it: Route and place lookups, alert SMS and live link when you ask for help, and anonymous stats only if you agree. | फ़ोन से बाहर जाता है: रास्ते और जगह खोजना, मदद माँगने पर अलर्ट मैसेज और लाइव लिंक, और आपकी सहमति पर ही बिना नाम के आँकड़े। |  |
+| `perm_open_source_link` | Saathi is open source | साथी ओपन सोर्स है |  |
 | `perm_optional` | Optional | ज़रूरी नहीं |  |
 | `perm_location` | Location | लोकेशन |  |
 | `perm_location_why` | To know where your trip goes. | ताकि पता रहे कि आपका सफ़र कहाँ जा रहा है। |  |
+| `perm_location_never` | Never shared with your contacts unless an alert goes out | अलर्ट भेजे जाने के अलावा कभी आपके अपनों के साथ शेयर नहीं होता |  |
 | `perm_location_always` | Location all the time | हर समय लोकेशन |  |
 | `perm_location_always_why` | So Saathi keeps watching with the screen off. | ताकि स्क्रीन बंद होने पर भी Saathi नज़र रखे। |  |
+| `perm_location_always_never` | Never tracks you when you are not on a trip | सफ़र न होने पर कभी आपकी लोकेशन ट्रैक नहीं करता |  |
 | `perm_sms` | Text messages | टेक्स्ट मैसेज |  |
 | `perm_sms_why` | Alerts go from your own SIM, even with no data. | अलर्ट आपके अपने SIM से जाते हैं, डेटा न हो तब भी। |  |
+| `perm_sms_never` | Never texts anyone without asking you first or during an alert | आपसे पूछे बिना या अलर्ट के बिना कभी किसी को मैसेज नहीं भेजता |  |
 | `perm_notifications` | Notifications | नोटिफ़िकेशन |  |
 | `perm_notifications_why` | For check-ins and the trip card. | चेक-इन और सफ़र कार्ड के लिए। |  |
+| `perm_notifications_never` | Never sends marketing or spam notifications | कभी विज्ञापन या बेवजह की सूचनाएँ नहीं भेजता |  |
 | `perm_lock_screen` | Check-ins over the lock screen | लॉक स्क्रीन पर चेक-इन |  |
 | `perm_lock_screen_why` | So 'Are you okay?' shows even when your phone is locked. | ताकि फ़ोन लॉक होने पर भी "क्या आप ठीक हैं?" दिखे। |  |
+| `perm_lock_screen_never` | Never opens your phone to anyone else | दूसरों के लिए आपका फ़ोन कभी अनलॉक नहीं करता |  |
 | `perm_background` | Keep running in the background | बैकग्राउंड में चलता रहे |  |
 | `perm_background_why` | So Android doesn't stop Saathi mid-trip. | ताकि Android सफ़र के बीच Saathi को बंद न करे। |  |
+| `perm_background_never` | Never runs heavy tasks when you are not on a trip | सफ़र न होने पर बैकग्राउंड में बैटरी खर्च नहीं करता |  |
 | `perm_rides` | Notice Uber, Ola and Rapido rides | Uber, Ola और Rapido की राइड पहचानें |  |
 | `perm_rides_why` | Trips start on their own when a ride is booked. | राइड बुक होते ही सफ़र अपने-आप शुरू हो जाता है। |  |
+| `perm_rides_never` | Never reads messages from other apps or personal chats | कभी दूसरे ऐप के मैसेज या निजी चैट नहीं पढ़ता |  |
 | `perm_microphone` | Microphone | माइक्रोफ़ोन |  |
 | `perm_microphone_why` | Records only after help is raised. | सिर्फ़ मदद माँगने के बाद रिकॉर्ड करता है। |  |
+| `perm_microphone_never` | Never listens or records unless an alert is active | अलर्ट शुरू होने से पहले कभी आवाज़ नहीं सुनता या रिकॉर्ड करता |  |
 | `perm_allow_label` | Allow %1$s | %1$s की अनुमति दें | Screen-reader label; %1$s is the permission title. |
 | `perm_allow` | Allow | अनुमति दें |  |
 | `perm_allowed` | Allowed | अनुमति मिल गई |  |
@@ -417,6 +428,7 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 |---|---|---|---|
 | `perm_keep_title` | Keep Saathi running | Saathi को चालू रखें |  |
 | `perm_keep_why` | Your phone stops apps in the background. Saathi has to keep watching during a trip. | आपका फ़ोन बैकग्राउंड में ऐप बंद कर देता है। सफ़र में Saathi को नज़र रखते रहना है। |  |
+| `perm_keep_never` | Never keeps sensors running once your trip is done | सफ़र खत्म होने के बाद कभी सेंसर चालू नहीं रखता |  |
 | `perm_keep_open` | Open settings | सेटिंग्स खोलें |  |
 | `perm_keep_needed` | Needed so Saathi keeps watching during a trip. | ज़रूरी है, ताकि सफ़र में Saathi नज़र रखता रहे। |  |
 | ⚠ `oem_xiaomi_1` | Turn on Autostart for Saathi. | Saathi के लिए Autostart चालू करें। | Phone-maker menu names are left in English, as they appear on most Indian phones. A phone set to Hindi may show them translated. |

@@ -374,23 +374,34 @@
     <!-- Setup: permissions -->
     <string name="perm_heading">Saathi को अपने सफ़र पर नज़र रखने दें</string>
     <string name="perm_subheading">Android हर एक के लिए एक बार पूछता है। Saathi इन्हें सिर्फ़ सफ़र और अलर्ट में इस्तेमाल करता है।</string>
+    <string name="perm_strip_stays">फ़ोन पर रहता है: आपके कॉन्टैक्ट, सफ़र, जगहें और ऑडियो रिकॉर्डिंग।</string>
+    <string name="perm_strip_leaves">फ़ोन से बाहर जाता है: रास्ते और जगह खोजना, मदद माँगने पर अलर्ट मैसेज और लाइव लिंक, और आपकी सहमति पर ही बिना नाम के आँकड़े।</string>
+    <string name="perm_open_source_link">साथी ओपन सोर्स है</string>
     <string name="perm_optional">ज़रूरी नहीं</string>
     <string name="perm_location">लोकेशन</string>
     <string name="perm_location_why">ताकि पता रहे कि आपका सफ़र कहाँ जा रहा है।</string>
+    <string name="perm_location_never">अलर्ट भेजे जाने के अलावा कभी आपके अपनों के साथ शेयर नहीं होता</string>
     <string name="perm_location_always">हर समय लोकेशन</string>
     <string name="perm_location_always_why">ताकि स्क्रीन बंद होने पर भी Saathi नज़र रखे।</string>
+    <string name="perm_location_always_never">सफ़र न होने पर कभी आपकी लोकेशन ट्रैक नहीं करता</string>
     <string name="perm_sms">टेक्स्ट मैसेज</string>
     <string name="perm_sms_why">अलर्ट आपके अपने SIM से जाते हैं, डेटा न हो तब भी।</string>
+    <string name="perm_sms_never">आपसे पूछे बिना या अलर्ट के बिना कभी किसी को मैसेज नहीं भेजता</string>
     <string name="perm_notifications">नोटिफ़िकेशन</string>
     <string name="perm_notifications_why">चेक-इन और सफ़र कार्ड के लिए।</string>
+    <string name="perm_notifications_never">कभी विज्ञापन या बेवजह की सूचनाएँ नहीं भेजता</string>
     <string name="perm_lock_screen">लॉक स्क्रीन पर चेक-इन</string>
     <string name="perm_lock_screen_why">ताकि फ़ोन लॉक होने पर भी \"क्या आप ठीक हैं?\" दिखे।</string>
+    <string name="perm_lock_screen_never">दूसरों के लिए आपका फ़ोन कभी अनलॉक नहीं करता</string>
     <string name="perm_background">बैकग्राउंड में चलता रहे</string>
     <string name="perm_background_why">ताकि Android सफ़र के बीच Saathi को बंद न करे।</string>
+    <string name="perm_background_never">सफ़र न होने पर बैकग्राउंड में बैटरी खर्च नहीं करता</string>
     <string name="perm_rides">Uber, Ola और Rapido की राइड पहचानें</string>
     <string name="perm_rides_why">राइड बुक होते ही सफ़र अपने-आप शुरू हो जाता है।</string>
+    <string name="perm_rides_never">कभी दूसरे ऐप के मैसेज या निजी चैट नहीं पढ़ता</string>
     <string name="perm_microphone">माइक्रोफ़ोन</string>
     <string name="perm_microphone_why">सिर्फ़ मदद माँगने के बाद रिकॉर्ड करता है।</string>
+    <string name="perm_microphone_never">अलर्ट शुरू होने से पहले कभी आवाज़ नहीं सुनता या रिकॉर्ड करता</string>
     <string name="perm_allow_label">%1$s की अनुमति दें</string>
     <string name="perm_allow">अनुमति दें</string>
     <string name="perm_allowed">अनुमति मिल गई</string>
@@ -401,6 +412,7 @@
     <!-- Setup and Settings: keep Saathi running -->
     <string name="perm_keep_title">Saathi को चालू रखें</string>
     <string name="perm_keep_why">आपका फ़ोन बैकग्राउंड में ऐप बंद कर देता है। सफ़र में Saathi को नज़र रखते रहना है।</string>
+    <string name="perm_keep_never">सफ़र खत्म होने के बाद कभी सेंसर चालू नहीं रखता</string>
     <string name="perm_keep_open">सेटिंग्स खोलें</string>
     <string name="perm_keep_needed">ज़रूरी है, ताकि सफ़र में Saathi नज़र रखता रहे।</string>
     <string name="oem_xiaomi_1">Saathi के लिए Autostart चालू करें।</string>
