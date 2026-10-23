@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=720, height=720" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 720px;
+        height: 720px;
+        overflow: hidden;
+        background: #0D1222;
+      }
+      #root {
+        width: 720px;
+        height: 720px;
+        position: relative;
+        background: #0D1222;
+        overflow: hidden;
+      }
+      /* Hold-for-help plate */
+      .help-plate {
+        position: absolute;
+        left: 170px;
+        top: 260px;
+        width: 380px;
+        height: 150px;
+        background: #C7372F;
+        border-radius: 32px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 24px;
+        box-shadow: 0 16px 40px rgba(199, 55, 47, 0.35);
+      }
+      .plate-fill {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+      .touch-indicator {
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.28);
+        border: 2px solid #FFFFFF;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0.5);
+        z-index: 30;
+      }
+      /* Madder alert burst wave */
+      .alert-wave {
+        position: absolute;
+        left: 360px;
+        top: 335px;
+        margin-left: -120px;
+        margin-top: -120px;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        border: 3px solid #C7372F;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 10;
+      }
+      /* Sent madder message bubble */
+      .madder-bubble {
+        position: absolute;
+        left: 260px;
+        top: 300px;
+        width: 200px;
+        background: #5A1714;
+        border: 1.5px solid #C7372F;
+        border-radius: 20px;
+        padding: 14px 18px;
+        opacity: 0;
+        z-index: 25;
+        box-shadow: 0 12px 32px rgba(90, 23, 20, 0.6);
+      }
+      /* Quick Tile container */
+      .quick-tile {
+        position: absolute;
+        left: 230px;
+        top: 275px;
+        width: 260px;
+        height: 120px;
+        background: #1B2340;
+        border: 1px solid #FFFFFF14;
+        border-radius: 24px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 12px 32px rgba(11, 15, 28, 0.5);
+        opacity: 0;
+      }
+      /* Undo countdown SVG */
+      .undo-ring-svg {
+        position: absolute;
+        left: 360px;
+        top: 335px;
+        margin-left: -80px;
+        margin-top: -80px;
+        width: 160px;
+        height: 160px;
+        transform: rotate(-90deg);
+        opacity: 0;
+        z-index: 35;
+        pointer-events: none;
+      }
+      .undo-circle-track {
+        fill: none;
+        stroke: #252F52;
+        stroke-width: 8;
+      }
+      .undo-circle-bar {
+        fill: none;
+        stroke: #E7B94A;
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 440;
+        stroke-dashoffset: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      class="clip"
+      data-composition-id="onb_you_ask"
+      data-start="0"
+      data-duration="8"
+      data-width="720"
+      data-height="720"
+    >
+      <!-- SCENE A: Hold for Help Plate -->
+      <div id="plateWrap">
+        <div id="helpPlate" class="help-plate">
+          <div id="plateFill" class="plate-fill"></div>
+          <!-- Top icon / star -->
+          <div style="display:flex; align-items:center; justify-content:space-between; z-index:2;">
+            <svg width="32" height="32" viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF" transform="rotate(45 24 24)"/></svg>
+            <div style="width:40px; height:8px; background:rgba(255,255,255,0.4); border-radius:4px;"></div>
+          </div>
+          <!-- Label bars -->
+          <div style="z-index:2;">
+            <div style="width:180px; height:18px; background:#FFFFFF; border-radius:6px; margin-bottom:10px;"></div>
+            <div style="width:120px; height:10px; background:rgba(255,255,255,0.6); border-radius:5px;"></div>
+          </div>
+        </div>
+
+        <!-- Finger Touch Indicator on Plate -->
+        <div id="fingerTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
+
+        <!-- Burst Waves -->
+        <div id="waveA" class="alert-wave"></div>
+        <div id="waveB" class="alert-wave"></div>
+
+        <!-- Madder SMS Bubble -->
+        <div id="madderBubble" class="madder-bubble">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#C7372F;"></div>
+            <div style="width:90px; height:10px; background:#FFDAD5; border-radius:5px;"></div>
+          </div>
+          <div style="width:150px; height:8px; background:#FFDAD5; opacity:0.8; border-radius:4px; margin-bottom:6px;"></div>
+          <div style="width:100px; height:8px; background:#FFDAD5; opacity:0.8; border-radius:4px;"></div>
+        </div>
+      </div>
+
+      <!-- SCENE B: Quick Tile with Undo Ring -->
+      <div id="tileWrap">
+        <div id="quickTile" class="quick-tile">
+          <!-- Ajrakh icon tile -->
+          <div style="width:48px; height:48px; border-radius:14px; background:#25336B; display:flex; align-items:center; justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="width:110px; height:14px; background:#EEF0F7; border-radius:5px; margin-bottom:8px;"></div>
+            <div style="width:70px; height:10px; background:#6F7899; border-radius:4px;"></div>
+          </div>
+        </div>
+
+        <!-- Finger Touch on Tile -->
+        <div id="tileTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
+
+        <!-- Undo Countdown Ring -->
+        <svg id="undoSvg" class="undo-ring-svg" viewBox="0 0 160 160">
+          <circle class="undo-circle-track" cx="80" cy="80" r="70" />
+          <circle id="undoBar" class="undo-circle-bar" cx="80" cy="80" r="70" />
+        </svg>
+
+        <!-- Tap undo indicator -->
+        <div id="cancelTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
+      </div>
+    </div>
+
+    <script>
+      // Immediate initial setup outside paused timeline
+      gsap.set("#plateWrap", { opacity: 1 });
+      gsap.set("#tileWrap", { opacity: 0 });
+      gsap.set("#fingerTouch", { scale: 0.5, opacity: 0 });
+      gsap.set("#plateFill", { scaleX: 0 });
+      gsap.set(["#waveA", "#waveB"], { scale: 0.5, opacity: 0 });
+      gsap.set("#madderBubble", { y: 0, opacity: 0, scale: 0.8 });
+      gsap.set("#undoSvg", { opacity: 0 });
+      gsap.set("#undoBar", { strokeDashoffset: 0 });
+      gsap.set(["#tileTouch", "#cancelTouch"], { scale: 0.5, opacity: 0 });
+
+      const tl = gsap.timeline({ paused: true });
+
+      // --- SCENE A: HOLD FOR HELP (0s - 3.8s) ---
+      // Finger touches down
+      tl.to("#fingerTouch", { opacity: 1, scale: 1, duration: 0.2, ease: "power1.out" }, 0.2);
+
+      // Plate fills with dark wash over 2.0s
+      tl.to("#plateFill", { scaleX: 1, duration: 2.0, ease: "linear" }, 0.4);
+
+      // At 2.4s: full fill reached -> alert triggers!
+      tl.to("#fingerTouch", { opacity: 0, scale: 1.4, duration: 0.2, ease: "power1.in" }, 2.4);
+
+      // Burst waves radiate
+      tl.fromTo("#waveA", { scale: 0.8, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 0.9, ease: "power2.out" }, 2.4);
+      tl.fromTo("#waveB", { scale: 0.8, opacity: 0.7 }, { scale: 2.8, opacity: 0, duration: 1.1, ease: "power2.out" }, 2.6);
+
+      // Madder bubble elevates
+      tl.to("#madderBubble", { opacity: 1, scale: 1, y: -120, duration: 0.7, ease: "back.out(1.5)" }, 2.5);
+
+      // Transition Scene A -> Scene B
+      tl.to("#plateWrap", { opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 3.6);
+      tl.to("#tileWrap", { opacity: 1, duration: 0.3, ease: "power1.out" }, 4.0);
+      tl.to("#quickTile", { opacity: 1, duration: 0.3, ease: "power1.out" }, 4.0);
+
+      // --- SCENE B: QUICK TILE TAP WITH 5s UNDO (4.0s - 7.6s) ---
+      // Tap on tile
+      tl.to("#tileTouch", { opacity: 1, scale: 1.1, duration: 0.15, ease: "power1.out" }, 4.2);
+      tl.to("#tileTouch", { opacity: 0, scale: 1.5, duration: 0.25, ease: "power1.in" }, 4.35);
+
+      // Undo ring appears and begins draining
+      tl.to("#undoSvg", { opacity: 1, duration: 0.2 }, 4.4);
+      tl.to("#undoBar", { strokeDashoffset: 440, duration: 2.6, ease: "linear" }, 4.4);
+
+      // User taps undo before it drains (at 6.2s)
+      tl.to("#cancelTouch", { opacity: 1, scale: 1.2, duration: 0.2, ease: "power1.out" }, 6.2);
+      tl.to("#cancelTouch", { opacity: 0, scale: 1.6, duration: 0.25, ease: "power1.in" }, 6.4);
+
+      // Ring clears cleanly
+      tl.to("#undoSvg", { opacity: 0, duration: 0.3, ease: "power2.in" }, 6.4);
+      tl.to("#quickTile", { borderColor: "#7BD3A4", duration: 0.3 }, 6.4);
+
+      // Loop fade out
+      tl.to("#root", { opacity: 0.95, duration: 0.3, ease: "power1.in" }, 7.7);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["onb_you_ask"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

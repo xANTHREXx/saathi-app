@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=720, height=720" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 720px;
+        height: 720px;
+        overflow: hidden;
+        background: #0D1222;
+      }
+      #root {
+        width: 720px;
+        height: 720px;
+        position: relative;
+        background: #0D1222;
+        overflow: hidden;
+      }
+      /* Phone frames */
+      .phone {
+        position: absolute;
+        width: 270px;
+        height: 480px;
+        background: #141A2E;
+        border-radius: 36px;
+        border: 2px solid #FFFFFF18;
+        box-shadow: 0 20px 48px rgba(11, 15, 28, 0.6);
+        overflow: hidden;
+      }
+      .phone-status {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        color: #EEF0F7;
+      }
+      .phone-header {
+        height: 52px;
+        background: #1B2340;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+        border-bottom: 1px solid #FFFFFF10;
+      }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #25336B;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .avatar svg {
+        width: 18px;
+        height: 18px;
+      }
+      .header-line {
+        height: 10px;
+        border-radius: 5px;
+        background: #6F7899;
+      }
+      .sim-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #252F52;
+        border-radius: 12px;
+        border: 1px solid #8FA2E844;
+      }
+      .signal-bar-wrap {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 14px;
+      }
+      .signal-bar {
+        width: 3px;
+        background: #EEF0F7;
+        border-radius: 1px;
+      }
+      /* SMS Bubble */
+      .msg-bubble {
+        position: absolute;
+        width: 200px;
+        background: #1B2340;
+        border: 1.5px solid #8FA2E855;
+        border-radius: 18px;
+        padding: 14px;
+        z-index: 20;
+        box-shadow: 0 8px 24px rgba(11,15,28,0.5);
+      }
+      .msg-line {
+        height: 8px;
+        border-radius: 4px;
+        background: #8FA2E8;
+        margin-bottom: 8px;
+      }
+      .msg-line-short {
+        width: 60%;
+        height: 8px;
+        border-radius: 4px;
+        background: #8FA2E8;
+      }
+      /* Cellular transmission waves */
+      .wave {
+        position: absolute;
+        border: 2px dashed #8FA2E866;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+      }
+      .delivery-check {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #7BD3A4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0);
+        z-index: 30;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      class="clip"
+      data-composition-id="onb_contacts"
+      data-start="0"
+      data-duration="6"
+      data-width="720"
+      data-height="720"
+    >
+      <!-- Background subtle cellular arc line -->
+      <svg width="720" height="720" style="position:absolute; inset:0;">
+        <path id="cellTrack" d="M 195 380 Q 360 260 525 350" fill="none" stroke="#252F52" stroke-width="2" stroke-dasharray="6 6" />
+      </svg>
+
+      <!-- Cellular wave pulses -->
+      <div id="wave1" class="wave" style="left:165px; top:350px; width:60px; height:60px;"></div>
+      <div id="wave2" class="wave" style="left:145px; top:330px; width:100px; height:100px;"></div>
+
+      <!-- Phone 1 (Her Phone - Sender) -->
+      <div class="phone" style="left:60px; top:120px;">
+        <div class="phone-status">
+          <!-- Time indicator -->
+          <div style="width:28px; height:6px; background:#EEF0F7; border-radius:3px;"></div>
+          <!-- Signal indicators (Cellular only, NO WiFi) -->
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="signal-bar-wrap">
+              <div class="signal-bar" style="height:4px;"></div>
+              <div class="signal-bar" style="height:7px;"></div>
+              <div class="signal-bar" style="height:10px;"></div>
+              <div class="signal-bar" style="height:13px;"></div>
+            </div>
+            <!-- Battery icon -->
+            <div style="width:16px; height:8px; border:1px solid #EEF0F7; border-radius:2px; padding:1px;">
+              <div style="width:80%; height:100%; background:#EEF0F7;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-header">
+          <div class="avatar">
+            <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="header-line" style="width:70px;"></div>
+          </div>
+          <!-- SIM Badge cue -->
+          <div class="sim-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#8FA2E8"><path d="M18 2h-8L4 8v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 5h2v3H9V5zm7 14h-2v-3h2v3zm0-5h-2v-3h2v3zm-4 5h-2v-3h2v3zm0-5h-2v-3h2v3z"/></svg>
+            <div style="width:14px; height:4px; background:#8FA2E8; border-radius:2px;"></div>
+          </div>
+        </div>
+
+        <!-- Phone screen inner content -->
+        <div style="padding:20px 14px;">
+          <div style="width:80px; height:8px; background:#252F52; border-radius:4px; margin-bottom:16px;"></div>
+          <div style="width:120px; height:8px; background:#1B2340; border-radius:4px;"></div>
+        </div>
+      </div>
+
+      <!-- Phone 2 (Contact's Phone - Receiver) -->
+      <div class="phone" style="left:390px; top:120px;">
+        <div class="phone-status">
+          <div style="width:28px; height:6px; background:#EEF0F7; border-radius:3px;"></div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="signal-bar-wrap">
+              <div class="signal-bar" style="height:4px;"></div>
+              <div class="signal-bar" style="height:7px;"></div>
+              <div class="signal-bar" style="height:10px;"></div>
+              <div class="signal-bar" style="height:13px;"></div>
+            </div>
+            <div style="width:16px; height:8px; border:1px solid #EEF0F7; border-radius:2px; padding:1px;">
+              <div style="width:90%; height:100%; background:#EEF0F7;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-header">
+          <div class="avatar" style="background:#1B2340;">
+            <svg viewBox="0 0 24 24" fill="#AAB2CC"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="header-line" style="width:90px; background:#6F7899;"></div>
+          </div>
+        </div>
+
+        <div id="targetSlot" style="padding:20px 14px;">
+          <!-- Empty destination area waiting for message -->
+          <div style="width:60px; height:8px; background:#1B2340; border-radius:4px; margin-bottom:16px;"></div>
+        </div>
+      </div>
+
+      <!-- Traveling SMS Bubble -->
+      <div id="smsBubble" class="msg-bubble" style="left:95px; top:310px;">
+        <div class="msg-line" style="width:90%;"></div>
+        <div class="msg-line" style="width:75%;"></div>
+        <div class="msg-line-short"></div>
+      </div>
+
+      <!-- Delivery Checkmark badge -->
+      <div id="deliveryCheck" class="delivery-check" style="left:605px; top:360px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#11162A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+    </div>
+
+    <script>
+      // Immediate initial setup outside paused timeline
+      gsap.set("#smsBubble", { x: 0, y: 0, scale: 1, opacity: 0 });
+      gsap.set(["#wave1", "#wave2"], { opacity: 0, scale: 0.4 });
+      gsap.set("#deliveryCheck", { opacity: 0, scale: 0 });
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Bubble appears in sender's phone
+      tl.to("#smsBubble", { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.2);
+
+      // Cellular wave pulses emit from sender's phone
+      tl.fromTo("#wave1", { opacity: 0.8, scale: 0.4 }, { opacity: 0, scale: 1.4, duration: 0.9, ease: "power2.out" }, 0.5);
+      tl.fromTo("#wave2", { opacity: 0.6, scale: 0.4 }, { opacity: 0, scale: 1.6, duration: 1.1, ease: "power2.out" }, 0.8);
+
+      // Bubble travels along cellular arc across to receiver's phone
+      // Path: from (0, 0) relative to start (left:95, top:310) to receiver position (left:425, top:310)
+      // Delta x = 330, curve y = -50
+      tl.to("#smsBubble", {
+        x: 165,
+        y: -40,
+        duration: 0.9,
+        ease: "power2.out"
+      }, 1.0);
+      tl.to("#smsBubble", {
+        x: 330,
+        y: 0,
+        duration: 0.9,
+        ease: "power2.in"
+      }, 1.9);
+
+      // Landing ripple and delivery badge
+      tl.to("#deliveryCheck", {
+        scale: 1.2,
+        opacity: 1,
+        duration: 0.35,
+        ease: "back.out(2)"
+      }, 2.8);
+      tl.to("#deliveryCheck", {
+        scale: 1.0,
+        duration: 0.2,
+        ease: "power1.out"
+      }, 3.15);
+
+      // Soft glow on received bubble
+      tl.to("#smsBubble", {
+        borderColor: "#7BD3A4",
+        duration: 0.4,
+        ease: "power1.out"
+      }, 2.8);
+
+      // Hold in delivered state
+      // Fade out for seamless loop at end
+      tl.to("#root", {
+        opacity: 0.95,
+        duration: 0.3,
+        ease: "power1.in"
+      }, 5.7);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["onb_contacts"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

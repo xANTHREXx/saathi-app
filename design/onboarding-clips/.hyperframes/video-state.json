@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "historyId": "68fc2c94-d5db-4a79-aa62-751598e5b08c",
+  "currentRevision": "2678c4a5-7c1d-496f-986f-030b1aac8ae0",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\1b\\1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060"
+    },
+    "CLAUDE.md": {
+      "hash": "1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\1b\\1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060"
+    },
+    "compositions/onb_welcome.html": {
+      "hash": "c3347868b543c8645446d7ab3e2ec97d578529b2000885c037ca3428cb2312be",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\c3\\c3347868b543c8645446d7ab3e2ec97d578529b2000885c037ca3428cb2312be"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\53\\53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "0ed3b44658a469588b5764cbc4aafb7210ae0445f0284393dccb07b46d516f26",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\0e\\0ed3b44658a469588b5764cbc4aafb7210ae0445f0284393dccb07b46d516f26"
+    },
+    "meta.json": {
+      "hash": "40980066c5c096ffbb6d4e67993b2d60a84e52acee8ddcae5561934385410172",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\40\\40980066c5c096ffbb6d4e67993b2d60a84e52acee8ddcae5561934385410172"
+    },
+    "package.json": {
+      "hash": "178791b46af1ad77a72a93f39b6675951723bdc685f02e7e6d7922d0612808e3",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\17\\178791b46af1ad77a72a93f39b6675951723bdc685f02e7e6d7922d0612808e3"
+    },
+    "compositions/onb_contacts.html": {
+      "hash": "6b7ce4f2079ea8df107ab41b93d75b878d235e3dfbefe61395e4d7f5d1608944",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\6b\\6b7ce4f2079ea8df107ab41b93d75b878d235e3dfbefe61395e4d7f5d1608944"
+    },
+    "compositions/onb_saathi_asks.html": {
+      "hash": "26787cbe73d3ab582a1cad3e9ea222dbed8235a37b8f7b6b0b78df0862c3abb9",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\26\\26787cbe73d3ab582a1cad3e9ea222dbed8235a37b8f7b6b0b78df0862c3abb9"
+    },
+    "compositions/onb_you_ask.html": {
+      "hash": "27077934af13d1e5bed577058ecbc7e71c16af7a92bdc413f6728d4d9d911444",
+      "content": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\27\\27077934af13d1e5bed577058ecbc7e71c16af7a92bdc413f6728d4d9d911444"
+    }
+  },
+  "revisions": {
+    "2678c4a5-7c1d-496f-986f-030b1aac8ae0": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1792783981314,
+      "endedAt": 1792783981354,
+      "files": {
+        "compositions/onb_contacts.html": {
+          "before": null,
+          "after": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\6b\\6b7ce4f2079ea8df107ab41b93d75b878d235e3dfbefe61395e4d7f5d1608944"
+        },
+        "compositions/onb_saathi_asks.html": {
+          "before": null,
+          "after": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\26\\26787cbe73d3ab582a1cad3e9ea222dbed8235a37b8f7b6b0b78df0862c3abb9"
+        },
+        "compositions/onb_welcome.html": {
+          "before": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\6e\\6e694215a309d29cb8ad4b2fab93032d7da2cc47caa0f99f34dd0bea18b00a83",
+          "after": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\c3\\c3347868b543c8645446d7ab3e2ec97d578529b2000885c037ca3428cb2312be"
+        },
+        "compositions/onb_you_ask.html": {
+          "before": null,
+          "after": "C:\\Users\\ROG STRIX\\.cache\\hyperframes\\history\\68fc2c94-d5db-4a79-aa62-751598e5b08c\\blobs\\27\\27077934af13d1e5bed577058ecbc7e71c16af7a92bdc413f6728d4d9d911444"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "26341060-041c-48b7-9287-60d2b6d3d9a0",
+      "completedAt": 1792784081401,
+      "output": "E:\\Second brain\\Projects\\AI_builder\\work\\saathi\\android\\app\\src\\main\\res\\raw\\onb_saathi_asks.mp4",
+      "status": "completed",
+      "revision": "2678c4a5-7c1d-496f-986f-030b1aac8ae0"
+    },
+    "retainedRevisions": [
+      "2678c4a5-7c1d-496f-986f-030b1aac8ae0"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}
