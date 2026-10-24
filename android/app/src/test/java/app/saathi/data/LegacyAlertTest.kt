@@ -6,7 +6,7 @@ import org.junit.Test
 
 class LegacyAlertTest {
     @Test fun readsAnAlertLine() {
-        assertEquals(AlertLogEntry(1792604360, listOf("Chinu")), legacyAlertEntry("NO_RESPONSE at 1792604360: told Chinu"))
+        assertEquals(AlertLogEntry(1792604360, listOf("Chinu"), reason = "NO_RESPONSE"), legacyAlertEntry("NO_RESPONSE at 1792604360: told Chinu"))
     }
 
     @Test fun readsSeveralNamesAndRetries() {
@@ -15,7 +15,7 @@ class LegacyAlertTest {
     }
 
     @Test fun nobodyToldIsAnEmptyList() {
-        assertEquals(AlertLogEntry(1792604360, emptyList()), legacyAlertEntry("HOLD at 1792604360: told "))
+        assertEquals(AlertLogEntry(1792604360, emptyList(), reason = "HOLD"), legacyAlertEntry("HOLD at 1792604360: told "))
     }
 
     @Test fun anythingElseIsNotRead() {

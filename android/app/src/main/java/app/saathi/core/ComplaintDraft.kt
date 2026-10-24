@@ -30,6 +30,8 @@ object ComplaintDraft {
     fun draft(f: Facts, zone: ZoneId = ZoneId.of("Asia/Kolkata")): String {
         val start = Instant.ofEpochSecond(f.startedAt).atZone(zone)
         val end = f.endedAt?.let { Instant.ofEpochSecond(it).atZone(zone) }
+        // An alert raised with no trip running has no vehicle and no journey to describe, only the moment she asked for help.
+        val alertOnly = f.mode.uppercase() == "ALERT"
         val vehicle = when (f.mode.uppercase()) {
             "AUTO" -> "an auto-rickshaw"; "CAB" -> "a cab"; "BIKE" -> "a bike taxi"; "BUS" -> "a bus"; "TRAIN" -> "a train"
             else -> "my journey on foot"
@@ -39,14 +41,20 @@ object ComplaintDraft {
             appendLine("The Station House Officer,")
             appendLine("[Police station name and city]")
             appendLine()
-            appendLine("Subject: Complaint about an incident on ${day.format(start)} while travelling in $vehicle")
+            if (alertOnly) appendLine("Subject: Complaint about an incident on ${day.format(start)}")
+            else appendLine("Subject: Complaint about an incident on ${day.format(start)} while travelling in $vehicle")
             appendLine()
             appendLine("Sir/Madam,")
             appendLine()
             append("I, [your full name], [age], residing at [your address], phone [your number], wish to report the following. ")
-            append("On ${day.format(start)}, at about ${time.format(start).lowercase()}, I was travelling in $vehicle")
-            f.app?.let { append(" booked through $it") }
-            f.plate?.let { append(", vehicle number $it") }
+            if (alertOnly) {
+                append("On ${day.format(start)}, at about ${time.format(start).lowercase()}, I used my phone to send my contacts an alert asking for help")
+                if (f.lat != null && f.lng != null) append(", near %.5f, %.5f".format(Locale.ENGLISH, f.lat, f.lng))
+            } else {
+                append("On ${day.format(start)}, at about ${time.format(start).lowercase()}, I was travelling in $vehicle")
+                f.app?.let { append(" booked through $it") }
+                f.plate?.let { append(", vehicle number $it") }
+            }
             appendLine(".")
             if (f.plateCheck?.startsWith("mismatch") == true) {
                 appendLine()
@@ -57,9 +65,12 @@ object ComplaintDraft {
                 appendLine("My phone's trip record shows: ${f.events.joinToString("; ")}.")
             }
             end?.let { e ->
-                append("The trip record ends at ${time.format(e).lowercase()}")
-                if (f.lat != null && f.lng != null) append(", near %.5f, %.5f".format(Locale.ENGLISH, f.lat, f.lng))
-                appendLine(".")
+                if (alertOnly) appendLine("I stopped the alert at ${time.format(e).lowercase()}.")
+                else {
+                    append("The trip record ends at ${time.format(e).lowercase()}")
+                    if (f.lat != null && f.lng != null) append(", near %.5f, %.5f".format(Locale.ENGLISH, f.lat, f.lng))
+                    appendLine(".")
+                }
             }
             appendLine()
             appendLine("What happened: [describe in your own words what happened, who was involved, and anyone who saw it].")

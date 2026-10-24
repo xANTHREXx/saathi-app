@@ -73,12 +73,13 @@ object Notifier {
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(activity(ctx, MainActivity::class.java, 10))
             .addAction(action(ctx, ctx.getString(R.string.action_help), service(ctx, TripService.ACTION_HELP, 11)))
-        // Only three actions show. With a timer running, its two controls take the places of Speak for me and Stop.
+        // Only three actions show. With a timer running, its two controls take the place of Stop.
         if (checkAt != null) {
             b.addAction(action(ctx, ctx.getString(R.string.check_add), service(ctx, TripService.ACTION_CHECK_ADD, 14)))
             b.addAction(action(ctx, ctx.getString(R.string.check_cancel), service(ctx, TripService.ACTION_CHECK_CANCEL, 15)))
         } else {
-            b.addAction(action(ctx, ctx.getString(R.string.tile_speak), activity(ctx, SpeakForMeActivity::class.java, 12)))
+            // Speak for me action is off until the feature is validated.
+            // b.addAction(action(ctx, ctx.getString(R.string.tile_speak), activity(ctx, SpeakForMeActivity::class.java, 12)))
             if (s.onTrip) b.addAction(action(ctx, ctx.getString(R.string.notif_action_stop), service(ctx, TripService.ACTION_STOP_TRIP, 13)))
         }
         return b.build()

@@ -23,6 +23,15 @@ class ComplaintDraftTest {
         assertTrue(d.contains("18 October 2025"))
     }
 
+    @Test fun anAlertWithNoTripIsNotATrip() {
+        val d = ComplaintDraft.draft(facts.copy(mode = "ALERT", app = null, plate = null, plateCheck = null, events = emptyList()))
+        assertTrue(d.contains("send my contacts an alert asking for help"))
+        assertTrue(d.contains("near 12.91651, 77.61012"))
+        assertTrue(d.contains("I stopped the alert at"))
+        assertFalse(d.contains("travelling in"))
+        assertFalse(d.contains("trip record ends"))
+    }
+
     @Test fun leavesUnknownsInBrackets() {
         val d = ComplaintDraft.draft(facts.copy(app = null, plate = null, plateCheck = null, events = emptyList(), lat = null, lng = null))
         assertTrue(d.contains("[your full name]"))

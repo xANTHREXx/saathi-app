@@ -45,7 +45,9 @@ import app.saathi.core.introKey
 import app.saathi.core.smsRecipients
 import app.saathi.core.toIntroduce
 import app.saathi.core.toldNames
+import app.saathi.data.IntroRecord
 import app.saathi.data.Settings
+import app.saathi.data.Store
 import app.saathi.trigger.HelpTileService
 import app.saathi.ui.setup.Perm
 import app.saathi.ui.setup.ProblemText
@@ -72,6 +74,9 @@ internal suspend fun introduce(ctx: Context, settings: Settings): IntroOutcome {
     val body = ctx.getString(R.string.ready_told_message)
     return withContext(Dispatchers.IO) {
         val results = to.map { c -> c to SmsSender.send(ctx, listOf(c), body).sent.isNotEmpty() }
+        // Activity keeps a line for each send that reached someone.
+        results.filter { it.second }.map { it.first.name }.takeIf { it.isNotEmpty() }
+            ?.let { Store.addIntro(ctx, IntroRecord(System.currentTimeMillis() / 1000, it)) }
         IntroOutcome(
             sentKeys = results.filter { it.second }.map { introKey(it.first) },
             sent = results.filter { it.second }.map { it.first.name },

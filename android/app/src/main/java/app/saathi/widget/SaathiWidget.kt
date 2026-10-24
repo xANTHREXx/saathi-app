@@ -38,7 +38,6 @@ import androidx.glance.unit.ColorProvider
 import app.saathi.R
 import app.saathi.trip.TripService
 import app.saathi.trip.TripState
-import app.saathi.ui.SpeakForMeActivity
 
 private val SLID = booleanPreferencesKey("slid")
 private val ground = Color(0xFF141A2E)
@@ -60,7 +59,10 @@ class SaathiWidget : GlanceAppWidget() {
                 if (!slid) {
                     Box(
                         GlanceModifier.fillMaxWidth().defaultWeight().background(madder).cornerRadius(22.dp)
-                            .clickable(actionStartActivity<SpeakForMeActivity>()).padding(16.dp),
+                            // Speak for me is switched off until it is validated, so the tap raises the alert directly.
+                            .clickable(actionStartService(
+                                Intent(context, TripService::class.java).setAction(TripService.ACTION_WIDGET_SOS), isForegroundService = true))
+                            .padding(16.dp),
                         contentAlignment = Alignment.BottomStart,
                     ) {
                         Column {

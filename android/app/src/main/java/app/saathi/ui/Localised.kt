@@ -139,6 +139,38 @@ internal fun Context.clockTime(ms: Long): String =
 internal fun Context.shortDate(ms: Long): String =
     SimpleDateFormat(DateFormat.getBestDateTimePattern(appLocale, "dMMM"), appLocale).format(Date(ms))
 
+/**
+ * The heading over a day in Activity: "Today", "Yesterday", or "Wednesday 21 October" in the app's language.
+ * Day boundaries follow the phone's own time zone.
+ */
+internal fun Context.dayHeading(ms: Long, nowMs: Long = System.currentTimeMillis()): String {
+    val zone = java.time.ZoneId.systemDefault()
+    val day = java.time.Instant.ofEpochMilli(ms).atZone(zone).toLocalDate()
+    val today = java.time.Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate()
+    return when (day) {
+        today -> getString(R.string.activity_today)
+        today.minusDays(1) -> getString(R.string.activity_yesterday)
+        else -> SimpleDateFormat(DateFormat.getBestDateTimePattern(appLocale, "EEEEdMMMM"), appLocale).format(Date(ms))
+    }
+}
+
+/** How she asked for help, for the headline of an alert in Activity. [reason] is a Reason name; null on older records. */
+@StringRes
+internal fun alertReasonRes(reason: String?): Int = when (reason) {
+    "HOLD" -> R.string.activity_reason_hold
+    "POWER_BUTTON" -> R.string.activity_reason_power
+    "NOTIFICATION" -> R.string.activity_reason_notification
+    "WIDGET_SOS" -> R.string.activity_reason_widget
+    "QS_TILE" -> R.string.activity_reason_tile
+    "SHORTCUT" -> R.string.activity_reason_shortcut
+    "HEADSET" -> R.string.activity_reason_headset
+    "SPEAK_FOR_ME" -> R.string.activity_reason_speak
+    "COMPANION" -> R.string.activity_reason_companion
+    "NO_RESPONSE" -> R.string.activity_reason_checkin
+    "PLATE_MISMATCH" -> R.string.activity_reason_plate
+    else -> R.string.activity_reason_unknown
+}
+
 /** "Wed 21 Oct, 9:42 pm" in the app's language. */
 internal fun Context.dayAndTime(ms: Long): String =
     SimpleDateFormat(DateFormat.getBestDateTimePattern(appLocale, "EEEdMMMhmm"), appLocale).format(Date(ms))

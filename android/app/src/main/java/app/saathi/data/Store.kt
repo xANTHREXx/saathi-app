@@ -48,9 +48,22 @@ data class Settings(
 @Serializable
 data class Evidence(val name: String, val sha256: String, val receivedAt: Long)
 
-/** One alert in a trip's history: when it went out, who was told, and whether it was her manual "Try again". */
+/**
+ * One alert in a record's history: when it went out, who was told, whether it was her manual "Try again", and how
+ * help was asked ([reason] is a [app.saathi.core.Reason] name; null on records from before it was kept).
+ */
 @Serializable
-data class AlertLogEntry(val at: Long, val told: List<String>, val retry: Boolean = false)
+data class AlertLogEntry(val at: Long, val told: List<String>, val retry: Boolean = false, val reason: String? = null)
+
+/**
+ * [TripRecord.mode] for an alert raised with no trip running. It is a record of its own, so it isn't lost and isn't
+ * attached to whatever trip comes next.
+ */
+const val ALERT_RECORD = "ALERT"
+
+/** She texted these contacts "I've added you to Saathi", at [at] (epoch seconds). */
+@Serializable
+data class IntroRecord(val at: Long, val to: List<String>)
 
 private val LEGACY_ALERT = Regex("""^([A-Z_]+) at (\d+): told ?(.*)$""")
 
@@ -58,7 +71,8 @@ private val LEGACY_ALERT = Regex("""^([A-Z_]+) at (\d+): told ?(.*)$""")
 fun legacyAlertEntry(line: String): AlertLogEntry? {
     val m = LEGACY_ALERT.matchEntire(line.trim()) ?: return null
     val told = m.groupValues[3].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-    return AlertLogEntry(m.groupValues[2].toLong(), told, retry = m.groupValues[1] == "RETRY")
+    val retry = m.groupValues[1] == "RETRY"
+    return AlertLogEntry(m.groupValues[2].toLong(), told, retry = retry, reason = m.groupValues[1].takeUnless { retry })
 }
 
 @Serializable
@@ -103,6 +117,11 @@ object Store {
         val all = records(ctx).filterNot { it.caseId == r.caseId } + r
         file(ctx, "records.json").writeText(json.encodeToString(all))
     }
+
+    fun intros(ctx: Context): List<IntroRecord> =
+        runCatching { json.decodeFromString<List<IntroRecord>>(file(ctx, "intros.json").readText()) }.getOrDefault(emptyList())
+
+    fun addIntro(ctx: Context, r: IntroRecord) = file(ctx, "intros.json").writeText(json.encodeToString(intros(ctx) + r))
 
     fun deleteRecord(ctx: Context, caseId: String) {
         file(ctx, "records.json").writeText(json.encodeToString(records(ctx).filterNot { it.caseId == caseId }))

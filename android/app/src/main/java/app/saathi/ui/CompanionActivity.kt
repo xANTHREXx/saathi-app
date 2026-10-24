@@ -116,9 +116,10 @@ class CompanionActivity : ComponentActivity() {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { AlertManager.raise(Reason.COMPANION) }, Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC7372F))) { Text(stringResource(R.string.action_help)) }
-                    Button(onClick = { startActivity(Intent(this@CompanionActivity, SpeakForMeActivity::class.java)) }, Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8FA2E8), contentColor = Color(0xFF0D1222))) { Text(stringResource(R.string.tile_speak)) }
-                    Button(onClick = { finish() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF252F52))) { Text(stringResource(R.string.companion_end)) }
+                    // Speak for me button is off until the feature is validated.
+                    // Button(onClick = { startActivity(Intent(this@CompanionActivity, SpeakForMeActivity::class.java)) }, Modifier.weight(1f),
+                    //     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8FA2E8), contentColor = Color(0xFF0D1222))) { Text(stringResource(R.string.tile_speak)) }
+                    Button(onClick = { finish() }, Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF252F52))) { Text(stringResource(R.string.companion_end)) }
                 }
             }
         } }
