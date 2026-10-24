@@ -4,301 +4,85 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=720, height=720" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/saathi.css" />
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        width: 720px;
-        height: 720px;
-        overflow: hidden;
-        background: #0D1222;
-      }
-      #root {
-        width: 720px;
-        height: 720px;
-        position: relative;
-        background: #0D1222;
-        overflow: hidden;
-      }
-      /* Phone frames */
-      .phone {
-        position: absolute;
-        width: 270px;
-        height: 480px;
-        background: #141A2E;
-        border-radius: 36px;
-        border: 2px solid #FFFFFF18;
-        box-shadow: 0 20px 48px rgba(11, 15, 28, 0.6);
-        overflow: hidden;
-      }
-      .phone-status {
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-        color: #EEF0F7;
-      }
-      .phone-header {
-        height: 52px;
-        background: #1B2340;
-        display: flex;
-        align-items: center;
-        padding: 0 16px;
-        gap: 12px;
-        border-bottom: 1px solid #FFFFFF10;
-      }
-      .avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #25336B;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .avatar svg {
-        width: 18px;
-        height: 18px;
-      }
-      .header-line {
-        height: 10px;
-        border-radius: 5px;
-        background: #6F7899;
-      }
-      .sim-pill {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        background: #252F52;
-        border-radius: 12px;
-        border: 1px solid #8FA2E844;
-      }
-      .signal-bar-wrap {
-        display: flex;
-        align-items: flex-end;
-        gap: 2px;
-        height: 14px;
-      }
-      .signal-bar {
-        width: 3px;
-        background: #EEF0F7;
-        border-radius: 1px;
-      }
-      /* SMS Bubble */
-      .msg-bubble {
-        position: absolute;
-        width: 200px;
-        background: #1B2340;
-        border: 1.5px solid #8FA2E855;
-        border-radius: 18px;
-        padding: 14px;
-        z-index: 20;
-        box-shadow: 0 8px 24px rgba(11,15,28,0.5);
-      }
-      .msg-line {
-        height: 8px;
-        border-radius: 4px;
-        background: #8FA2E8;
-        margin-bottom: 8px;
-      }
-      .msg-line-short {
-        width: 60%;
-        height: 8px;
-        border-radius: 4px;
-        background: #8FA2E8;
-      }
-      /* Cellular transmission waves */
-      .wave {
-        position: absolute;
-        border: 2px dashed #8FA2E866;
-        border-radius: 50%;
-        pointer-events: none;
-        opacity: 0;
-      }
-      .delivery-check {
-        position: absolute;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: #7BD3A4;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transform: scale(0);
-        z-index: 30;
-      }
+      /* Amma's phone: an ordinary lock screen, then her messages app. The SMS is the real alert text
+         (core/AlertText.kt), which stays in English in every language, so this clip has one render. */
+      .lock { position: absolute; inset: 0; background: linear-gradient(180deg, #1A2140 0%, #0E1328 100%); }
+      .clock { position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 76px; font-weight: 300; letter-spacing: -0.04em; }
+      .date { position: absolute; left: 0; right: 0; top: 184px; text-align: center; font-size: 14px; color: var(--fg2); }
+      .notif { position: absolute; left: 12px; right: 12px; top: 250px; border-radius: 24px; background: rgba(238,240,247,0.1); padding: 14px 16px; backdrop-filter: none; }
+      .n-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg2); }
+      .n-app { width: 20px; height: 20px; border-radius: 6px; background: #3B6FE0; display: flex; align-items: center; justify-content: center; }
+      .n-who { margin-top: 8px; font-size: 15px; font-weight: 650; }
+      .n-text { margin-top: 3px; font-size: 13.5px; line-height: 1.35; color: var(--fg); }
+      .thread { position: absolute; inset: 0; background: #0B0F1C; }
+      .bar { position: absolute; left: 0; right: 0; top: 30px; height: 62px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--hair); }
+      .av { width: 36px; height: 36px; border-radius: 50%; background: #3D4B86; display: flex; align-items: center; justify-content: center; font-weight: 650; }
+      .bar b { font-size: 17px; font-weight: 650; }
+      .bar span { display: block; font-size: 12px; color: var(--fg2); }
+      .bubble { position: absolute; left: 14px; width: 292px; top: 124px; border-radius: 22px 22px 22px 6px; background: #1D2645; padding: 14px 16px; font-size: 14.5px; line-height: 1.42; }
+      .bubble a { color: #9DB4FF; text-decoration: underline; word-break: break-all; }
+      .meta { position: absolute; left: 20px; top: 0; font-size: 11px; color: var(--fg2); }
+      .sim { position: absolute; left: 14px; right: 14px; bottom: 26px; height: 46px; border-radius: 23px; background: #141A2E; display: flex; align-items: center; padding: 0 16px; font-size: 13px; color: var(--fg2); }
     </style>
   </head>
   <body>
-    <div
-      id="root"
-      class="clip"
-      data-composition-id="onb_contacts"
-      data-start="0"
-      data-duration="6"
-      data-width="720"
-      data-height="720"
-    >
-      <!-- Background subtle cellular arc line -->
-      <svg width="720" height="720" style="position:absolute; inset:0;">
-        <path id="cellTrack" d="M 195 380 Q 360 260 525 350" fill="none" stroke="#252F52" stroke-width="2" stroke-dasharray="6 6" />
-      </svg>
-
-      <!-- Cellular wave pulses -->
-      <div id="wave1" class="wave" style="left:165px; top:350px; width:60px; height:60px;"></div>
-      <div id="wave2" class="wave" style="left:145px; top:330px; width:100px; height:100px;"></div>
-
-      <!-- Phone 1 (Her Phone - Sender) -->
-      <div class="phone" style="left:60px; top:120px;">
-        <div class="phone-status">
-          <!-- Time indicator -->
-          <div style="width:28px; height:6px; background:#EEF0F7; border-radius:3px;"></div>
-          <!-- Signal indicators (Cellular only, NO WiFi) -->
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div class="signal-bar-wrap">
-              <div class="signal-bar" style="height:4px;"></div>
-              <div class="signal-bar" style="height:7px;"></div>
-              <div class="signal-bar" style="height:10px;"></div>
-              <div class="signal-bar" style="height:13px;"></div>
+    <div id="root" data-composition-id="onb_contacts" data-start="0" data-duration="9" data-width="720" data-height="720">
+      <div id="cam" class="cam">
+        <div id="phone" class="phone" style="left:172px; top:44px;">
+          <div class="screen">
+            <div class="status"><span>9:42</span><span class="icons"><i style="width:14px;height:10px"></i><i style="width:10px;height:10px;border-radius:5px"></i><i style="width:20px;height:10px"></i></span></div>
+            <div id="lock" class="lock">
+              <div class="clock">9:42</div>
+              <div class="date">Tuesday, 21 October</div>
+              <div id="notif" class="notif">
+                <div class="n-head"><span class="n-app"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg></span>Messages · now</div>
+                <div class="n-who">Priya</div>
+                <div class="n-text">Saathi alert: Priya hasn't answered a check-in. Vehicle KA05AB1234. Trip: stopped 6 min near Indiranagar…</div>
+              </div>
             </div>
-            <!-- Battery icon -->
-            <div style="width:16px; height:8px; border:1px solid #EEF0F7; border-radius:2px; padding:1px;">
-              <div style="width:80%; height:100%; background:#EEF0F7;"></div>
+            <div id="thread" class="thread">
+              <div class="bar"><div class="av">P</div><div><b>Priya</b><span>Mobile · SMS</span></div></div>
+              <div id="bubble" class="bubble">Saathi alert: Priya hasn't answered a check-in. Vehicle KA05AB1234. Trip: stopped 6 min near Indiranagar. Location at 9:42 PM: <a>https://maps.google.com/?q=12.97840,77.64080</a> Live: <a>https://xanthrexx.github.io/saathi-app/live/?t=…</a><div class="meta" style="position:static; margin-top:8px">9:42 PM · SMS</div></div>
+              <div class="sim">Text message</div>
             </div>
           </div>
         </div>
-
-        <div class="phone-header">
-          <div class="avatar">
-            <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-          </div>
-          <div style="flex:1;">
-            <div class="header-line" style="width:70px;"></div>
-          </div>
-          <!-- SIM Badge cue -->
-          <div class="sim-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#8FA2E8"><path d="M18 2h-8L4 8v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 5h2v3H9V5zm7 14h-2v-3h2v3zm0-5h-2v-3h2v3zm-4 5h-2v-3h2v3zm0-5h-2v-3h2v3z"/></svg>
-            <div style="width:14px; height:4px; background:#8FA2E8; border-radius:2px;"></div>
-          </div>
-        </div>
-
-        <!-- Phone screen inner content -->
-        <div style="padding:20px 14px;">
-          <div style="width:80px; height:8px; background:#252F52; border-radius:4px; margin-bottom:16px;"></div>
-          <div style="width:120px; height:8px; background:#1B2340; border-radius:4px;"></div>
-        </div>
-      </div>
-
-      <!-- Phone 2 (Contact's Phone - Receiver) -->
-      <div class="phone" style="left:390px; top:120px;">
-        <div class="phone-status">
-          <div style="width:28px; height:6px; background:#EEF0F7; border-radius:3px;"></div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div class="signal-bar-wrap">
-              <div class="signal-bar" style="height:4px;"></div>
-              <div class="signal-bar" style="height:7px;"></div>
-              <div class="signal-bar" style="height:10px;"></div>
-              <div class="signal-bar" style="height:13px;"></div>
-            </div>
-            <div style="width:16px; height:8px; border:1px solid #EEF0F7; border-radius:2px; padding:1px;">
-              <div style="width:90%; height:100%; background:#EEF0F7;"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="phone-header">
-          <div class="avatar" style="background:#1B2340;">
-            <svg viewBox="0 0 24 24" fill="#AAB2CC"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          </div>
-          <div style="flex:1;">
-            <div class="header-line" style="width:90px; background:#6F7899;"></div>
-          </div>
-        </div>
-
-        <div id="targetSlot" style="padding:20px 14px;">
-          <!-- Empty destination area waiting for message -->
-          <div style="width:60px; height:8px; background:#1B2340; border-radius:4px; margin-bottom:16px;"></div>
-        </div>
-      </div>
-
-      <!-- Traveling SMS Bubble -->
-      <div id="smsBubble" class="msg-bubble" style="left:95px; top:310px;">
-        <div class="msg-line" style="width:90%;"></div>
-        <div class="msg-line" style="width:75%;"></div>
-        <div class="msg-line-short"></div>
-      </div>
-
-      <!-- Delivery Checkmark badge -->
-      <div id="deliveryCheck" class="delivery-check" style="left:605px; top:360px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#11162A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <div id="finger" class="finger"></div>
       </div>
     </div>
-
     <script>
-      // Immediate initial setup outside paused timeline
-      gsap.set("#smsBubble", { x: 0, y: 0, scale: 1, opacity: 0 });
-      gsap.set(["#wave1", "#wave2"], { opacity: 0, scale: 0.4 });
-      gsap.set("#deliveryCheck", { opacity: 0, scale: 0 });
+      const at = (s, px, py) => ({ scale: s, x: 360 - s * px, y: 360 - s * py });
+      gsap.set("#cam", at(1.12, 352, 330));
+      gsap.set("#notif", { y: -60, opacity: 0 });
+      gsap.set("#thread", { opacity: 0, scale: 1.04 });
+      gsap.set("#finger", { left: 352, top: 352 });
+      gsap.set("#bubble a", { backgroundSize: "0% 100%" });
 
       const tl = gsap.timeline({ paused: true });
-
-      // Bubble appears in sender's phone
-      tl.to("#smsBubble", { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.2);
-
-      // Cellular wave pulses emit from sender's phone
-      tl.fromTo("#wave1", { opacity: 0.8, scale: 0.4 }, { opacity: 0, scale: 1.4, duration: 0.9, ease: "power2.out" }, 0.5);
-      tl.fromTo("#wave2", { opacity: 0.6, scale: 0.4 }, { opacity: 0, scale: 1.6, duration: 1.1, ease: "power2.out" }, 0.8);
-
-      // Bubble travels along cellular arc across to receiver's phone
-      // Path: from (0, 0) relative to start (left:95, top:310) to receiver position (left:425, top:310)
-      // Delta x = 330, curve y = -50
-      tl.to("#smsBubble", {
-        x: 165,
-        y: -40,
-        duration: 0.9,
-        ease: "power2.out"
-      }, 1.0);
-      tl.to("#smsBubble", {
-        x: 330,
-        y: 0,
-        duration: 0.9,
-        ease: "power2.in"
-      }, 1.9);
-
-      // Landing ripple and delivery badge
-      tl.to("#deliveryCheck", {
-        scale: 1.2,
-        opacity: 1,
-        duration: 0.35,
-        ease: "back.out(2)"
-      }, 2.8);
-      tl.to("#deliveryCheck", {
-        scale: 1.0,
-        duration: 0.2,
-        ease: "power1.out"
-      }, 3.15);
-
-      // Soft glow on received bubble
-      tl.to("#smsBubble", {
-        borderColor: "#7BD3A4",
-        duration: 0.4,
-        ease: "power1.out"
-      }, 2.8);
-
-      // Hold in delivered state
-      // Fade out for seamless loop at end
-      tl.to("#root", {
-        opacity: 0.95,
-        duration: 0.3,
-        ease: "power1.in"
-      }, 5.7);
+      // 0.5  The text arrives on Amma's phone: lands from the top on a long tail, phone buzzes.
+      tl.to("#notif", { y: 0, opacity: 1, duration: 0.7, ease: "expo.out" }, 0.5);
+      tl.to("#phone", { x: 2, duration: 0.05, repeat: 5, yoyo: true, ease: "none" }, 0.55);
+      tl.set("#phone", { x: 0 }, 0.85);
+      // Punch in on the notification so the words read.
+      tl.to("#cam", { ...at(1.55, 352, 362), duration: 0.8, ease: "power2.inOut" }, 1.4);
+      // 3.2  She taps it.
+      tl.to("#finger", { opacity: 1, scale: 0.86, duration: 0.2, ease: "power2.out" }, 3.1);
+      tl.to("#notif", { scale: 0.98, duration: 0.12, ease: "power2.in" }, 3.25);
+      tl.to("#finger", { opacity: 0, scale: 1, duration: 0.2, ease: "power2.out" }, 3.4);
+      // The messages app opens over the lock screen; the full alert with both links.
+      tl.to("#thread", { opacity: 1, scale: 1, duration: 0.45, ease: "expo.out" }, 3.45);
+      tl.to("#cam", { ...at(1.32, 344, 300), duration: 0.9, ease: "power2.inOut" }, 3.5);
+      // Hold long enough to read (about 0.3 s a word for the lead, then rest).
+      // 8.3 – 9  Back to the quiet lock screen for the loop.
+      tl.to("#thread", { opacity: 0, filter: "blur(8px)", duration: 0.25, ease: "power2.in" }, 8.3);
+      tl.to("#notif", { y: -60, opacity: 0, scale: 1, duration: 0.3, ease: "power2.in" }, 8.3);
+      tl.to("#cam", { ...at(1.12, 352, 330), duration: 0.6, ease: "power2.inOut" }, 8.3);
+      tl.set("#thread", { filter: "blur(0px)", scale: 1.04 }, 8.99);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["onb_contacts"] = tl;
-      tl.seek(0);
     </script>
   </body>
 </html>

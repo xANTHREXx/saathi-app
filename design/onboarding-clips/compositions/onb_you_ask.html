@@ -1,265 +1,129 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-composition-variables='[{"id":"lang","type":"string","label":"Language (en or hi)","default":"en"}]'>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=720, height=720" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/saathi.css" />
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        width: 720px;
-        height: 720px;
-        overflow: hidden;
-        background: #0D1222;
-      }
-      #root {
-        width: 720px;
-        height: 720px;
-        position: relative;
-        background: #0D1222;
-        overflow: hidden;
-      }
-      /* Hold-for-help plate */
-      .help-plate {
-        position: absolute;
-        left: 170px;
-        top: 260px;
-        width: 380px;
-        height: 150px;
-        background: #C7372F;
-        border-radius: 32px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 24px;
-        box-shadow: 0 16px 40px rgba(199, 55, 47, 0.35);
-      }
-      .plate-fill {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.35);
-        transform-origin: left center;
-        transform: scaleX(0);
-      }
-      .touch-indicator {
-        position: absolute;
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.28);
-        border: 2px solid #FFFFFF;
-        pointer-events: none;
-        opacity: 0;
-        transform: scale(0.5);
-        z-index: 30;
-      }
-      /* Madder alert burst wave */
-      .alert-wave {
-        position: absolute;
-        left: 360px;
-        top: 335px;
-        margin-left: -120px;
-        margin-top: -120px;
-        width: 240px;
-        height: 240px;
-        border-radius: 50%;
-        border: 3px solid #C7372F;
-        pointer-events: none;
-        opacity: 0;
-        z-index: 10;
-      }
-      /* Sent madder message bubble */
-      .madder-bubble {
-        position: absolute;
-        left: 260px;
-        top: 300px;
-        width: 200px;
-        background: #5A1714;
-        border: 1.5px solid #C7372F;
-        border-radius: 20px;
-        padding: 14px 18px;
-        opacity: 0;
-        z-index: 25;
-        box-shadow: 0 12px 32px rgba(90, 23, 20, 0.6);
-      }
-      /* Quick Tile container */
-      .quick-tile {
-        position: absolute;
-        left: 230px;
-        top: 275px;
-        width: 260px;
-        height: 120px;
-        background: #1B2340;
-        border: 1px solid #FFFFFF14;
-        border-radius: 24px;
-        padding: 18px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        box-shadow: 0 12px 32px rgba(11, 15, 28, 0.5);
-        opacity: 0;
-      }
-      /* Undo countdown SVG */
-      .undo-ring-svg {
-        position: absolute;
-        left: 360px;
-        top: 335px;
-        margin-left: -80px;
-        margin-top: -80px;
-        width: 160px;
-        height: 160px;
-        transform: rotate(-90deg);
-        opacity: 0;
-        z-index: 35;
-        pointer-events: none;
-      }
-      .undo-circle-track {
-        fill: none;
-        stroke: #252F52;
-        stroke-width: 8;
-      }
-      .undo-circle-bar {
-        fill: none;
-        stroke: #E7B94A;
-        stroke-width: 8;
-        stroke-linecap: round;
-        stroke-dasharray: 440;
-        stroke-dashoffset: 0;
-      }
+      .map { position: absolute; left: 0; top: 0; width: 360px; height: 300px; background: #10162A; overflow: hidden; }
+      .sheet { position: absolute; left: 0; top: 262px; width: 360px; height: 560px; background: var(--bg); border-radius: 28px 28px 0 0; }
+      .handle { position: absolute; left: 162px; top: 10px; width: 36px; height: 4px; border-radius: 2px; background: rgba(111,120,153,0.5); }
+      .t-title { position: absolute; left: 20px; top: 30px; font-size: 22px; font-weight: 650; letter-spacing: -0.015em; }
+      .t-watch { position: absolute; left: 20px; top: 64px; display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--fg2); }
+      .t-dest { position: absolute; left: 20px; top: 98px; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--fg2); }
+      .rule { position: absolute; left: 0; right: 0; top: 656px; height: 1px; background: var(--hair); }
+      .help-row { position: absolute; left: 14px; right: 14px; top: 668px; height: 120px; display: flex; gap: 10px; }
+      .hold { position: relative; flex: 1.15; border-radius: 30px; background: var(--help); overflow: hidden; }
+      .hold .face { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; }
+      .hold b { font-size: 21px; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.05; }
+      .hold span { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 6px; }
+      .wash { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: rgba(13,18,34,0.42); transform-origin: 0 50%; }
+      .quiet { position: absolute; inset: 0; background: var(--helpC); padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; }
+      .quiet b { font-size: 17px; font-weight: 650; color: var(--onHelpC); line-height: 1.1; }
+      .call { flex: 1; border-radius: 30px; background: var(--s2); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; font-size: 15px; font-weight: 600; }
+      .banner { position: absolute; left: 14px; right: 14px; top: 26px; border-radius: 20px; background: var(--helpC); padding: 14px; display: flex; gap: 12px; align-items: center; }
+      .disc { width: 36px; height: 36px; border-radius: 50%; background: var(--help); display: flex; align-items: center; justify-content: center; flex: none; }
+      .banner b { display: block; font-size: 16px; font-weight: 650; color: var(--onHelpC); }
+      .banner span { display: block; font-size: 11.5px; color: rgba(255,218,213,0.8); margin-top: 3px; line-height: 1.35; }
+      .okay { position: absolute; left: 14px; top: 124px; width: 332px; height: 88px; font-size: 26px; border-radius: 30px; }
     </style>
   </head>
   <body>
-    <div
-      id="root"
-      class="clip"
-      data-composition-id="onb_you_ask"
-      data-start="0"
-      data-duration="8"
-      data-width="720"
-      data-height="720"
-    >
-      <!-- SCENE A: Hold for Help Plate -->
-      <div id="plateWrap">
-        <div id="helpPlate" class="help-plate">
-          <div id="plateFill" class="plate-fill"></div>
-          <!-- Top icon / star -->
-          <div style="display:flex; align-items:center; justify-content:space-between; z-index:2;">
-            <svg width="32" height="32" viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF" transform="rotate(45 24 24)"/></svg>
-            <div style="width:40px; height:8px; background:rgba(255,255,255,0.4); border-radius:4px;"></div>
-          </div>
-          <!-- Label bars -->
-          <div style="z-index:2;">
-            <div style="width:180px; height:18px; background:#FFFFFF; border-radius:6px; margin-bottom:10px;"></div>
-            <div style="width:120px; height:10px; background:rgba(255,255,255,0.6); border-radius:5px;"></div>
-          </div>
-        </div>
-
-        <!-- Finger Touch Indicator on Plate -->
-        <div id="fingerTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
-
-        <!-- Burst Waves -->
-        <div id="waveA" class="alert-wave"></div>
-        <div id="waveB" class="alert-wave"></div>
-
-        <!-- Madder SMS Bubble -->
-        <div id="madderBubble" class="madder-bubble">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <div style="width:10px; height:10px; border-radius:50%; background:#C7372F;"></div>
-            <div style="width:90px; height:10px; background:#FFDAD5; border-radius:5px;"></div>
-          </div>
-          <div style="width:150px; height:8px; background:#FFDAD5; opacity:0.8; border-radius:4px; margin-bottom:6px;"></div>
-          <div style="width:100px; height:8px; background:#FFDAD5; opacity:0.8; border-radius:4px;"></div>
-        </div>
-      </div>
-
-      <!-- SCENE B: Quick Tile with Undo Ring -->
-      <div id="tileWrap">
-        <div id="quickTile" class="quick-tile">
-          <!-- Ajrakh icon tile -->
-          <div style="width:48px; height:48px; border-radius:14px; background:#25336B; display:flex; align-items:center; justify-content:center;">
-            <svg width="24" height="24" viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-          </div>
-          <div style="flex:1;">
-            <div style="width:110px; height:14px; background:#EEF0F7; border-radius:5px; margin-bottom:8px;"></div>
-            <div style="width:70px; height:10px; background:#6F7899; border-radius:4px;"></div>
+    <svg width="0" height="0" style="position:absolute">
+      <symbol id="ajrakh" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.2" /><rect x="5" y="5" width="14" height="14" rx="1.2" transform="rotate(45 12 12)" /></symbol>
+    </svg>
+    <div id="root" data-composition-id="onb_you_ask" data-start="0" data-duration="8" data-width="720" data-height="720">
+      <div id="cam" class="cam">
+        <div id="phone" class="phone" style="left:172px; top:44px;">
+          <div class="screen">
+            <div class="status"><span>9:42</span><span class="icons"><i style="width:14px;height:10px"></i><i style="width:10px;height:10px;border-radius:5px"></i><i style="width:20px;height:10px"></i></span></div>
+            <div class="map">
+              <svg width="360" height="300" viewBox="0 0 360 300">
+                <g stroke="#1C2440" stroke-width="10" fill="none" stroke-linecap="round"><path d="M-20 90 C 80 80 160 120 380 100" /><path d="M60 -20 C 70 90 40 200 70 320" /><path d="M250 -20 C 230 120 260 200 240 320" /><path d="M-20 230 C 120 210 200 250 380 220" /></g>
+                <path d="M40 270 C 70 210 90 180 150 160 S 240 120 300 60" fill="none" stroke="#6F7899" stroke-opacity="0.6" stroke-width="2.5" stroke-dasharray="1 7" stroke-linecap="round" />
+              </svg>
+              <div style="position:absolute; left:196px; top:140px; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%; background:rgba(143,162,232,0.2)"></div>
+              <div style="position:absolute; left:196px; top:140px; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 3px #fff"></div>
+            </div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div id="calm">
+                <div class="t-title" data-t="place"></div>
+                <div class="t-watch"><i class="dot" style="background:var(--ok)"></i><span data-t="watching"></span></div>
+                <div class="t-dest"><i class="dot" style="background:var(--ok)"></i><span data-t="dest"></span></div>
+                <div style="position:absolute; left:33px; top:146px; width:2px; height:120px; background:rgba(255,255,255,0.13)"></div>
+                <div class="star" style="left:34px; top:164px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div><div class="star" style="left:34px; top:186px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div><div class="star" style="left:34px; top:208px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div><div class="star" style="left:34px; top:230px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div><div class="star" style="left:34px; top:252px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+                <div style="position:absolute; left:24px; top:276px; width:20px; height:20px; border-radius:50%; background:var(--brand)"></div>
+                <div style="position:absolute; left:60px; top:273px; font-size:15px; font-weight:650" data-t="you"></div>
+                <div style="position:absolute; left:60px; top:295px; font-size:13px; color:var(--fg2)" data-t="quietline"></div>
+              </div>
+              <div id="alert" style="opacity:0">
+                <div id="banner" class="banner"><div class="disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div><div><b data-t="told"></b><span data-t="link"></span></div></div>
+                <div id="okay" class="okay plate-okay"><svg width="24" height="24" viewBox="0 0 24 24" fill="#11162A"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span data-t="okay"></span></div>
+              </div>
+            </div>
+            <div class="rule"></div>
+            <div class="help-row">
+              <div class="hold">
+                <div id="wash" class="wash"></div>
+                <div class="face"><b data-t="hold"></b><span data-t="holdsub"></span></div>
+                <div id="quiet" class="quiet" style="opacity:0"><b data-t="raised"></b></div>
+              </div>
+              <div class="call"><svg width="22" height="22" viewBox="0 0 24 24" fill="var(--brand)"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg><span data-t="call"></span></div>
+            </div>
           </div>
         </div>
-
-        <!-- Finger Touch on Tile -->
-        <div id="tileTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
-
-        <!-- Undo Countdown Ring -->
-        <svg id="undoSvg" class="undo-ring-svg" viewBox="0 0 160 160">
-          <circle class="undo-circle-track" cx="80" cy="80" r="70" />
-          <circle id="undoBar" class="undo-circle-bar" cx="80" cy="80" r="70" />
-        </svg>
-
-        <!-- Tap undo indicator -->
-        <div id="cancelTouch" class="touch-indicator" style="left:330px; top:305px;"></div>
+        <div id="finger" class="finger"></div>
       </div>
     </div>
-
     <script>
-      // Immediate initial setup outside paused timeline
-      gsap.set("#plateWrap", { opacity: 1 });
-      gsap.set("#tileWrap", { opacity: 0 });
-      gsap.set("#fingerTouch", { scale: 0.5, opacity: 0 });
-      gsap.set("#plateFill", { scaleX: 0 });
-      gsap.set(["#waveA", "#waveB"], { scale: 0.5, opacity: 0 });
-      gsap.set("#madderBubble", { y: 0, opacity: 0, scale: 0.8 });
-      gsap.set("#undoSvg", { opacity: 0 });
-      gsap.set("#undoBar", { strokeDashoffset: 0 });
-      gsap.set(["#tileTouch", "#cancelTouch"], { scale: 0.5, opacity: 0 });
+      const T = {
+        en: { place: "4th Main Road", watching: "Watching your Uber auto", dest: "Going to Work · watching for detours", hold: "Hold for help",
+          holdsub: "2 seconds · texts Amma", call: "Call Saathi", told: "Amma was told", link: "Live location link sent · Saathi doesn't call 112",
+          okay: "I'm okay", raised: "Your contacts were told", you: "You · 4th Main Road", quietline: "6 min watched, all quiet" },
+        hi: { place: "4th Main Road", watching: "आपके Uber ऑटो पर नज़र है", dest: "ऑफ़िस जा रही हैं · रास्ता बदलने पर नज़र है", hold: "मदद के लिए दबाए रखें",
+          holdsub: "2 सेकंड · Amma को मैसेज जाएगा", call: "Saathi को कॉल करें", told: "Amma को बता दिया गया", link: "लाइव लोकेशन का लिंक भेज दिया गया · Saathi 112 पर कॉल नहीं करता",
+          okay: "मैं ठीक हूँ", raised: "आपके कॉन्टैक्ट को बता दिया गया", you: "आप · 4th Main Road", quietline: "6 मिनट नज़र रखी, सब शांत" },
+      };
+      const vars = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      const lang = vars.lang === "hi" ? "hi" : "en";
+      document.documentElement.lang = lang;
+      if (lang === "hi") document.querySelectorAll(".t-title, .hold b").forEach((e) => (e.style.letterSpacing = "0"));
+      document.querySelectorAll("[data-t]").forEach((e) => (e.textContent = T[lang][e.dataset.t]));
+
+      const at = (s, px, py) => ({ scale: s, x: 360 - s * px, y: 360 - s * py });
+      // The help row sits at stage y ~ 780: frame it with the sheet above.
+      gsap.set("#cam", at(1.22, 352, 590));
+      gsap.set("#wash", { scaleX: 0 });
+      gsap.set("#finger", { left: 272, top: 772 });
 
       const tl = gsap.timeline({ paused: true });
+      // 0.7  Her thumb lands on the plate and holds.
+      tl.to("#finger", { opacity: 1, scale: 0.86, duration: 0.25, ease: "power2.out" }, 0.7);
+      // 0.9 – 2.9  The plate fills with a dark wash over the full two seconds (linear, as in the app).
+      tl.to("#wash", { scaleX: 1, duration: 2.0, ease: "none" }, 0.9);
+      // 2.9  Help is raised: a short buzz, the finger lifts, the plate steps back.
+      tl.to("#phone", { x: 2, duration: 0.05, repeat: 5, yoyo: true, ease: "none" }, 2.92);
+      tl.set("#phone", { x: 0 }, 3.22);
+      tl.to("#finger", { opacity: 0, scale: 1, duration: 0.2, ease: "power2.out" }, 2.95);
+      tl.to(".hold .face", { opacity: 0, duration: 0.15, ease: "power2.in" }, 2.92);
+      tl.to("#quiet", { opacity: 1, duration: 0.3, ease: "power2.out" }, 3.0);
+      tl.to("#calm", { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, 2.95);
+      tl.to("#alert", { opacity: 1, duration: 0.01 }, 3.1);
+      tl.fromTo("#banner", { y: -18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "expo.out" }, 3.1);
+      tl.fromTo("#okay", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out" }, 3.25);
+      // Pull back so the told banner, I'm okay and the quiet plate read together.
+      tl.to("#cam", { ...at(1.12, 352, 560), duration: 0.9, ease: "power2.inOut" }, 3.2);
 
-      // --- SCENE A: HOLD FOR HELP (0s - 3.8s) ---
-      // Finger touches down
-      tl.to("#fingerTouch", { opacity: 1, scale: 1, duration: 0.2, ease: "power1.out" }, 0.2);
-
-      // Plate fills with dark wash over 2.0s
-      tl.to("#plateFill", { scaleX: 1, duration: 2.0, ease: "linear" }, 0.4);
-
-      // At 2.4s: full fill reached -> alert triggers!
-      tl.to("#fingerTouch", { opacity: 0, scale: 1.4, duration: 0.2, ease: "power1.in" }, 2.4);
-
-      // Burst waves radiate
-      tl.fromTo("#waveA", { scale: 0.8, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 0.9, ease: "power2.out" }, 2.4);
-      tl.fromTo("#waveB", { scale: 0.8, opacity: 0.7 }, { scale: 2.8, opacity: 0, duration: 1.1, ease: "power2.out" }, 2.6);
-
-      // Madder bubble elevates
-      tl.to("#madderBubble", { opacity: 1, scale: 1, y: -120, duration: 0.7, ease: "back.out(1.5)" }, 2.5);
-
-      // Transition Scene A -> Scene B
-      tl.to("#plateWrap", { opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 3.6);
-      tl.to("#tileWrap", { opacity: 1, duration: 0.3, ease: "power1.out" }, 4.0);
-      tl.to("#quickTile", { opacity: 1, duration: 0.3, ease: "power1.out" }, 4.0);
-
-      // --- SCENE B: QUICK TILE TAP WITH 5s UNDO (4.0s - 7.6s) ---
-      // Tap on tile
-      tl.to("#tileTouch", { opacity: 1, scale: 1.1, duration: 0.15, ease: "power1.out" }, 4.2);
-      tl.to("#tileTouch", { opacity: 0, scale: 1.5, duration: 0.25, ease: "power1.in" }, 4.35);
-
-      // Undo ring appears and begins draining
-      tl.to("#undoSvg", { opacity: 1, duration: 0.2 }, 4.4);
-      tl.to("#undoBar", { strokeDashoffset: 440, duration: 2.6, ease: "linear" }, 4.4);
-
-      // User taps undo before it drains (at 6.2s)
-      tl.to("#cancelTouch", { opacity: 1, scale: 1.2, duration: 0.2, ease: "power1.out" }, 6.2);
-      tl.to("#cancelTouch", { opacity: 0, scale: 1.6, duration: 0.25, ease: "power1.in" }, 6.4);
-
-      // Ring clears cleanly
-      tl.to("#undoSvg", { opacity: 0, duration: 0.3, ease: "power2.in" }, 6.4);
-      tl.to("#quickTile", { borderColor: "#7BD3A4", duration: 0.3 }, 6.4);
-
-      // Loop fade out
-      tl.to("#root", { opacity: 0.95, duration: 0.3, ease: "power1.in" }, 7.7);
+      // 7.3 – 8  Reset for the loop.
+      tl.to("#cam", { ...at(1.22, 352, 590), duration: 0.6, ease: "power2.inOut" }, 7.3);
+      tl.to(["#alert", "#quiet"], { opacity: 0, duration: 0.2, ease: "power2.in" }, 7.3);
+      tl.to(["#calm", ".hold .face"], { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out" }, 7.45);
+      tl.to("#wash", { scaleX: 0, duration: 0.3, ease: "power2.in" }, 7.4);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["onb_you_ask"] = tl;
-      tl.seek(0);
     </script>
   </body>
 </html>

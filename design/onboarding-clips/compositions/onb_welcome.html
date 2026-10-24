@@ -1,253 +1,103 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-composition-variables='[{"id":"lang","type":"string","label":"Language (en or hi)","default":"en"}]'>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=720, height=720" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/saathi.css" />
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        width: 720px;
-        height: 720px;
-        overflow: hidden;
-        background: #0D1222;
-      }
-      #root {
-        width: 720px;
-        height: 720px;
-        position: relative;
-        background: #0D1222;
-        overflow: hidden;
-      }
-      /* Map background grid */
-      .map-road {
-        stroke: #1B2340;
-        stroke-width: 14;
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-      .map-road-minor {
-        stroke: #141A2E;
-        stroke-width: 8;
-        fill: none;
-        stroke-linecap: round;
-      }
-      .route-trail {
-        stroke: #2E3F8644;
-        stroke-width: 4;
-        fill: none;
-        stroke-dasharray: 6 8;
-      }
-      .star-stamp {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 36px;
-        height: 36px;
-        margin-left: -18px;
-        margin-top: -18px;
-        transform-origin: center center;
-        opacity: 0;
-      }
-      .star-stamp svg {
-        width: 100%;
-        height: 100%;
-      }
-      .auto-vehicle {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 52px;
-        height: 64px;
-        margin-left: -26px;
-        margin-top: -32px;
-        transform-origin: center center;
-        z-index: 10;
-        filter: drop-shadow(0 8px 16px rgba(11,15,28,0.5));
-      }
-      .pulse-ring {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 96px;
-        height: 96px;
-        margin-left: -48px;
-        margin-top: -48px;
-        border-radius: 50%;
-        border: 2px solid #8FA2E8;
-        opacity: 0;
-        pointer-events: none;
-        z-index: 5;
-      }
-      .final-badge {
-        position: absolute;
-        left: 360px;
-        top: 360px;
-        width: 80px;
-        height: 80px;
-        margin-left: -40px;
-        margin-top: -40px;
-        background: #25336B;
-        border-radius: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #FFFFFF22;
-        box-shadow: 0 12px 32px rgba(13,18,34,0.6);
-        opacity: 0;
-        transform: scale(0.5);
-        z-index: 20;
-      }
-      .final-badge svg {
-        width: 44px;
-        height: 44px;
-      }
+      .map { position: absolute; left: 0; top: 0; width: 360px; height: 330px; background: #10162A; overflow: hidden; }
+      .sheet { position: absolute; left: 0; top: 292px; width: 360px; height: 560px; background: var(--bg); border-radius: 28px 28px 0 0; }
+      .handle { position: absolute; left: 162px; top: 10px; width: 36px; height: 4px; border-radius: 2px; background: rgba(111,120,153,0.5); }
+      .t-title { position: absolute; left: 20px; top: 30px; font-size: 22px; font-weight: 650; letter-spacing: -0.015em; }
+      .t-watch { position: absolute; left: 20px; top: 64px; display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--fg2); }
+      .t-min { position: absolute; right: 20px; top: 28px; text-align: right; }
+      .t-min b { display: block; font-size: 24px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+      .t-min span { font-size: 11px; color: var(--fg2); }
+      .t-dest { position: absolute; left: 20px; top: 98px; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--fg2); }
+      .plate { position: absolute; right: 14px; top: 40px; height: 30px; padding: 0 10px; border-radius: 6px; background: #F7F7F2; color: #111; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; display: flex; align-items: center; box-shadow: 0 0 0 2px #222 inset; }
+      .ms { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+      .ms svg { width: 100%; height: 100%; display: block; overflow: visible; }
     </style>
   </head>
   <body>
-    <div
-      id="root"
-      class="clip"
-      data-composition-id="onb_welcome"
-      data-start="0"
-      data-duration="6"
-      data-width="720"
-      data-height="720"
-    >
-      <!-- Background map grid -->
-      <svg width="720" height="720" style="position:absolute; inset:0;">
-        <path class="map-road-minor" d="M 0 180 L 720 180 M 0 540 L 720 540 M 180 0 L 180 720 M 540 0 L 540 720" />
-        <path class="map-road" d="M 60 80 Q 220 120 280 280 T 480 460 T 640 620" />
-        <path class="map-road" d="M 660 100 L 480 260 L 260 480 L 80 640" />
-        <!-- Main route line -->
-        <path id="routePath" class="route-trail" d="M 120 160 C 220 200, 240 380, 360 400 C 460 420, 520 320, 600 480" />
-      </svg>
-
-      <!-- Stamped stars along the trip -->
-      <div id="star1" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-      <div id="star2" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-      <div id="star3" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-      <div id="star4" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-      <div id="star5" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-      <div id="star6" class="star-stamp">
-        <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8"/><rect x="10" y="10" width="28" height="28" rx="2" fill="#8FA2E8" transform="rotate(45 24 24)"/></svg>
-      </div>
-
-      <!-- Pulse ripple at destination -->
-      <div id="destPulse" class="pulse-ring"></div>
-
-      <!-- Auto Rickshaw vehicle SVG -->
-      <div id="auto" class="auto-vehicle">
-        <svg viewBox="0 0 52 64" fill="none">
-          <!-- Headlight beam -->
-          <polygon points="26,10 6,0 46,0" fill="#E7B94A" opacity="0.3" />
-          <!-- Wheels -->
-          <rect x="4" y="38" width="6" height="18" rx="3" fill="#11162A" />
-          <rect x="42" y="38" width="6" height="18" rx="3" fill="#11162A" />
-          <rect x="23" y="2" width="6" height="14" rx="3" fill="#11162A" />
-          <!-- Chassis / Green body -->
-          <rect x="8" y="18" width="36" height="42" rx="10" fill="#1E7A4C" />
-          <!-- Yellow cabin roof -->
-          <rect x="10" y="14" width="32" height="34" rx="8" fill="#E7B94A" />
-          <!-- Windshield -->
-          <rect x="14" y="16" width="24" height="10" rx="3" fill="#0D1222" />
-          <!-- Rear cover -->
-          <rect x="12" y="36" width="28" height="18" rx="4" fill="#1B2340" />
-        </svg>
-      </div>
-
-      <!-- Settling Ajrakh Star Badge -->
-      <div id="finalBadge" class="final-badge">
-        <svg viewBox="0 0 48 48">
-          <rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF"/>
-          <rect x="10" y="10" width="28" height="28" rx="2" fill="#FFFFFF" transform="rotate(45 24 24)"/>
-        </svg>
+    <svg width="0" height="0" style="position:absolute">
+      <symbol id="ajrakh" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.2" /><rect x="5" y="5" width="14" height="14" rx="1.2" transform="rotate(45 12 12)" /></symbol>
+    </svg>
+    <div id="root" data-composition-id="onb_welcome" data-start="0" data-duration="9" data-width="720" data-height="720">
+      <div id="cam" class="cam">
+        <div id="phone" class="phone" style="left:172px; top:44px;">
+          <div class="screen">
+            <div class="status"><span>9:36</span><span class="icons"><i style="width:14px;height:10px"></i><i style="width:10px;height:10px;border-radius:5px"></i><i style="width:20px;height:10px"></i></span></div>
+            <div class="map">
+              <svg width="360" height="330" viewBox="0 0 360 330">
+                <g stroke="#1C2440" stroke-width="11" fill="none" stroke-linecap="round"><path d="M-20 110 C 80 96 170 130 380 112" /><path d="M58 -20 C 70 100 44 220 70 350" /><path d="M262 -20 C 240 120 270 220 248 350" /><path d="M-20 252 C 120 232 200 270 380 240" /></g>
+                <g stroke="#161D35" stroke-width="5" fill="none"><path d="M-20 178 L 380 190" /><path d="M156 -20 L 166 350" /><path d="M318 -20 L 300 350" /></g>
+                <path id="route" d="M30 312 C 64 236 96 196 156 176 S 250 132 318 56" fill="none" stroke="#6F7899" stroke-opacity="0.55" stroke-width="2.5" stroke-dasharray="1 7" stroke-linecap="round" />
+              </svg>
+              <!-- Stars stamped along the walked route, one per minute -->
+              <div id="m1" class="ms" style="left:44px; top:282px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="m2" class="ms" style="left:70px; top:232px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="m3" class="ms" style="left:104px; top:197px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="m4" class="ms" style="left:146px; top:179px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="m5" class="ms" style="left:196px; top:162px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="m6" class="ms" style="left:244px; top:136px"><svg fill="var(--brand)"><use href="#ajrakh" /></svg></div>
+              <div id="halo" style="position:absolute; left:30px; top:312px; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(143,162,232,0.2)"></div>
+              <div id="me" style="position:absolute; left:30px; top:312px; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 3px #fff"></div>
+            </div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="t-title" data-t="place"></div>
+              <div class="t-watch"><i class="dot" style="background:var(--ok)"></i><span data-t="watching"></span></div>
+              <div class="t-min"><b id="tmin">0</b><span data-t="watched"></span></div>
+              <div class="t-dest"><i class="dot" style="background:var(--ok)"></i><span data-t="dest"></span></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-
     <script>
-      // Immediate initial setup outside paused timeline
-      gsap.set("#auto", { x: 120, y: 160, rotation: 35, opacity: 1 });
-      gsap.set("#star1", { x: 120, y: 160, opacity: 0, scale: 0 });
-      gsap.set("#star2", { x: 210, y: 230, opacity: 0, scale: 0 });
-      gsap.set("#star3", { x: 280, y: 350, opacity: 0, scale: 0 });
-      gsap.set("#star4", { x: 380, y: 405, opacity: 0, scale: 0 });
-      gsap.set("#star5", { x: 480, y: 360, opacity: 0, scale: 0 });
-      gsap.set("#star6", { x: 600, y: 480, opacity: 0, scale: 0 });
-      gsap.set("#destPulse", { x: 600, y: 480, opacity: 0, scale: 0.5 });
-      gsap.set("#finalBadge", { opacity: 0, scale: 0.5 });
+      const T = {
+        en: { place: "4th Main Road", watching: "Watching your Uber auto", watched: "watched", dest: "Going to Work · watching for detours" },
+        hi: { place: "4th Main Road", watching: "आपके Uber ऑटो पर नज़र है", watched: "नज़र रखी", dest: "ऑफ़िस जा रही हैं · रास्ता बदलने पर नज़र है" },
+      };
+      const vars = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      const lang = vars.lang === "hi" ? "hi" : "en";
+      document.documentElement.lang = lang;
+      if (lang === "hi") document.querySelectorAll(".t-title").forEach((e) => (e.style.letterSpacing = "0"));
+      document.querySelectorAll("[data-t]").forEach((e) => (e.textContent = T[lang][e.dataset.t]));
+
+      const at = (s, px, py) => ({ scale: s, x: 360 - s * px, y: 360 - s * py });
+      // Wide on the map first, then settle on the whole trip card.
+      gsap.set("#cam", at(1.5, 300, 250));
+      gsap.set([".ms"], { opacity: 0, scale: 1.6 });
+      const mins = { v: 0 };
+      const showMin = () => (document.getElementById("tmin").textContent = String(Math.round(mins.v)));
+      showMin();
 
       const tl = gsap.timeline({ paused: true });
+      // The auto moves along her route; a star is stamped behind it each "minute".
+      const pts = [[44, 282], [70, 232], [104, 197], [146, 179], [196, 162], [244, 136], [292, 92]];
+      pts.forEach(([x, y], i) => {
+        const t = 0.2 + i * 0.75;
+        tl.to(["#me", "#halo"], { left: x, top: y, duration: 0.75, ease: "none" }, t);
+        if (i < 6) {
+          // Stamp: lands at 1.6x and 35% ink, settles to 1x over 200 ms (DESIGN.md "stamp").
+          tl.fromTo(`#m${i + 1}`, { opacity: 0.35, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.26, ease: "expo.out", immediateRender: false }, t + 0.75);
+          tl.to(mins, { v: i + 1, duration: 0.01, onUpdate: showMin }, t + 0.75);
+        }
+      });
+      // Pull back to the whole trip card while the thread keeps growing.
+      tl.to("#cam", { ...at(1.22, 352, 330), duration: 1.4, ease: "power2.inOut" }, 3.2);
 
-      // Star 1 stamps immediately
-      tl.fromTo("#star1", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 0.1);
-
-      // Move auto P1 -> P2
-      tl.to("#auto", {
-        x: 210, y: 230, rotation: 55, duration: 0.65, ease: "power1.inOut"
-      }, 0.2);
-      tl.fromTo("#star2", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 0.85);
-
-      // Move auto P2 -> P3
-      tl.to("#auto", {
-        x: 280, y: 350, rotation: 40, duration: 0.7, ease: "power1.inOut"
-      }, 0.9);
-      tl.fromTo("#star3", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 1.6);
-
-      // Move auto P3 -> P4
-      tl.to("#auto", {
-        x: 380, y: 405, rotation: -10, duration: 0.7, ease: "power1.inOut"
-      }, 1.65);
-      tl.fromTo("#star4", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 2.35);
-
-      // Move auto P4 -> P5
-      tl.to("#auto", {
-        x: 480, y: 360, rotation: 30, duration: 0.7, ease: "power1.inOut"
-      }, 2.4);
-      tl.fromTo("#star5", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 3.1);
-
-      // Move auto P5 -> P6 (arrival)
-      tl.to("#auto", {
-        x: 600, y: 480, rotation: 45, duration: 0.75, ease: "power2.out"
-      }, 3.15);
-      tl.fromTo("#star6", { scale: 1.8, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, 3.9);
-
-      // Destination pulse
-      tl.to("#destPulse", {
-        scale: 1.6, opacity: 0.8, duration: 0.5, ease: "power2.out"
-      }, 3.9);
-      tl.to("#destPulse", {
-        scale: 2.4, opacity: 0, duration: 0.6, ease: "power2.in"
-      }, 4.4);
-
-      // Final settling mark appears in center
-      tl.to("#finalBadge", {
-        scale: 1.1, opacity: 1, duration: 0.5, ease: "back.out(1.8)"
-      }, 4.2);
-      tl.to("#finalBadge", {
-        scale: 1.0, duration: 0.3, ease: "power1.out"
-      }, 4.7);
-
-      // Smooth loop fade out at 5.7s to 6.0s
-      tl.to(["#root"], {
-        opacity: 0.95, duration: 0.3, ease: "power1.in"
-      }, 5.7);
+      // 8.3 – 9  Reset for the loop: the thread lifts, the camera returns.
+      tl.to(".ms", { opacity: 0, duration: 0.3, ease: "power2.in" }, 8.3);
+      tl.to(["#me", "#halo"], { left: 30, top: 312, duration: 0.6, ease: "power2.inOut" }, 8.3);
+      tl.to("#cam", { ...at(1.5, 300, 250), duration: 0.65, ease: "power2.inOut" }, 8.3);
+      tl.to(mins, { v: 0, duration: 0.01, onUpdate: showMin }, 8.5);
 
       window.__timelines = window.__timelines || {};
       window.__timelines["onb_welcome"] = tl;
-      tl.seek(0);
     </script>
   </body>
 </html>
