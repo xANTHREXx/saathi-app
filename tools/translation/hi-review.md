@@ -388,33 +388,33 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `perm_heading` | Let Saathi watch your trips | Saathi को अपने सफ़र पर नज़र रखने दें |  |
 | `perm_subheading` | Android asks once for each. Saathi uses them only on trips and alerts. | Android हर एक के लिए एक बार पूछता है। Saathi इन्हें सिर्फ़ सफ़र और अलर्ट में इस्तेमाल करता है। |  |
 | `perm_strip_stays` | Stays on your phone: Your contacts, trips, places and audio recordings. | फ़ोन पर रहता है: आपके कॉन्टैक्ट, सफ़र, जगहें और ऑडियो रिकॉर्डिंग। |  |
-| `perm_strip_leaves` | Leaves it: Route and place lookups, alert SMS and live link when you ask for help, and anonymous stats only if you agree. | फ़ोन से बाहर जाता है: रास्ते और जगह खोजना, मदद माँगने पर अलर्ट मैसेज और लाइव लिंक, और आपकी सहमति पर ही बिना नाम के आँकड़े। |  |
+| `perm_strip_leaves` | Leaves it: Route, place and vehicle lookups, texts to your contacts, a live link during an alert, and anonymous crash reports, which you can turn off in Settings. Usage stats only if you agree. | फ़ोन से बाहर जाता है: रास्ते, जगह और गाड़ी की खोज, आपके अपनों को मैसेज, अलर्ट के दौरान लाइव लिंक, और बिना नाम की क्रैश रिपोर्ट, जिन्हें आप सेटिंग्स में बंद कर सकते हैं। इस्तेमाल के आँकड़े सिर्फ़ आपकी सहमति पर। |  |
 | `perm_open_source_link` | Saathi is open source | साथी ओपन सोर्स है |  |
 | `perm_optional` | Optional | ज़रूरी नहीं |  |
 | `perm_location` | Location | लोकेशन |  |
 | `perm_location_why` | To know where your trip goes. | ताकि पता रहे कि आपका सफ़र कहाँ जा रहा है। |  |
-| `perm_location_never` | Never shared with your contacts unless an alert goes out | अलर्ट भेजे जाने के अलावा कभी आपके अपनों के साथ शेयर नहीं होता |  |
+| `perm_location_never` | Your contacts get it only in an alert, or in a low-battery or switched-off text | आपके अपनों को सिर्फ़ अलर्ट में, या बैटरी कम होने या फ़ोन बंद होने के मैसेज में मिलती है |  |
 | `perm_location_always` | Location all the time | हर समय लोकेशन |  |
 | `perm_location_always_why` | So Saathi keeps watching with the screen off. | ताकि स्क्रीन बंद होने पर भी Saathi नज़र रखे। |  |
-| `perm_location_always_never` | Never tracks you when you are not on a trip | सफ़र न होने पर कभी आपकी लोकेशन ट्रैक नहीं करता |  |
+| `perm_location_always_never` | Followed only during a trip. Off a trip, read only when an alert goes out or while you set up | सिर्फ़ सफ़र के दौरान पीछा करता है। सफ़र के बाहर सिर्फ़ तब पढ़ता है जब अलर्ट जाता है या आप सेटअप करते हैं |  |
 | `perm_sms` | Text messages | टेक्स्ट मैसेज |  |
 | `perm_sms_why` | Alerts go from your own SIM, even with no data. | अलर्ट आपके अपने SIM से जाते हैं, डेटा न हो तब भी। |  |
-| `perm_sms_never` | Never texts anyone without asking you first or during an alert | आपसे पूछे बिना या अलर्ट के बिना कभी किसी को मैसेज नहीं भेजता |  |
+| `perm_sms_never` | Texts your contacts only for an alert, a low battery or switched-off phone on a trip, and arrival if you turn it on | आपके अपनों को मैसेज सिर्फ़ अलर्ट पर, सफ़र में बैटरी कम होने या फ़ोन बंद होने पर, और आप चालू करें तो पहुँचने पर भेजता है |  |
 | `perm_notifications` | Notifications | नोटिफ़िकेशन |  |
 | `perm_notifications_why` | For check-ins and the trip card. | चेक-इन और सफ़र कार्ड के लिए। |  |
 | `perm_notifications_never` | Never sends marketing or spam notifications | कभी विज्ञापन या बेवजह की सूचनाएँ नहीं भेजता |  |
 | `perm_lock_screen` | Check-ins over the lock screen | लॉक स्क्रीन पर चेक-इन |  |
 | `perm_lock_screen_why` | So 'Are you okay?' shows even when your phone is locked. | ताकि फ़ोन लॉक होने पर भी "क्या आप ठीक हैं?" दिखे। |  |
-| `perm_lock_screen_never` | Never opens your phone to anyone else | दूसरों के लिए आपका फ़ोन कभी अनलॉक नहीं करता |  |
+| `perm_lock_screen_never` | You can answer a check-in without unlocking. Taking back a sent alert needs you to unlock | चेक-इन का जवाब बिना अनलॉक किए दिया जा सकता है। भेजा हुआ अलर्ट वापस लेने के लिए फ़ोन अनलॉक करना पड़ता है |  |
 | `perm_background` | Keep running in the background | बैकग्राउंड में चलता रहे |  |
 | `perm_background_why` | So Android doesn't stop Saathi mid-trip. | ताकि Android सफ़र के बीच Saathi को बंद न करे। |  |
-| `perm_background_never` | Never runs heavy tasks when you are not on a trip | सफ़र न होने पर बैकग्राउंड में बैटरी खर्च नहीं करता |  |
+| `perm_background_never` | Off a trip, it only waits for you to ask for help. It does not follow your location | सफ़र के बाहर सिर्फ़ इंतज़ार करता है कि आप मदद माँगें। आपकी लोकेशन का पीछा नहीं करता |  |
 | `perm_rides` | Notice Uber, Ola and Rapido rides | Uber, Ola और Rapido की राइड पहचानें |  |
 | `perm_rides_why` | Trips start on their own when a ride is booked. | राइड बुक होते ही सफ़र अपने-आप शुरू हो जाता है। |  |
-| `perm_rides_never` | Never reads messages from other apps or personal chats | कभी दूसरे ऐप के मैसेज या निजी चैट नहीं पढ़ता |  |
+| `perm_rides_never` | Only looks at Uber, Ola and Rapido ride notifications. Ignores everything else | सिर्फ़ Uber, Ola और Rapido की राइड सूचनाएँ देखता है। बाकी सब अनदेखा करता है |  |
 | `perm_microphone` | Microphone | माइक्रोफ़ोन |  |
 | `perm_microphone_why` | Records only after help is raised. | सिर्फ़ मदद माँगने के बाद रिकॉर्ड करता है। |  |
-| `perm_microphone_never` | Never listens or records unless an alert is active | अलर्ट शुरू होने से पहले कभी आवाज़ नहीं सुनता या रिकॉर्ड करता |  |
+| `perm_microphone_never` | Records only after help is raised. Listens only while you hold the talk button on Call Saathi | रिकॉर्डिंग सिर्फ़ मदद माँगे जाने के बाद। सुनता तब है जब आप Saathi कॉल पर बोलने का बटन दबाए रखते हैं |  |
 | `perm_allow_label` | Allow %1$s | %1$s की अनुमति दें | Screen-reader label; %1$s is the permission title. |
 | `perm_allow` | Allow | अनुमति दें |  |
 | `perm_allowed` | Allowed | अनुमति मिल गई |  |
@@ -428,7 +428,7 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 |---|---|---|---|
 | `perm_keep_title` | Keep Saathi running | Saathi को चालू रखें |  |
 | `perm_keep_why` | Your phone stops apps in the background. Saathi has to keep watching during a trip. | आपका फ़ोन बैकग्राउंड में ऐप बंद कर देता है। सफ़र में Saathi को नज़र रखते रहना है। |  |
-| `perm_keep_never` | Never keeps sensors running once your trip is done | सफ़र खत्म होने के बाद कभी सेंसर चालू नहीं रखता |  |
+| `perm_keep_never` | Location stops when your trip ends | सफ़र खत्म होते ही लोकेशन बंद हो जाती है |  |
 | `perm_keep_open` | Open settings | सेटिंग्स खोलें |  |
 | `perm_keep_needed` | Needed so Saathi keeps watching during a trip. | ज़रूरी है, ताकि सफ़र में Saathi नज़र रखता रहे। |  |
 | ⚠ `oem_xiaomi_1` | Turn on Autostart for Saathi. | Saathi के लिए Autostart चालू करें। | Phone-maker menu names are left in English, as they appear on most Indian phones. A phone set to Hindi may show them translated. |
@@ -496,7 +496,11 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `rules_lane_you_title` | You ask · goes straight away | जब आप कहें · तुरंत जाता है |  |
 | `rules_trigger_hold` | Hold the help button for 2 seconds | मदद के बटन को 2 सेकंड तक दबाए रखें |  |
 | `rules_trigger_tile` | Quick Settings tile (5s to cancel) | क्विक सेटिंग्स टाइल (रोकने के लिए 5 सेकंड) |  |
-| `rules_trigger_speak_for_me` | Speak for me (5s to cancel) | स्पीक फ़ॉर मी (रोकने के लिए 5 सेकंड) |  |
+| `rules_trigger_widget` | Help on the home-screen widget (5s to cancel) | होम स्क्रीन विजेट पर मदद (रोकने के लिए 5 सेकंड) |  |
+| `rules_trigger_shortcut` | Get help shortcut or back-tap (5s to cancel) | मदद शॉर्टकट या बैक-टैप (रोकने के लिए 5 सेकंड) |  |
+| `rules_trigger_notification` | Help in the Saathi notification | Saathi की सूचना में मदद बटन |  |
+| `rules_trigger_companion` | On Call Saathi, saying 'help' or 'bachao' | Saathi कॉल पर 'help' या 'बचाओ' बोलने पर |  |
+| `rules_trigger_plate` | Tell my contacts, after a plate that doesn't match | नंबर प्लेट न मिलने पर 'मेरे कॉन्टैक्ट को बताएँ' दबाने पर |  |
 | `rules_trigger_power` | Power button pressed quickly | पावर बटन को तेज़ी से दबाने पर |  |
 | `rules_trigger_earphone` | Earphone button 3 times (5s to cancel) | ईयरफ़ोन बटन 3 बार दबाने पर (रोकने के लिए 5 सेकंड) |  |
 | `rules_lane_saathi_title` | Saathi asks you first · only if you don't answer | साथी पहले आपसे पूछता है · जवाब न देने पर ही जाता है |  |
@@ -505,7 +509,12 @@ Settings now opens on a count of seven protections, each a row that opens its ow
 | `rules_trigger_off_route` | Ride leaves the expected route | गाड़ी तय रास्ते से अलग जाने पर |  |
 | `rules_trigger_late` | Ride is taking much longer than expected | सफ़र में उम्मीद से बहुत ज़्यादा देर होने पर |  |
 | `rules_trigger_check_on_me` | Scheduled Check on me timer ends | चेक ऑन मी का समय पूरा होने पर |  |
-| `rules_closing_summary` | Saathi never texts silently: you either asked for help yourself, or you didn't answer when it asked if you were okay. | साथी कभी बिना बताए मैसेज नहीं भेजता: या तो आपने खुद मदद माँगी हो, या ठीक होने का पूछने पर आपने जवाब न दिया हो। |  |
+| `rules_lane_plain_title` | Also a plain text, not an alert | साथ में एक सादा मैसेज, अलर्ट नहीं |  |
+| `rules_plain_battery` | Battery running low (5%) during a trip | सफ़र में बैटरी कम (5%) होने पर |  |
+| `rules_plain_off` | Phone switched off during a trip | सफ़र में फ़ोन बंद होने पर |  |
+| `rules_plain_arrived` | You arrived, only if you turn it on in Settings | आपके पहुँचने पर, सिर्फ़ तब जब आप सेटिंग्स में चालू करें |  |
+| `rules_plain_okay` | "I'm okay", after you take back an alert | अलर्ट वापस लेने के बाद "मैं ठीक हूँ" |  |
+| `rules_plain_note` | These have no alarm and no live link. The battery and switched-off texts can be turned off in Settings. | इनमें अलार्म और लाइव लिंक नहीं होता। बैटरी और फ़ोन बंद होने के मैसेज सेटिंग्स में बंद किए जा सकते हैं। |  |
 
 ## Setup: practice
 
@@ -735,7 +744,7 @@ Added for Home practice card, Settings "How Saathi works", real situations, and 
 | `settings_how_it_works` | How Saathi works | साथी कैसे काम करता है | Sub-page in Settings "Also". |
 | `settings_how_it_works_sum` | Alert rules, real situations, and video | अलर्ट नियम, असल स्थितियाँ और वीडियो | Subtitle in Settings list. |
 | `practice_card_title` | Try a practice check-in | एक अभ्यास आज़माएँ | Home screen prompt card. |
-| `practice_card_body` | Hear what an alert sounds like and see how to answer. Nothing will be sent to your contacts. | सुनें कि आवाज़ कैसी होती है और जवाब कैसे देना है। आपके संपर्कों को कुछ भी नहीं भेजा जाएगा। | Explains why to try practice. |
+| `practice_card_body` | Hear what a check-in sounds like and how to answer it. Nothing is sent to your contacts. | सुनें कि चेक-इन कैसा सुनाई देता है और उसका जवाब कैसे देना है। आपके संपर्कों को कुछ नहीं भेजा जाता। | Explains why to try practice. |
 | `practice_card_starting` | Starting in %1$d seconds… | %1$d सेकंड में शुरू हो रहा है… | Shown while counting down to practice check-in. |
 | `how_situations_title` | Real situations | असल स्थितियाँ | Section header in How Saathi works. |
 | `how_what_saathi_does` | What Saathi does | साथी क्या करता है | Column / label for system action. |

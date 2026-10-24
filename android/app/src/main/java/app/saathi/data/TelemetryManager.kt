@@ -22,6 +22,19 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicBoolean
 
+/** What an onboarding event does: go out now, wait until she is asked, or be thrown away. */
+enum class OnboardingRoute { SEND, HOLD, DROP }
+
+/**
+ * She agreed: send. She has not been asked yet: hold, the answer may still be yes.
+ * She was asked and said no: drop, nothing about her setup is kept.
+ */
+fun onboardingRoute(usageStats: Boolean, consentAsked: Boolean): OnboardingRoute = when {
+    usageStats -> OnboardingRoute.SEND
+    !consentAsked -> OnboardingRoute.HOLD
+    else -> OnboardingRoute.DROP
+}
+
 data class TelemetryEvent(
     val name: String,
     val properties: Map<String, Any>,
@@ -212,14 +225,17 @@ object TelemetryManager {
      */
     fun trackOnboarding(ctx: Context, name: String, properties: Map<String, Any> = emptyMap()) {
         runCatching {
-            if (Store.settings(ctx).usageStats) {
-                track(ctx, name, properties)
-            } else {
-                val record = createEventRecord(name, properties)
-                synchronized(lock) {
-                    val current = readHeld(ctx)
-                    val updated = enforceCap(current + record, HELD_CAPACITY)
-                    writeHeld(ctx, updated)
+            val s = Store.settings(ctx)
+            when (onboardingRoute(s.usageStats, s.consentAsked)) {
+                OnboardingRoute.SEND -> track(ctx, name, properties)
+                OnboardingRoute.DROP -> Unit
+                OnboardingRoute.HOLD -> {
+                    val record = createEventRecord(name, properties)
+                    synchronized(lock) {
+                        val current = readHeld(ctx)
+                        val updated = enforceCap(current + record, HELD_CAPACITY)
+                        writeHeld(ctx, updated)
+                    }
                 }
             }
         }

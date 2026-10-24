@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import app.saathi.R
 import app.saathi.alert.AlertManager
 import app.saathi.core.AlertRules
+import app.saathi.core.PlainText
 import app.saathi.core.Trigger
 import app.saathi.ui.theme.Saathi
 
@@ -76,7 +77,11 @@ fun AlertRulesContent(
                         val stringRes = when (trigger) {
                             Trigger.HOLD -> R.string.rules_trigger_hold
                             Trigger.TILE -> R.string.rules_trigger_tile
-                            Trigger.SPEAK_FOR_ME -> R.string.rules_trigger_speak_for_me
+                            Trigger.WIDGET -> R.string.rules_trigger_widget
+                            Trigger.SHORTCUT -> R.string.rules_trigger_shortcut
+                            Trigger.NOTIFICATION -> R.string.rules_trigger_notification
+                            Trigger.COMPANION -> R.string.rules_trigger_companion
+                            Trigger.PLATE_MISMATCH -> R.string.rules_trigger_plate
                             Trigger.POWER_BUTTON -> R.string.rules_trigger_power
                             Trigger.EARPHONE -> R.string.rules_trigger_earphone
                             else -> return@forEach
@@ -134,13 +139,41 @@ fun AlertRulesContent(
             }
         }
 
-        // Closing rule sentence
-        Text(
-            text = stringResource(R.string.rules_closing_summary),
-            style = MaterialTheme.typography.bodyMedium,
-            color = c.fg2,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-        )
+        // Lane 3: plain texts that go without an alert
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, c.hair),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.rules_lane_plain_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    rules.plainTexts.forEach { text ->
+                        val stringRes = when (text) {
+                            PlainText.BATTERY_LOW -> R.string.rules_plain_battery
+                            PlainText.PHONE_OFF -> R.string.rules_plain_off
+                            PlainText.ARRIVED -> R.string.rules_plain_arrived
+                            PlainText.IM_OKAY -> R.string.rules_plain_okay
+                        }
+                        RuleBullet(stringResource(stringRes), MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.rules_plain_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.fg2,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(4.dp))
     }
 }
 

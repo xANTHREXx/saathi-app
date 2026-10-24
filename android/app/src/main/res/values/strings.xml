@@ -378,33 +378,33 @@
     <string name="perm_heading">Let Saathi watch your trips</string>
     <string name="perm_subheading">Android asks once for each. Saathi uses them only on trips and alerts.</string>
     <string name="perm_strip_stays">Stays on your phone: Your contacts, trips, places and audio recordings.</string>
-    <string name="perm_strip_leaves">Leaves it: Route and place lookups, alert SMS and live link when you ask for help, and anonymous stats only if you agree.</string>
+    <string name="perm_strip_leaves">Leaves it: Route, place and vehicle lookups, texts to your contacts, a live link during an alert, and anonymous crash reports, which you can turn off in Settings. Usage stats only if you agree.</string>
     <string name="perm_open_source_link">Saathi is open source</string>
     <string name="perm_optional">Optional</string>
     <string name="perm_location">Location</string>
     <string name="perm_location_why">To know where your trip goes.</string>
-    <string name="perm_location_never">Never shared with your contacts unless an alert goes out</string>
+    <string name="perm_location_never">Your contacts get it only in an alert, or in a low-battery or switched-off text</string>
     <string name="perm_location_always">Location all the time</string>
     <string name="perm_location_always_why">So Saathi keeps watching with the screen off.</string>
-    <string name="perm_location_always_never">Never tracks you when you are not on a trip</string>
+    <string name="perm_location_always_never">Followed only during a trip. Off a trip, read only when an alert goes out or while you set up</string>
     <string name="perm_sms">Text messages</string>
     <string name="perm_sms_why">Alerts go from your own SIM, even with no data.</string>
-    <string name="perm_sms_never">Never texts anyone without asking you first or during an alert</string>
+    <string name="perm_sms_never">Texts your contacts only for an alert, a low battery or switched-off phone on a trip, and arrival if you turn it on</string>
     <string name="perm_notifications">Notifications</string>
     <string name="perm_notifications_why">For check-ins and the trip card.</string>
     <string name="perm_notifications_never">Never sends marketing or spam notifications</string>
     <string name="perm_lock_screen">Check-ins over the lock screen</string>
     <string name="perm_lock_screen_why">So \'Are you okay?\' shows even when your phone is locked.</string>
-    <string name="perm_lock_screen_never">Never opens your phone to anyone else</string>
+    <string name="perm_lock_screen_never">You can answer a check-in without unlocking. Taking back a sent alert needs you to unlock</string>
     <string name="perm_background">Keep running in the background</string>
     <string name="perm_background_why">So Android doesn\'t stop Saathi mid-trip.</string>
-    <string name="perm_background_never">Never runs heavy tasks when you are not on a trip</string>
+    <string name="perm_background_never">Off a trip, it only waits for you to ask for help. It does not follow your location</string>
     <string name="perm_rides">Notice Uber, Ola and Rapido rides</string>
     <string name="perm_rides_why">Trips start on their own when a ride is booked.</string>
-    <string name="perm_rides_never">Never reads messages from other apps or personal chats</string>
+    <string name="perm_rides_never">Only looks at Uber, Ola and Rapido ride notifications. Ignores everything else</string>
     <string name="perm_microphone">Microphone</string>
     <string name="perm_microphone_why">Records only after help is raised.</string>
-    <string name="perm_microphone_never">Never listens or records unless an alert is active</string>
+    <string name="perm_microphone_never">Records only after help is raised. Listens only while you hold the talk button on Call Saathi</string>
     <string name="perm_allow_label">Allow %1$s</string>
     <string name="perm_allow">Allow</string>
     <string name="perm_allowed">Allowed</string>
@@ -415,7 +415,7 @@
     <!-- Setup and Settings: keep Saathi running -->
     <string name="perm_keep_title">Keep Saathi running</string>
     <string name="perm_keep_why">Your phone stops apps in the background. Saathi has to keep watching during a trip.</string>
-    <string name="perm_keep_never">Never keeps sensors running once your trip is done</string>
+    <string name="perm_keep_never">Location stops when your trip ends</string>
     <string name="perm_keep_open">Open settings</string>
     <string name="perm_keep_needed">Needed so Saathi keeps watching during a trip.</string>
     <string name="oem_xiaomi_1">Turn on Autostart for Saathi.</string>
@@ -474,7 +474,11 @@
     <string name="rules_lane_you_title">You ask · goes straight away</string>
     <string name="rules_trigger_hold">Hold the help button for 2 seconds</string>
     <string name="rules_trigger_tile">Quick Settings tile (5s to cancel)</string>
-    <string name="rules_trigger_speak_for_me">Speak for me (5s to cancel)</string>
+    <string name="rules_trigger_widget">Help on the home-screen widget (5s to cancel)</string>
+    <string name="rules_trigger_shortcut">Get help shortcut or back-tap (5s to cancel)</string>
+    <string name="rules_trigger_notification">Help in the Saathi notification</string>
+    <string name="rules_trigger_companion">On Call Saathi, saying \'help\' or \'bachao\'</string>
+    <string name="rules_trigger_plate">Tell my contacts, after a plate that doesn\'t match</string>
     <string name="rules_trigger_power">Power button pressed quickly</string>
     <string name="rules_trigger_earphone">Earphone button 3 times (5s to cancel)</string>
     <string name="rules_lane_saathi_title">Saathi asks you first · only if you don\'t answer</string>
@@ -483,7 +487,12 @@
     <string name="rules_trigger_off_route">Ride leaves the expected route</string>
     <string name="rules_trigger_late">Ride is taking much longer than expected</string>
     <string name="rules_trigger_check_on_me">Scheduled Check on me timer ends</string>
-    <string name="rules_closing_summary">Saathi never texts silently: you either asked for help yourself, or you didn\'t answer when it asked if you were okay.</string>
+    <string name="rules_lane_plain_title">Also a plain text, not an alert</string>
+    <string name="rules_plain_battery">Battery running low (5%) during a trip</string>
+    <string name="rules_plain_off">Phone switched off during a trip</string>
+    <string name="rules_plain_arrived">You arrived, only if you turn it on in Settings</string>
+    <string name="rules_plain_okay">\"I\'m okay\", after you take back an alert</string>
+    <string name="rules_plain_note">These have no alarm and no live link. The battery and switched-off texts can be turned off in Settings.</string>
 
     <!-- Setup: practice -->
     <string name="practice_title">One practice, so the real one isn\'t a surprise.</string>
@@ -499,7 +508,7 @@
 
     <!-- Home card: practice -->
     <string name="practice_card_title">Try a practice check-in</string>
-    <string name="practice_card_body">Hear what an alert sounds like and see how to answer. Nothing will be sent to your contacts.</string>
+    <string name="practice_card_body">Hear what a check-in sounds like and how to answer it. Nothing is sent to your contacts.</string>
     <string name="practice_card_starting">Starting in %1$d seconds…</string>
 
     <!-- How Saathi works: real situations -->
